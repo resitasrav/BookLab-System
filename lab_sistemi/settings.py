@@ -25,9 +25,21 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUC
 # Sunucuda False, Localde True olacak (Yine .env'den okur)
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-# Sunucu adresini buraya ekleyeceğiz (Şimdilik herkese açık)
-ALLOWED_HOSTS = ['*']
+# ========================================================
+# GÜVENLİK AYARLARI (GÜNCELLENDİ)
+# ========================================================
 
+# 1. Sitenin çalışacağı adresler (Kendi site adını yazıyoruz)
+ALLOWED_HOSTS = [
+    'asravresit.pythonanywhere.com', 
+    'localhost', 
+    '127.0.0.1'
+]
+
+# 2. Form güvenliği için gerekli ayar (BUNU EKLEMEZSEN FORM GÖNDEREMEZSİN)
+CSRF_TRUSTED_ORIGINS = [
+    'https://asravresit.pythonanywhere.com',
+]
 
 # ========================================================
 # 2. UYGULAMA TANIMLARI
