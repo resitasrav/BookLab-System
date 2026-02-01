@@ -1,3 +1,4 @@
+from urllib import response
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
@@ -37,7 +38,8 @@ from .models import (
 def excel_indir(modeladmin, request, queryset):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="randevu_listesi.csv"'
-    writer = csv.writer(response)
+    response.write(u'\ufeff'.encode('utf8'))  # UTF-8 BOM ekle
+    writer = csv.writer(response, delimiter=';')
     writer.writerow(["Kullanıcı Adı", "Laboratuvar", "Cihaz", "Tarih", "Saat", "Durum"])
     for randevu in queryset:
         writer.writerow(
