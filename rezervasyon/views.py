@@ -8,6 +8,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from .models import Randevu
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -30,6 +32,9 @@ from .forms import (
 
 # PDF Utility (utils.py dosyanızda olduğundan emin olun)
 from .utils import render_to_pdf
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -506,13 +511,6 @@ def arizali_cihaz_listesi(request):
     return render(request, "yonetim_arizali_cihazlar.html", {"cihazlar": cihazlar})
 
 
-@login_required
-def lab_takvim(request, lab_id):
-    """Tekil Lab Takvimi Görünümü"""
-    lab = get_object_or_404(Laboratuvar, id=lab_id)
-    # Bu sayfada takvim verileri API'den (lab_events) çekileceği için 
-    # context'e sadece lab bilgisini gönderiyoruz.
-    return render(request, "lab_takvim.html", {"lab": lab})
 
 @require_GET
 def lab_resources(request, lab_id):
@@ -521,3 +519,51 @@ def lab_resources(request, lab_id):
     cihazlar = Cihaz.objects.filter(lab=lab)
     resources = [{"id": c.id, "title": c.isim} for c in cihazlar]
     return JsonResponse(resources, safe=False)
+
+# ===============================
+import json
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
+from .models import Laboratuvar, Randevu, Cihaz
+
+# 1. Sayfayı Açan Fonksiyon
+@login_required
+def lab_takvim(request, lab_id):
+    lab = get_object_or_404(Laboratuvar, id=lab_id)
+    
+    # Labdaki cihazları JSON formatına çevirip sayfaya gönderiyoruz
+    # (HTML'deki cihazlar_json|safe kısmı için)
+    cihazlar = list(Cihaz.objects.filter(lab=lab, aktif_mi=True).values('id', 'isim'))
+    cihazlar_json = json.dumps(cihazlar, cls=DjangoJSONEncoder)
+
+    return render(request, "lab_takvim.html", {
+        "lab": lab,
+        "cihazlar_json": cihazlar_json
+    })
+
+# 2. Takvimi Dolduran API (Veri Musluğu)
+@login_required
+def lab_events_api(request, lab_id):
+    # Sadece bu laboratuvarın randevularını getir
+    randevular = Randevu.objects.filter(cihaz__lab_id=lab_id)
+    events = []
+
+    for r in randevular:
+        renk = '#dc3545' # Kırmızı (Varsayılan)
+        if r.durum == 'onaylandi': renk = '#28a745' # Yeşil
+        elif r.durum == 'onay_bekleniyor': renk = '#ffc107' # Sarı
+
+        events.append({
+            'title': f"{r.kullanici.username} - {r.cihaz.isim}",
+            'start': f"{r.tarih}T{r.baslangic_saati}:00",
+            'end': f"{r.tarih}T{r.bitis_saati}:00",
+            'color': renk,
+            # Modal için ek bilgiler:
+            'extendedProps': {
+                'cihaz_id': r.cihaz.isim,
+                'kullanici': r.kullanici.username,
+                'durum': r.get_durum_display()
+            }
+        })
+    
+    return JsonResponse(events, safe=False)

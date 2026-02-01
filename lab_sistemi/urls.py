@@ -61,6 +61,7 @@ urlpatterns = [
     path("lab/<int:lab_id>/", views.lab_detay, name="lab_detay"),
     path("cihaz/<int:cihaz_id>/", views.randevu_al, name="randevu_al"),
     path("ariza-bildir/<int:cihaz_id>/", views.ariza_bildir, name="ariza_bildir"),
+    path('api/randevular/', views.randevulari_getir, name='randevulari_getir'),
 
     # ========================================================
     # 6. KULLANICI PROFİLİ VE RANDEVULARIM
