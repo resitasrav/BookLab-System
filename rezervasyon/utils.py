@@ -24,8 +24,7 @@ def register_font():
         if not os.path.exists(font_path):
             font_path = os.path.join(
                 settings.BASE_DIR,
-                "static",
-                "fonts",
+                "static\fonts",
                 "DejaVuSans.ttf"
             )
 

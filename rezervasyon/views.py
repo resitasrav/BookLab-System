@@ -441,21 +441,24 @@ def sifre_sifirla_talep(request):
             protocol = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             
-            # --- BURADAN İTİBAREN SENİN KODUN BAŞLIYOR ---
             
             # 1. HTML İçeriği Hazırla
+            # Şablonun içindeki {% url %} etiketinin hata vermemesi için uid ve token'ı AYRI gönderiyoruz.
             html_content = render_to_string(
                 "password_reset_email.html", 
                 {
                     'user': user,
-                    'reset_link': f"{protocol}://{domain}{reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
+                    'protocol': protocol,
+                    'domain': domain,
+                    'uid': uid,    # Şablon bunu 'uid' olarak bekliyor
+                    'token': token # Şablon bunu 'token' olarak bekliyor
                 }
             )
 
             # 2. Düz Metin Halini Oluştur
             text_content = strip_tags(html_content)
 
-            # 3. Çok Alternatifli E-posta Nesnesini Oluştur
+            # 3. E-posta Nesnesini Oluştur
             email_obj = EmailMultiAlternatives(
                 subject="BTÜ Lab Sistemi | Şifre Sıfırlama",
                 body=text_content,
@@ -467,7 +470,6 @@ def sifre_sifirla_talep(request):
             email_obj.attach_alternative(html_content, "text/html")
             email_obj.send()
             
-            # --- KODUN BURADA BİTİYOR ---
 
             messages.success(request, "✅ Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.")
             return render(request, "password_reset_flow.html", {"stage": "done"})
