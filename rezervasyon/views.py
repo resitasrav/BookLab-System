@@ -36,7 +36,6 @@ from .utils import render_to_pdf
 
 logger = logging.getLogger(__name__)
 
-
 class CustomLoginView(auth_views.LoginView):
     template_name = "giris.html"
     form_class = EmailOrUsernameAuthenticationForm
@@ -424,7 +423,6 @@ def ariza_bildir_genel(request):
 # ============================================================
 #ŞİFRE SIFIRLAMA GÖRÜNÜMLERİ
 # ============================================================# views.py (Dekoratörü kaldırdık ve send_mail kısmını netleştirdik)
-
 def sifre_sifirla_talep(request):
     if request.method == "POST":
         email = request.POST.get('email')
@@ -471,3 +469,34 @@ def sifre_sifirla_talep(request):
             messages.error(request, "❌ Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı.")
             
     return render(request, "password_reset_flow.html", {"stage": "form"})
+
+# ============================================================
+#yeni doğrulama kodu gonderme
+# ============================================================
+def kod_tekrar_gonder(request):
+    user_id = request.session.get('dogrulama_user_id')
+    
+    if not user_id:
+        messages.error(request, "Oturum süresi dolmuş, lütfen tekrar kayıt olun.")
+        return redirect('kayit')
+
+    from django.contrib.auth.models import User
+    user = User.objects.get(id=user_id)
+    
+    # Yeni kod üret ve session'ı güncelle
+    yeni_kod = str(random.randint(100000, 999999))
+    request.session['dogrulama_kodu'] = yeni_kod
+    
+    try:
+        send_mail(
+            "BTÜ Lab Sistemi | Yeni Doğrulama Kodu",
+            f"Merhaba {user.username}, yeni doğrulama kodunuz: {yeni_kod}",
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        messages.success(request, "✅ Yeni doğrulama kodu e-posta adresinize gönderildi.")
+    except Exception as e:
+        messages.error(request, "❌ Kod gönderilirken bir hata oluştu.")
+
+    return redirect('email_dogrulama')
