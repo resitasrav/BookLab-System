@@ -1,4 +1,4 @@
-import json
+iimport json
 import logging
 import random
 import string
@@ -12,16 +12,19 @@ from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives # EmailMultiAlternatives buraya taşındı
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count
 from django.db import transaction
-#ŞİFRE SIFIRLAMA İÇİN
+from django.urls import reverse # 🟢 URL tersine çözümleme için eklendi
+
+# --- ŞİFRE SIFIRLAMA İÇİN GEREKLİLER ---
+from django.contrib.auth.tokens import default_token_generator # 🟢 NameError hatasını çözen kritik satır
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags # 🟢 Mail gövdesindeki HTML'i temizlemek için
 
 # --- MODELS & FORMS ---
 from .models import Laboratuvar, Cihaz, Randevu, Profil, Duyuru, Ariza
@@ -32,7 +35,9 @@ from .forms import (
     KayitFormu,
     EmailOrUsernameAuthenticationForm,
 )
-from .utils import render_to_pdf
+
+# --- UTILS ---
+from .utils import render_to_pdf # 🟢 PDF çıktısı almak için eklendi
 
 logger = logging.getLogger(__name__)
 
@@ -422,7 +427,7 @@ def ariza_bildir_genel(request):
     return redirect(request.META.get('HTTP_REFERER', 'anasayfa'))
 # ============================================================
 #ŞİFRE SIFIRLAMA GÖRÜNÜMLERİ
-# ============================================================# views.py (Dekoratörü kaldırdık ve send_mail kısmını netleştirdik)
+# ============================================================# 
 def sifre_sifirla_talep(request):
     if request.method == "POST":
         email = request.POST.get('email')
