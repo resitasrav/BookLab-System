@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.mail import send_mail, EmailMultiAlternatives # EmailMultiAlternatives buraya taşındı
 from django.core.serializers.json import DjangoJSONEncoder
