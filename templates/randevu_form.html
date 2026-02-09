@@ -60,6 +60,40 @@
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* MOBİL RESPONSIVE - TELEFON & TABLET */
+    @media (max-width: 992px) {
+        .booking-wrapper { padding: 1rem 0.5rem; }
+        .schedule-card, .form-card { padding: 1.5rem !important; border-radius: 15px; }
+        .form-label { font-size: 0.85rem; }
+        .form-control-btu { padding: 10px; font-size: 0.9rem; }
+        .btn-confirm { padding: 12px; font-size: 0.9rem; }
+        .occupied-slot { padding: 10px 12px; font-size: 0.85rem; }
+        h2 { font-size: 1.4rem; }
+        h5 { font-size: 1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .row.g-4 { gap: 1.5rem !important; }
+        .col-lg-5, .col-lg-7 { max-width: 100%; flex-basis: 100%; }
+        .schedule-card, .form-card { padding: 1.2rem !important; }
+        .badge { font-size: 0.75rem; }
+        input[type="date"], input[type="time"] { font-size: 16px; }
+        h2 { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 576px) {
+        .booking-wrapper { padding: 0.5rem 0; }
+        .schedule-card, .form-card { padding: 1rem !important; border-radius: 12px; }
+        h2 { font-size: 1.1rem; }
+        h4, h5 { font-size: 0.95rem; }
+        .form-label { font-size: 0.8rem; }
+        .form-control-btu { padding: 8px; font-size: 0.85rem; }
+        .btn-confirm { padding: 10px; font-size: 0.85rem; letter-spacing: 0; }
+        .occupied-slot { padding: 8px 10px; font-size: 0.8rem; margin-bottom: 8px; }
+        .row { gap: 0.5rem !important; }
+        .col-md-6 { width: 100%; }
+    }
 </style>
 
 <div class="container booking-wrapper mb-5">
@@ -80,7 +114,8 @@
                 <div class="bg-light rounded-4 p-3 mb-4">
                     <label class="form-label d-block mb-2 text-muted small">Farklı Bir Tarihe Bak:</label>
                     <form method="GET" class="d-flex gap-2">
-                        <input type="date" name="tarih" value="{{ secilen_tarih }}" 
+                        <input type="date" id="date_picker_left" name="tarih" value="{{ secilen_tarih }}" 
+                               min="{{ bugun_tarih }}"
                                class="form-control form-control-sm border-0 shadow-sm" 
                                onchange="this.form.submit()">
                     </form>
@@ -127,8 +162,10 @@
                         <label class="form-label">Seçili Tarih</label>
                         <div class="input-group shadow-sm rounded-3">
                             <span class="input-group-text bg-white border-0"><i class="bi bi-calendar-event text-primary"></i></span>
-                            <input type="date" name="tarih" value="{{ secilen_tarih }}" readonly 
-                                   class="form-control border-0 bg-light fw-bold text-primary">
+                            <input type="date" id="date_picker_right" name="tarih" value="{{ secilen_tarih }}" 
+                                   min="{{ bugun_tarih }}"
+                                   class="form-control border-0 bg-light fw-bold text-primary"
+                                   onchange="syncAndSubmit(this.value)">
                         </div>
                     </div>
 
@@ -161,4 +198,13 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Sağdaki takvim değiştiğinde URL'yi güncelleyerek sayfayı yeniler
+    function syncAndSubmit(dateValue) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tarih', dateValue);
+        window.location.href = url.toString();
+    }
+</script>
 {% endblock %}

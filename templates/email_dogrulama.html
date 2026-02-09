@@ -64,6 +64,45 @@
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 768px) {
+        .verify-card { border-radius: 1.2rem; }
+        .verify-header { padding: 1.8rem 1rem; }
+        h3 { font-size: 1.3rem; }
+        .display-6 { font-size: 2.5rem; }
+        p { font-size: 0.9rem; }
+        .code-input { font-size: 2rem !important; letter-spacing: 0.6rem; }
+        .btn-verify { padding: 0.8rem; font-size: 0.9rem; }
+        .card-body { padding: 1.5rem 1rem !important; }
+        .badge { font-size: 0.8rem !important; }
+    }
+
+    @media (max-width: 576px) {
+        .container { padding-left: 8px; padding-right: 8px; }
+        .verify-card { border-radius: 1rem; }
+        .verify-header { padding: 1.5rem 0.8rem; }
+        h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .display-6 { font-size: 2rem; }
+        p { font-size: 0.85rem; }
+        .code-input {
+            font-size: 1.8rem !important; letter-spacing: 0.5rem; padding: 0.75rem !important;
+        }
+        .btn-verify { padding: 0.7rem; font-size: 0.85rem; text-transform: capitalize; letter-spacing: 0; }
+        .card-body { padding: 1rem !important; }
+        .badge { font-size: 0.7rem !important; padding: 0.4rem 0.8rem; }
+        .mb-4 { margin-bottom: 1rem !important; }
+        .mt-4 { margin-top: 1rem !important; }
+        .pt-3 { padding-top: 0.75rem !important; }
+        .border-top { border-top: 1px solid #eee !important; }
+        .small { font-size: 0.75rem !important; }
+    }
+
+    @media (max-width: 360px) {
+        .verify-header { padding: 1.2rem 0.6rem; }
+        .code-input { font-size: 1.5rem !important; letter-spacing: 0.3rem; }
+        .btn-verify { padding: 0.6rem; font-size: 0.8rem; }
+    }
 </style>
 
 <div class="container">

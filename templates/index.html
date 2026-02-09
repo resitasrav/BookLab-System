@@ -11,16 +11,81 @@
         background-size: 30px 30px;
     }
 
-    /* Duyuru Kartı: Sağa Yaslı ve Modern */
-    .announcement-card {
-        border: none;
-        border-right: 5px solid var(--btu-accent); /* Sağa yaslı olduğu için sağa çizgi */
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.9);
+    /* ============================================================
+       DUYURU TİMELİNE STİLİ (Modern Tarihli Akış)
+       ============================================================ */
+    .announcement-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .announcement-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--btu-accent) 0%, #0056b3 100%);
+        border-radius: 3px;
+    }
+
+    .announcement-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        border-left: 4px solid var(--btu-accent);
         backdrop-filter: blur(5px);
         transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
-    .announcement-card:hover { transform: translateX(-5px); }
+
+    .announcement-item::before {
+        content: '';
+        position: absolute;
+        left: -3.5rem;
+        top: 1.5rem;
+        width: 16px;
+        height: 16px;
+        background: var(--btu-accent);
+        border: 4px solid white;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px var(--btu-accent);
+        z-index: 2;
+    }
+
+    .announcement-item:hover {
+        transform: translateX(8px);
+        box-shadow: 0 6px 16px rgba(0, 168, 204, 0.2);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    .announcement-date {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #fff;
+        background: var(--btu-accent);
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content {
+        font-size: 0.85rem;
+        color: #555;
+        line-height: 1.5;
+        margin-bottom: 0.5rem;
+    }
 
     /* Hero Alanı: Gradyan Geçişli */
     .hero-section {
@@ -39,60 +104,166 @@
         transform: translateY(-8px);
         box-shadow: 0 12px 25px rgba(0, 51, 102, 0.1) !important;
     }
-</style>
 
-{% if duyurular %}
-<div class="container mt-3">
-    <div class="row">
-        <div class="col-lg-7 offset-lg-5 col-md-9 offset-md-3">
-            <div class="d-flex align-items-center mb-2 justify-content-end">
-                <h6 class="fw-bold text-muted mb-0 small">
-                    <i class="bi bi-megaphone-fill me-2 text-warning"></i>GÜNCEL AKIŞ
-                </h6>
-            </div>
-            
-            {% for duyuru in duyurular %}
+    /* Giriş/Kayıt Kartı - Vurgulu */
+    .auth-card {
+        background: linear-gradient(135deg, rgba(0, 51, 102, 0.05) 0%, rgba(0, 168, 204, 0.05) 100%);
+        border: 2px solid var(--btu-accent);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .auth-card:hover {
+        box-shadow: 0 8px 20px rgba(0, 168, 204, 0.15);
+        transform: translateY(-4px);
+    }
+
+    /* Giriş/Kayıt Butonları - Daha Büyük ve Vurgulu */
+    .auth-buttons .btn {
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .auth-buttons .btn-primary {
+        background: linear-gradient(135deg, #0056b3 0%, var(--btu-accent) 100%);
+        border: none;
+    }
+
+    .auth-buttons .btn-primary:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 86, 179, 0.3);
+    }
+
+    .auth-buttons .btn-outline-dark {
+        border-width: 2px;
+        color: #1a1a1a;
+    }
+
+    .auth-buttons .btn-outline-dark:hover {
+        transform: scale(1.05);
+        background-color: #1a1a1a;
+    }
+
+    /* MOBİL RESPONSIVE - TELEFON */
+    @media (max-width: 768px) {
+        body { background-size: 20px 20px; }
+        .hero-section { padding: 2rem !important; border-radius: 16px; }
+        .hero-section h1 { font-size: 1.5rem !important; }
+        .hero-section .lead { font-size: 0.9rem; }
+        .lab-card { border-radius: 15px; }
+        .lab-card:hover { transform: translateY(-4px); }
+        .card { margin-bottom: 1rem; }
+        .btn { font-size: 0.9rem; padding: 0.6rem 1rem; }
+        h4 { font-size: 1.1rem; }
+        
+        .announcement-timeline { padding-left: 1.5rem; }
+        .announcement-item::before { left: -2.8rem; width: 12px; height: 12px; }
+        .announcement-item { padding: 0.8rem; font-size: 0.85rem; }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section { padding: 1.5rem !important; }
+        .hero-section h1 { font-size: 1.3rem !important; }
+        .hero-section .row { flex-direction: column; }
+        .card-body { padding: 1rem !important; }
+        .badge { font-size: 0.7rem; }
+        h5 { font-size: 1rem; }
+        h6 { font-size: 0.85rem; }
+        
+        .announcement-timeline { padding-left: 1.2rem; }
+        .announcement-item::before { left: -2.3rem; width: 10px; height: 10px; box-shadow: none; }
+        .announcement-item { margin-bottom: 1rem; padding: 0.7rem; }
+        .announcement-date { font-size: 0.65rem; padding: 3px 8px; }
+        .announcement-title { font-size: 0.85rem; }
+        .announcement-content { font-size: 0.8rem; }
+    }
+</style>{% if duyurular %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <h5 class="fw-bold text-primary mb-0">
+            <i class="bi bi-megaphone-fill me-2"></i>GÜNCEL AKIŞ
+        </h5>
+        <div class="ms-auto small text-muted">
+            <i class="bi bi-clock-history me-1"></i> Son Duyurular
+        </div>
+    </div>
+
+    <div class="announcement-timeline">
+        {% for duyuru in duyurular %}
             {% if duyuru.aktif_mi %}
-            <div id="duyuru-{{ duyuru.id }}" class="alert announcement-card shadow-sm alert-dismissible fade show mb-2" role="alert" style="display: none;">
-                <div class="d-flex justify-content-end text-end">
-                    <div class="pe-4">
-                        <h6 class="fw-bold mb-1 text-dark">{{ duyuru.baslik }}</h6>
-                        <p class="mb-1 text-muted small lh-sm">{{ duyuru.icerik }}</p>
-                        <small class="text-info d-block mt-1" style="font-size: 0.7rem;">
-                            <i class="bi bi-clock-history me-1"></i> {{ duyuru.tarih|date:"d F Y | H:i" }}
-                        </small>
-                    </div>
-                    <div class="flex-shrink-0 text-warning fs-4">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </div>
+            <div id="duyuru-{{ duyuru.id }}" class="announcement-item shadow-sm border-start border-4 border-info mb-3 p-3 bg-white rounded-3" style="display: none;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="announcement-date text-primary fw-bold small">
+                        <i class="bi bi-calendar-event me-1"></i>{{ duyuru.tarih|date:"d.m.Y" }}
+                    </span>
+                    <button type="button" class="btn-close btn-sm" onclick="duyuruyuKapat({{ duyuru.id }})" aria-label="Kapat"></button>
                 </div>
-                <button type="button" class="btn-close" onclick="duyuruyuKapat({{ duyuru.id }})" aria-label="Kapat"></button>
+                <h6 class="announcement-title fw-bold mb-1">{{ duyuru.baslik }}</h6>
+                <p class="announcement-content small mb-2 text-secondary">{{ duyuru.icerik }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                    <small class="text-muted" style="font-size: 0.7rem;">
+                        <i class="bi bi-clock-history me-1"></i> {{ duyuru.tarih|date:"H:i" }}
+                    </small>
+                </div>
             </div>
             {% endif %}
-            {% endfor %}
-        </div>
+        {% endfor %}
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        {% for duyuru in duyurular %}
-            if (!localStorage.getItem("duyuru_kapali_{{ duyuru.id }}")) {
-                document.getElementById("duyuru-{{ duyuru.id }}").style.display = "block";
+    // Sayfa yüklenir yüklenmez (DOMContentLoaded beklenmeden) kontrol başlasın
+    (function() {
+        // Django döngüsü yerine genel bir class seçici kullanarak çakışmaları önleyelim
+        const announcements = document.querySelectorAll('.announcement-item');
+        
+        announcements.forEach(item => {
+            const id = item.id.replace('duyuru-', '');
+            // LocalStorage kontrolü
+            if (!localStorage.getItem("duyuru_kapali_" + id)) {
+                item.style.display = "block";
             }
-        {% endfor %}
-    });
+        });
+    })();
 
     function duyuruyuKapat(id) {
+        // Kullanıcı kapattığında kaydet
         localStorage.setItem("duyuru_kapali_" + id, "true");
-        var element = document.getElementById("duyuru-" + id);
-        element.style.display = 'none';
+        const element = document.getElementById("duyuru-" + id);
+        if (element) {
+            // Hafif bir kapanış animasyonu
+            element.style.transition = "opacity 0.3s ease";
+            element.style.opacity = "0";
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 300);
+        }
     }
 </script>
 {% endif %}
 
-<div class="container mt-4">
-    <a href="{% url 'genel_takvim' %}" class="btn btn-warning w-100 py-3 shadow-sm border-0 rounded-4 text-dark position-relative overflow-hidden">
+<div class="container mt-5">
+    <div class="hero-section text-white p-5 shadow-lg mb-4 position-relative">
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-md-8">
+                {% if user.is_authenticated %}
+                <h1 class="fw-bold display-5 mb-2">Merhaba, {{ user.first_name }}! 👋</h1>
+                <p class="lead opacity-75">Bugün hangi laboratuvarda çalışma yapmayı planlıyorsun?</p>
+                {% else %}
+                <h1 class="fw-bold display-5 mb-2">BTÜ Laboratuvar Sistemi</h1>
+                <p class="lead opacity-75">Üniversitemizin teknik altyapısına buradan erişebilirsiniz.</p>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-end d-none d-md-block">
+                <i class="bi bi-cpu-fill display-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENEL KAMPÜS PROGRAMI - ANA VIEW'IN HEMEN ALTINDA -->
+    <a href="{% url 'genel_takvim' %}" class="btn btn-warning w-100 py-3 shadow-sm border-0 rounded-4 text-dark mb-5 position-relative overflow-hidden">
         <div class="d-flex justify-content-center align-items-center position-relative" style="z-index: 2;">
             <i class="bi bi-calendar-week-fill fs-3 me-3 text-primary"></i>
             <div class="text-start">
@@ -104,27 +275,9 @@
     </a>
 </div>
 
-<div class="container mt-4">
-    <div class="hero-section text-white p-5 shadow-lg mb-5 position-relative">
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-md-8">
-                {% if user.is_authenticated %}
-                <h1 class="fw-bold display-5 mb-2">Merhaba, {{ user.first_name }}! 👋</h1>
-                <p class="lead opacity-75">Bugün hangi laboratuvarda çalışma yapmayı planlıyorsun?</p>
-                {% else %}
-                <h1 class="fw-bold display-5 mb-2">BTÜ Lab Portalı</h1>
-                <p class="lead opacity-75">Üniversitemizin teknik altyapısına buradan erişebilirsiniz.</p>
-                {% endif %}
-            </div>
-            <div class="col-md-4 text-end d-none d-md-block">
-                <i class="bi bi-cpu-fill display-1 opacity-25"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="container mb-5">
     <div class="row g-4">
+        <!-- LAB KARTLARI - SOL TARAF (8 KOLON) -->
         <div class="col-lg-8">
             <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
                 <span class="bg-primary text-white p-2 rounded-3 me-3"><i class="bi bi-flask"></i></span>
@@ -153,8 +306,10 @@
             </div>
         </div>
 
+        <!-- HESAP ÖZETİ & GİRİŞ/KAYIT - SAĞ TARAF (4 KOLON) -->
         <div class="col-lg-4">
             {% if user.is_authenticated %}
+            <!-- HESAP ÖZETİ -->
             <div class="card shadow-sm border-0 mb-4 rounded-4 bg-white">
                 <div class="card-body p-4">
                     <h6 class="text-uppercase text-muted small fw-bold mb-3 border-bottom pb-2">HESAP ÖZETİ</h6>
@@ -167,6 +322,7 @@
             </div>
             
             {% if siradaki_randevu %}
+            <!-- SIRADAKİ RANDEVU -->
             <div class="card shadow border-0 mb-4 border-start border-5 border-success rounded-4" style="background: #fdfdfd;">
                 <div class="card-body p-4">
                     <h6 class="fw-bold text-success small mb-3 uppercase"><i class="bi bi-lightning-charge-fill me-1"></i> SIRADAKİ İŞLEM</h6>
@@ -181,7 +337,8 @@
             {% endif %}
 
             {% if user.is_staff %}
-            <div class="card shadow-sm border-0 mb-4 border-top border-5 border-danger rounded-4">
+            <!-- EĞİTMEN YÖNETİM MERKEZI -->
+            <div class="card shadow-sm border-0 border-top border-5 border-danger rounded-4">
                 <div class="card-body p-4 text-center">
                     <i class="bi bi-speedometer2 text-danger display-6 mb-2 d-block"></i>
                     <h6 class="fw-bold text-danger mb-3">Eğitmen Yönetim Merkezi</h6>
@@ -191,16 +348,30 @@
             {% endif %}
 
             {% else %}
-            <div class="card shadow-sm border-0 bg-white text-center p-5 rounded-4">
-                <div class="bg-light rounded-circle d-inline-flex p-4 mb-3 mx-auto">
-                    <i class="bi bi-person-lock fs-1 text-primary"></i>
+            <!-- GİRİŞ GEREKLİ - VURGULIİ KART -->
+            <div class="card auth-card shadow-lg p-5 rounded-4 text-center">
+                <div style="background: linear-gradient(135deg, #0056b3 0%, #00a8cc 100%); border-radius: 16px; padding: 2rem; margin: -3rem -3rem 1.5rem -3rem;">
+                    <i class="bi bi-person-lock" style="font-size: 3rem; color: white;"></i>
                 </div>
-                <h5 class="fw-bold">Giriş Gerekli</h5>
-                <p class="text-muted small">Randevu oluşturmak için lütfen BTÜ hesabınızla giriş yapın.</p>
-                <div class="d-grid gap-2 mt-4">
-                    <a href="{% url 'giris' %}" class="btn btn-primary rounded-pill py-2 fw-bold">Giriş Yap</a>
-                    <a href="{% url 'kayit' %}" class="btn btn-outline-dark rounded-pill py-2">Kayıt Ol</a>
+                
+                <h5 class="fw-bold mb-2">Giriş Gerekli</h5>
+                <p class="text-muted mb-4">
+                    Randevu oluşturmak ve laboratuvarlara erişmek için lütfen BTÜ hesabınızla giriş yapın.
+                </p>
+                
+                <div class="d-grid gap-3 auth-buttons">
+                    <a href="{% url 'giris' %}" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap
+                    </a>
+                    <a href="{% url 'kayit' %}" class="btn btn-outline-dark rounded-pill py-3 fw-bold">
+                        <i class="bi bi-person-plus me-2"></i>Kayıt Ol (Yeni Kullanıcı)
+                    </a>
                 </div>
+
+                <small class="text-muted d-block mt-4 pt-3 border-top">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Henüz BTÜ hesabınız yok mu? Kayıt ol sayfasına giderek hemen başlayın.
+                </small>
             </div>
             {% endif %}
         </div>

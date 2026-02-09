@@ -89,6 +89,7 @@ urlpatterns = [
     path("ariza-bildir/<int:cihaz_id>/", views.ariza_bildir, name="ariza_bildir"),
     path("sorun-bildir/", views.ariza_bildir_genel, name="ariza_bildir_genel"),
     path('lab/<int:lab_id>/takvim/', views.lab_takvim, name='lab_takvim'),
+    path('yonetim/cihaz-durum/<int:cihaz_id>/', views.cihaz_durum_degistir, name='cihaz_durum_degistir'),
 
     # ========================================================
     # 6. KULLANICI PROFİLİ VE YÖNETİM

@@ -73,6 +73,51 @@
     .fc-button-primary:hover { background-color: var(--btu-accent) !important; }
 
     .fc-day-today { background-color: rgba(0, 168, 204, 0.05) !important; }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 992px) {
+        .container-fluid { padding-left: 12px; padding-right: 12px; }
+        #calendar { min-height: 600px; padding: 10px; }
+        h2 { font-size: 1.3rem; }
+        .breadcrumb { font-size: 0.8rem; }
+    }
+
+    @media (max-width: 768px) {
+        .container-fluid { padding-left: 8px; padding-right: 8px; }
+        .row.mb-4 { gap: 1rem; }
+        .col-md-8, .col-md-4 { width: 100%; max-width: 100%; }
+        h2 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+        #calendar { min-height: 500px; padding: 8px; }
+        .card { border-radius: 15px; }
+        .fc-toolbar { flex-wrap: wrap; gap: 0.5rem; }
+        .fc-toolbar-title { font-size: 1rem; }
+        .fc-button { font-size: 0.8rem; padding: 0.4rem 0.8rem !important; }
+        .fc-event { font-size: 0.7rem; }
+        .breadcrumb.mb-2 { margin-bottom: 0.3rem !important; }
+    }
+
+    @media (max-width: 576px) {
+        .container-fluid { padding-left: 4px; padding-right: 4px; }
+        .d-flex.justify-content-between { flex-direction: column; gap: 0.5rem; }
+        .text-md-end { text-align: start !important; }
+        h2 { font-size: 1rem; }
+        p { font-size: 0.75rem; padding-left: 0 !important; }
+        .breadcrumb { font-size: 0.7rem; }
+        .btn { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
+        .card { border-radius: 12px; padding: 0.3rem 0 !important; }
+        #calendar { min-height: 400px; padding: 4px; }
+        .fc-toolbar { flex-direction: column; }
+        .fc-toolbar-title { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .fc-button { font-size: 0.7rem; padding: 0.35rem 0.6rem !important; }
+        .fc-event { font-size: 0.65rem; padding: 1px 2px !important; }
+        .custom-event-node { font-size: 0.6rem; }
+    }
+
+    @media (max-width: 360px) {
+        .fc-toolbar-title { font-size: 0.8rem; }
+        .fc-button { font-size: 0.6rem; }
+        #calendar { min-height: 350px; }
+    }
 </style>
 
 <div class="container-fluid mt-2 mb-5 px-lg-5">

@@ -120,11 +120,35 @@ class Randevu(models.Model):
 
 # 4. Profil
 class Profil(models.Model):
+    # ✨ ÖĞRENCI STATUS SEÇENEKLERI
+    STATUS_CHOICES = [
+        ('pasif_ogrenci', 'Pasif Öğrenci (Email Doğrulı)'),
+        ('aktif_ogrenci', 'Aktif Öğrenci (Admin Onaylı)'),
+        ('iptal', 'İptal Edildi'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Kullanıcı")
     okul_numarasi = models.CharField(max_length=20, blank=True, verbose_name="Okul Numarası")
     telefon = models.CharField(max_length=15, blank=True, verbose_name="Telefon Numarası")
     resim = models.ImageField(upload_to="profil_resimleri/", blank=True, null=True, verbose_name="Profil Resmi")
     dogrulama_kodu = models.CharField(max_length=6, blank=True, null=True, verbose_name="E-Posta Doğrulama Kodu")
+    
+    # ✨ YENİ ALANLAR:
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pasif_ogrenci',
+        verbose_name="Öğrenci Durumu"
+    )
+    email_dogrulandi = models.BooleanField(
+        default=False,
+        verbose_name="Email Doğrulandı mı?"
+    )
+    email_dogrulama_tarihi = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Email Doğrulama Tarihi"
+    )
 
     class Meta:
         verbose_name = "Kullanıcı Profili"

@@ -68,6 +68,40 @@
         border-bottom: 2px solid #f0f4f8;
         padding-bottom: 0.5rem;
     }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 992px) {
+        .col-lg-8 { width: 100%; max-width: 100%; }
+        .profile-card { border-radius: 15px; }
+        .profile-header { padding: 2rem 1rem; }
+        h3 { font-size: 1.3rem; }
+        p { font-size: 0.9rem; }
+    }
+
+    @media (max-width: 768px) {
+        .profile-header { padding: 1.5rem 1rem; }
+        .profile-img-container { margin-top: -60px; }
+        .profile-img { width: 120px; height: 120px; border: 5px solid #fff; }
+        .form-label { font-size: 0.8rem; }
+        .form-control { padding: 0.65rem 0.8rem; font-size: 0.9rem; }
+        .section-title { font-size: 1rem; }
+        h3 { font-size: 1.15rem; }
+        .btn { font-size: 0.85rem; }
+    }
+
+    @media (max-width: 576px) {
+        .container { padding-left: 8px; padding-right: 8px; }
+        .card { border-radius: 12px; }
+        .profile-header { padding: 1.2rem 0.8rem; }
+        .profile-img-container { margin-top: -50px; }
+        .profile-img { width: 100px; height: 100px; border: 4px solid #fff; }
+        h3 { font-size: 1rem; }
+        p { font-size: 0.8rem; }
+        .form-label { font-size: 0.75rem; }
+        .form-control { padding: 0.6rem 0.7rem; font-size: 0.85rem; }
+        .section-title { font-size: 0.9rem; }
+        .btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+    }
 </style>
 
 <div class="container mt-2 mb-5">

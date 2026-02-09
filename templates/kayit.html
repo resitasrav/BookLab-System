@@ -59,6 +59,47 @@
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
     }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 768px) {
+        .register-card { border-radius: 1.2rem; }
+        .register-header { padding: 1.5rem; border-radius: 1.2rem 1.2rem 0 0; }
+        .register-header h3 { font-size: 1.3rem; }
+        .card-body { padding: 1.5rem 1rem !important; }
+        label { font-size: 0.9rem; }
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
+            font-size: 0.95rem; padding: 0.65rem 0.8rem;
+        }
+        .helptext { font-size: 0.7rem; }
+        .register-btn { padding: 0.8rem; font-size: 0.9rem; }
+    }
+
+    @media (max-width: 576px) {
+        .register-card { border-radius: 1rem; }
+        .register-header { padding: 1.2rem; }
+        .register-header h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
+        .register-header p { font-size: 0.8rem; }
+        .card-body { padding: 1rem !important; }
+        .django-form-wrapper { margin-bottom: 1rem; }
+        .django-form-wrapper p { margin-bottom: 1rem; }
+        label { font-size: 0.85rem; margin-bottom: 4px; }
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
+            font-size: 16px; padding: 0.6rem 0.7rem;
+        }
+        .helptext { font-size: 0.65rem; margin-top: 2px; }
+        .register-btn { padding: 0.7rem; font-size: 0.85rem; }
+        .card-footer { padding: 0.8rem !important; }
+        .card-footer p { font-size: 0.75rem; }
+    }
+
+    @media (max-width: 360px) {
+        .register-header { padding: 1rem; }
+        .card-body { padding: 0.8rem !important; }
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
+            font-size: 16px; padding: 0.5rem 0.6rem;
+        }
+        .register-btn { padding: 0.6rem; font-size: 0.8rem; }
+    }
 </style>
 
 <div class="container">

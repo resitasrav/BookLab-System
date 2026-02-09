@@ -51,6 +51,42 @@
         color: white;
         box-shadow: 0 5px 15px rgba(0, 86, 179, 0.3);
     }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 992px) {
+        .lab-header-box { padding: 1.5rem; border-radius: 15px; }
+        .lab-header-box h2 { font-size: 1.3rem; }
+        .lab-header-box p { font-size: 0.9rem; }
+        .breadcrumb { margin-bottom: 0.5rem; }
+        .btn { font-size: 0.85rem; }
+        h4 { font-size: 1.1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .lab-header-box { padding: 1.2rem; margin-bottom: 1.5rem; }
+        .lab-header-box h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .lab-header-box p { font-size: 0.85rem; }
+        .lab-header-box .flex-wrap { flex-direction: column; }
+        .lab-header-box .btn { width: 100%; }
+        .device-card { border-radius: 15px; }
+        .device-card:hover { transform: translateY(-4px); }
+        .card-body { padding: 1rem !important; }
+        h5 { font-size: 1rem; }
+        .badge { font-size: 0.7rem; }
+    }
+
+    @media (max-width: 576px) {
+        .lab-header-box { padding: 1rem; }
+        .lab-header-box h2 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .lab-header-box p { font-size: 0.8rem; }
+        .breadcrumb { font-size: 0.75rem; }
+        .device-card { border-radius: 12px; }
+        .card-body { padding: 0.8rem !important; }
+        h5 { font-size: 0.9rem; }
+        h6 { font-size: 0.8rem; }
+        .btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+        .status-dot { height: 8px; width: 8px; }
+    }
 </style>
 
 <div class="container mt-2 mb-5">

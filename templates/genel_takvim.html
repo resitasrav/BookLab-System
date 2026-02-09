@@ -72,6 +72,51 @@
         font-weight: 600 !important;
     }
     .fc-button-primary:hover { background-color: var(--btu-accent) !important; }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 992px) {
+        .container-fluid { padding-left: 12px; padding-right: 12px; }
+        #calendar { min-height: 600px; padding: 10px; }
+        h2 { font-size: 1.3rem; }
+        .fc-toolbar-title { font-size: 1.1rem; }
+        .fc-event { font-size: 0.75rem; }
+    }
+
+    @media (max-width: 768px) {
+        .container-fluid { padding-left: 8px; padding-right: 8px; }
+        .row.mb-4 { gap: 1rem; }
+        .col-md-8, .col-md-4 { width: 100%; max-width: 100%; }
+        h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        p { font-size: 0.85rem; }
+        .card { border-radius: 15px; }
+        #calendar { min-height: 500px; padding: 8px; }
+        .fc-toolbar { flex-wrap: wrap; gap: 0.5rem; }
+        .fc-toolbar-title { font-size: 1rem; }
+        .fc-button { font-size: 0.8rem; padding: 0.4rem 0.8rem !important; }
+        .fc-event { font-size: 0.7rem; }
+        .custom-event-node { font-size: 0.65rem; }
+    }
+
+    @media (max-width: 576px) {
+        .container-fluid { padding-left: 4px; padding-right: 4px; }
+        .d-flex.justify-content-between { flex-direction: column; gap: 0.5rem; }
+        .text-md-end { text-align: start !important; }
+        h2 { font-size: 1.05rem; }
+        p { font-size: 0.75rem; padding-left: 0 !important; }
+        .btn { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
+        .card { border-radius: 12px; padding: 0.5rem 0 !important; }
+        #calendar { min-height: 400px; padding: 4px; }
+        .fc-toolbar { flex-direction: column; }
+        .fc-toolbar-title { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .fc-button { font-size: 0.7rem; padding: 0.35rem 0.6rem !important; }
+        .fc-event { font-size: 0.65rem; padding: 1px 2px !important; }
+    }
+
+    @media (max-width: 360px) {
+        .fc-toolbar-title { font-size: 0.8rem; }
+        .fc-button { font-size: 0.6rem; }
+        #calendar { min-height: 350px; }
+    }
 </style>
 
 <div class="container-fluid mt-2 mb-5 px-lg-5">
@@ -80,7 +125,7 @@
             <h2 class="fw-bold text-primary mb-1">
                 <i class="bi bi-calendar-range-fill me-2 text-info"></i>Genel Labratuvar Takvimi
             </h2>
-            <p class="text-muted small ps-4"> saatleri görmek için etkinliğe tıklayın.</p>
+            <p class="text-muted small ps-4"> Saatleri görmek için etkinliğe tıklayın.</p>
         </div>
         <div class="col-md-4 text-md-end">
             <a href="{% url 'randevularim' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">

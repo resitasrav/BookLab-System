@@ -20,7 +20,15 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count
 from django.db import transaction
 from django.urls import reverse # 🟢 URL tersine çözümleme için eklendi
-
+from django.db.models import Q 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Cihaz
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+#from .decorators import staff_member_required # Kendi dekoratörün veya Django'nunki
+from .models import Cihaz
 # --- ŞİFRE SIFIRLAMA İÇİN GEREKLİLER ---
 from django.contrib.auth.tokens import default_token_generator # 🟢 NameError hatasını çözen kritik satır
 from django.utils.http import urlsafe_base64_encode
@@ -47,22 +55,46 @@ class CustomLoginView(auth_views.LoginView):
     form_class = EmailOrUsernameAuthenticationForm
 
     def form_invalid(self, form):
-        # If authentication failed, check whether an account exists but is inactive
+        """
+        Kullanıcı giriş yapamadığında:
+        1. Hesap bulunmuş mu?
+        2. Neden aktif değil?
+           - Email doğrulanmadı mı?
+           - Email doğrulandı ama admin başlamadı mı?
+           - Hesap iptal edilmiş mi?
+        """
         identifier = self.request.POST.get("username", "").strip()
-        pasif_mesaj = None
+        durum_mesaji = None
+        
         if identifier:
-            # Look up by username or email
+            # Kullanıcıyı username veya email ile ara
             user_qs = User.objects.filter(username__iexact=identifier) | User.objects.filter(email__iexact=identifier)
             user = user_qs.first()
+            
             if user and not user.is_active:
-                pasif_mesaj = (
-                    "Hesabınız henüz aktif değil veya onay bekliyor. "
-                    "Lütfen yöneticinizle iletişime geçin veya kayıt e-postanızı kontrol edin."
-                )
-
+                # ✅ Kullanıcı bulundu ama is_active=False
+                try:
+                    profil = Profil.objects.get(user=user)
+                    
+                    # 📧 EMAIL DOĞRULANDı MI?
+                    if not profil.email_dogrulandi:
+                        durum_mesaji = "📧 Email adresiniz henüz doğrulanmamıştır. Lütfen gelen kutuğunuzu kontrol edin."
+                    
+                    # ✅ EMAIL DOĞRULANDIYSA?
+                    elif profil.status == 'pasif_ogrenci' and profil.email_dogrulandi:
+                        durum_mesaji = "⏳ Email doğrulandı! Ancak yönetici tarafından onaylanmayı beklemektedir."
+                    
+                    # ❌ HESAP İPTAL EDİLMİŞ?
+                    elif profil.status == 'iptal':
+                        durum_mesaji = "❌ Hesabınız yönetici tarafından iptal edilmiştir. Lütfen iletişime geçin."
+                    
+                except Profil.DoesNotExist:
+                    durum_mesaji = "Hesabınızda bir sorun oluştu. Lütfen yöneticinizle iletişime geçin."
+        
         context = self.get_context_data(form=form)
-        if pasif_mesaj:
-            context["pasif_mesaj"] = pasif_mesaj
+        if durum_mesaji:
+            context["pasif_mesaj"] = durum_mesaji
+        
         return self.render_to_response(context)
 
 # ============================================================
@@ -90,7 +122,13 @@ def check_overlap(cihaz, tarih, baslangic, bitis, exclude_id=None):
 def anasayfa(request):
     labs = Laboratuvar.objects.all()
     duyurular = Duyuru.objects.filter(aktif_mi=True).order_by("-tarih")
-    context = {"labs": labs, "duyurular": duyurular}
+    duyurular = Duyuru.objects.filter(aktif_mi=True).order_by("-tarih")
+    
+    context = {
+        "labs": labs, 
+        "duyurular": duyurular,
+        "bugun": timezone.now().date() # tarih bazlı filtreleme 
+    }
 
     if request.user.is_authenticated:
         aktif_sorgu = Randevu.objects.filter(
@@ -181,39 +219,133 @@ def lab_events_api(request, lab_id):
 @login_required
 def randevu_al(request, cihaz_id):
     secilen_cihaz = get_object_or_404(Cihaz, id=cihaz_id)
+    simdi = timezone.now()
+
+    secilen_tarih_str = request.GET.get("tarih")
+    try:
+        if secilen_tarih_str:
+            secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date()
+        else:
+            secilen_tarih = simdi.date()
+    except ValueError:
+        secilen_tarih = simdi.date()
+    
     if not secilen_cihaz.aktif_mi:
         messages.error(request, f"⛔ '{secilen_cihaz.isim}' bakımda.")
         return redirect("lab_detay", lab_id=secilen_cihaz.lab.id)
 
+    # Tarih belirleme (Hata korumalı)
     secilen_tarih_str = request.GET.get("tarih")
-    secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date() if secilen_tarih_str else datetime.now().date()
+    try:
+        secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date() if secilen_tarih_str else timezone.now().date()
+    except ValueError:
+        secilen_tarih = timezone.now().date()
 
     if request.method == "POST":
         try:
             t_obj = datetime.strptime(request.POST.get("tarih"), "%Y-%m-%d").date()
-            b_obj = datetime.strptime(request.POST.get("baslangic"), "%H:%M").time()
-            bit_obj = datetime.strptime(request.POST.get("bitis"), "%H:%M").time()
+            b_saat_ham = datetime.strptime(request.POST.get("baslangic"), "%H:%M")
+            bit_saat_ham = datetime.strptime(request.POST.get("bitis"), "%H:%M")
+
+            #  SAAT YUVARLAMA MANTIĞI ---
+            def yuvarla(dt):
+                # Dakikayı al: 0-14 -> 00 | 15-44 -> 30 | 45-59 -> Sonraki Saat :00
+                dakika = dt.minute
+                if dakika < 15:
+                    return dt.replace(minute=0, second=0)
+                elif dakika < 45:
+                    return dt.replace(minute=30, second=0)
+                else:
+                    return (dt + timedelta(hours=1)).replace(minute=0, second=0)
+
+            b_saat_yuvarlak = yuvarla(b_saat_ham).time()
+            bit_saat_yuvarlak = yuvarla(bit_saat_ham).time()
+            
+            # Değişkenleri güncelle
+            b_obj = b_saat_yuvarlak
+            bit_obj = bit_saat_yuvarlak
+            secilen_tarih = t_obj 
+
         except Exception:
-            messages.error(request, "⚠️ Geçersiz tarih/saati formatı gönderildi.")
+            messages.error(request, "⚠️ Geçersiz tarih/saat formatı.")
             return redirect("randevu_al", cihaz_id=cihaz_id)
 
-        # Transaction içinde tekrar kontrol ederek race condition riskini azalt
+        # Zaman Nesnelerini Hazırla
+        simdi = timezone.now()
+        baslangic_dt = timezone.make_aware(datetime.combine(t_obj, b_obj))
+        bitis_dt = timezone.make_aware(datetime.combine(t_obj, bit_obj))
+        
+        # 1. KURAL: Geçmişe Randevu Engeli
+        if baslangic_dt < simdi:
+            messages.error(request, "❌ Geçmiş bir zamana randevu alamazsınız.")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        # 2. KURAL: IPTAL_MIN_SURE_SAAT Kontrolü
+        limit_vakti = simdi + timedelta(hours=settings.IPTAL_MIN_SURE_SAAT)
+        if baslangic_dt < limit_vakti:
+            messages.error(request, f"⚠️ Randevu en geç {settings.IPTAL_MIN_SURE_SAAT} saat önceden alınmalıdır.")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        #  SÜRE KISITLAMALARI ---
+        fark = (bitis_dt - baslangic_dt).total_seconds() / 3600
+
+        # Min 1 Saat Kontrolü
+        if fark < 1:
+            messages.error(request, "⚠️ En az 1 saatlik randevu almalısınız. (Saatler otomatik yuvarlanmıştır)")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        # Max 3 Saat Kontrolü (settings.MAX_RANDEVU_SAATI kullanıldı)
+        if fark > settings.MAX_RANDEVU_SAATI:
+            messages.error(request, f"⚠️ En fazla {settings.MAX_RANDEVU_SAATI} saatlik randevu alabilirsiniz.")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        if fark <= 0:
+            messages.error(request, "⚠️ Bitiş saati başlangıçtan sonra olmalıdır.")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+# Çakışma Kontrolü ve Kayıt
         with transaction.atomic():
-            if check_overlap(secilen_cihaz, t_obj, b_obj, bit_obj):
-                messages.error(request, "⚠️ Bu saat aralığı DOLU!")
+            # 1. Kontrol: Cihaz bazlı çakışma (Mevcut check_overlap fonksiyonun)
+            cihaz_cakisiyor = check_overlap(secilen_cihaz, t_obj, b_obj, bit_obj)
+
+            # 2. Kontrol: Kullanıcı bazlı çakışma (Kullanıcı başka bir cihazda mı?)
+            # Sadece onay bekleyen veya onaylanan randevulara bakar, iptalleri saymaz.
+            kullanici_cakisiyor = Randevu.objects.filter(
+                kullanici=request.user,
+                tarih=t_obj,
+                durum__in=['onay_bekleniyor', 'onaylandi'],
+                baslangic_saati__lt=bit_obj, # Başlangıç saati bitişten önceyse
+                bitis_saati__gt=b_obj        # Bitiş saati başlangıçtan sonraysa
+            ).exists()
+
+            if cihaz_cakisiyor:
+                messages.error(request, "⚠️ Bu saat aralığı DOLU veya yuvarlanan saatler çakışmaya neden oldu!")
+            elif kullanici_cakisiyor:
+                messages.error(request, "⚠️ Aynı zaman diliminde başka bir laboratuvar/cihaz için zaten bir randevunuz bulunuyor!")
             else:
-                Randevu.objects.create(kullanici=request.user, cihaz=secilen_cihaz, tarih=t_obj, baslangic_saati=b_obj, bitis_saati=bit_obj)
-                messages.success(request, "✅ Randevu oluşturuldu, onay bekleniyor.")
+                # Her iki kontrol de geçerliyse kaydı yap
+                Randevu.objects.create(
+                    kullanici=request.user, 
+                    cihaz=secilen_cihaz, 
+                    tarih=t_obj, 
+                    baslangic_saati=b_obj, 
+                    bitis_saati=bit_obj
+                )
+                messages.success(request, f"✅ Randevu {b_obj.strftime('%H:%M')} - {bit_obj.strftime('%H:%M')} arasına oluşturuldu.")
                 return redirect("randevularim")
 
-        # Eğer POST ile gelindiyse, template'de seçilen tarihi POST verisinden göster
-        secilen_tarih = t_obj
+    # Mevcut randevuları listele (Sadece Onay Bekleyen ve Onaylanmış olanlar)
+    mevcut_randevular = Randevu.objects.filter(
+        cihaz=secilen_cihaz, 
+        tarih=secilen_tarih,
+        durum__in=['onay_bekleniyor', 'onaylandi'] # 🟢 Bu kısım iptalleri gizler
+    ).order_by("baslangic_saati")
 
-    # Mevcut randevuları sağ tarafta listelemek için template'in beklediği
-    # context anahtarını sağlayalım.
-    mevcut_randevular = Randevu.objects.filter(cihaz=secilen_cihaz, tarih=secilen_tarih).order_by("baslangic_saati")
-    return render(request, "randevu_form.html", {"cihaz": secilen_cihaz, "secilen_tarih": secilen_tarih.strftime("%Y-%m-%d"), "mevcut_randevular": mevcut_randevular})
-
+    return render(request, "randevu_form.html", {
+        "cihaz": secilen_cihaz, 
+        "secilen_tarih": secilen_tarih.strftime("%Y-%m-%d"), 
+        "bugun_tarih": simdi.strftime("%Y-%m-%d"),
+        "mevcut_randevular": mevcut_randevular
+    })
 @login_required
 def randevularim(request):
     # Tüm randevuları çekiyoruz
@@ -314,16 +446,24 @@ def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
+            # ✅ ADIM 1: User Oluştur (PASİF - Asla Giriş Yapamaz)
             user = form.save(commit=False)
-            user.is_active = False  # 🔴 Burası kritik: Kullanıcıyı PASİF yapar
-            user.save() 
+            user.is_active = False  # 🔴 Email doğrulana kadar AKTİF OLMAYACAK
+            user.save()
             
-            # Doğrulama kodu üret ve session'a at
+            # ✅ ADIM 2: Profil Oluştur ve Durumunu Belirle
+            # (post_save signal ile otomatik oluşturulur, durumunu set et)
+            profil = Profil.objects.get(user=user)
+            profil.status = 'pasif_ogrenci'          # ← Pasif Öğrenci
+            profil.email_dogrulandi = False          # ← Email henüz doğrulanmadı
+            profil.save()
+            
+            # ✅ ADIM 3: Doğrulama Kodu Üret
             dogrulama_kodu = str(random.randint(100000, 999999))
             request.session['dogrulama_kodu'] = dogrulama_kodu
             request.session['dogrulama_user_id'] = user.id
 
-            # Mail gönderimi
+            # ✅ ADIM 4: Email Gönder
             try:
                 send_mail(
                     "BTÜ Lab Kayıt Doğrulama",
@@ -332,39 +472,60 @@ def kayit(request):
                     [user.email],
                     fail_silently=False
                 )
+                messages.success(request, "Kayıt başarılı! Lütfen mailine gelen kodu gir.")
+                return redirect("email_dogrulama")
+            
             except Exception as e:
-                print(f"Mail Hatası: {e}") # Hatayı sunucu logunda görebilirsin
-
-            messages.success(request, "Kayıt başarılı! Lütfen mailine gelen kodu gir.")
-            return redirect("email_dogrulama")
+                # ⚠️ EMAIL GÖNDERME HATASI - KULLANICIYI SİL
+                print(f"Mail Hatası: {e}")
+                messages.error(request, "❌ Email gönderilemedi. Lütfen yöneticiye başvurun.")
+                user.delete()  # 🗑️ Başarısız kayıt siliniyor
+                return render(request, "kayit.html", {"form": KayitFormu()})
     else:
         form = KayitFormu()
+    
     return render(request, "kayit.html", {"form": form})
 
 def email_dogrulama(request):
     user_id = request.session.get('dogrulama_user_id')
     dogrulama_kodu = request.session.get('dogrulama_kodu')
     
+    # ❌ Session'da veri yoksa kayıt sayfasına gönder
     if not user_id or not dogrulama_kodu:
+        messages.error(request, "❌ Oturum süresi dolmuş. Lütfen tekrar kayıt olun.")
         return redirect("kayit")
 
     if request.method == "POST":
-        girilen_kod = request.POST.get("kod")
+        girilen_kod = request.POST.get("kod", "").strip()
         
-        # Sabit '123456' yerine session'daki rastgele kodu kontrol ediyoruz
-        if girilen_kod == dogrulama_kodu: 
-            from django.contrib.auth.models import User
+        # ✅ KOD DOĞRU MU?
+        if girilen_kod == dogrulama_kodu:
             user = get_object_or_404(User, id=user_id)
-            user.is_active = True # 🟢 Şimdi aktif ediyoruz
-            user.save()
             
+            # ✨ PROFIL'İ GÜNCELLE - Email Doğrulı Yap
+            profil = Profil.objects.get(user=user)
+            profil.email_dogrulandi = True                      # ✅ Email DOĞRULANDI
+            profil.email_dogrulama_tarihi = timezone.now()      # ✅ Tarih Kaydet
+            profil.status = 'pasif_ogrenci'                     # ✅ Pasif Öğrenci
+            profil.save()
+            
+            # 🔴 USER ASLA AKTİF OLMAYACAK - ADMIN KARAR VERECEK
+            # user.is_active = True  ← YAPILMIYOR!
+            
+            # 🗑️ Session'da Verileri Sil
             del request.session['dogrulama_user_id']
             del request.session['dogrulama_kodu']
             
-            messages.success(request, "🎉 Hesabınız doğrulandı! Giriş yapabilirsiniz.")
+            messages.success(
+                request, 
+                "🎉 Email doğrulandı! Admin tarafından onaylanmayı beklemektedir."
+            )
             return redirect("giris")
+        
         else:
+            # ❌ KOD YANLIŞ
             messages.error(request, "❌ Hatalı doğrulama kodu.")
+            # Session kalır, tekrar deneyebilir
 
     return render(request, "email_dogrulama.html")
 @login_required
@@ -388,21 +549,112 @@ def randevu_pdf_indir(request):
         filename
     )
 @staff_member_required
-def ogrenci_listesi(request): return render(request, "yonetim_ogrenciler.html", {"ogrenciler": Profil.objects.all()})
+def ogrenci_listesi(request):
+    # Öğrencileri en son kayıt olandan (ID'ye göre ters) başlayarak alıyoruz
+    ogrenciler = Profil.objects.all().order_by('-id')
+
+    # Arama parametresini URL'den yakala (?q=...)
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        # İsim, soyisim, kullanıcı adı veya okul numarasına göre ara
+        ogrenciler = ogrenciler.filter(
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(user__username__icontains=query) |
+            Q(okul_numarasi__icontains=query)
+        ).distinct()
+
+    return render(request, "yonetim_ogrenciler.html", {
+        "ogrenciler": ogrenciler,
+        "search_q": query  # Arama kutusunda kelimenin kalması için geri gönderiyoruz
+    })
 @staff_member_required
-def arizali_cihaz_listesi(request): return render(request, "yonetim_arizali_cihazlar.html", {"cihazlar": Cihaz.objects.filter(aktif_mi=False)})
+def arizali_cihaz_listesi(request):
+    """
+    Tüm cihazları listeler. Arızalı (pasif) olanları en üstte gösterir.
+    """
+    # aktif_mi False (0) olanlar, True (1) olanlardan önce gelir (order_by yükselen sıra)
+    cihazlar = Cihaz.objects.all().order_by('aktif_mi', 'isim')
+    
+    return render(request, "yonetim_arizali_cihazlar.html", {
+        "cihazlar": cihazlar
+    })
+
 @staff_member_required
-def tum_randevular(request): return render(request, "tum_randevular.html", {"randevular": Randevu.objects.all()})
+def cihaz_durum_degistir(request, cihaz_id):
+    cihaz = get_object_or_404(Cihaz, id=cihaz_id)
+    cihaz.aktif_mi = not cihaz.aktif_mi
+    
+    if cihaz.aktif_mi:
+        # Notu silmek yerine arşive almak istersen burayı değiştirebilirsin
+        # Şimdilik senin isteğin üzerine temizliyoruz:
+        cihaz.aciklama = "" 
+        messages.success(request, f"✅ {cihaz.isim} aktif edildi ve arıza notu temizlendi.")
+    else:
+        messages.warning(request, f"⚠️ {cihaz.isim} şu an pasif durumda.")
+    
+    cihaz.save()
+    return redirect('arizali_cihaz_listesi')
+def tum_randevular(request):
+    # Varsayılan Sıralama: En yeni tarihli olan en üstte
+    randevular = Randevu.objects.all().order_by('-tarih', '-baslangic_saati')
+
+    # URL'den gelen filtre parametrelerini yakala
+    q = request.GET.get('q', '').strip()          # Ad, Soyad veya Kullanıcı Adı
+    cihaz = request.GET.get('cihaz', '').strip()  # Cihaz İsmi
+    lab = request.GET.get('lab', '').strip()      # Laboratuvar İsmi
+    tarih = request.GET.get('tarih_ara', '')      # Belirli Bir Tarih
+
+    # --- FİLTRELEME MANTIĞI ---
+    if q:
+        randevular = randevular.filter(
+            Q(kullanici__first_name__icontains=q) | 
+            Q(kullanici__last_name__icontains=q) | 
+            Q(kullanici__username__icontains=q)
+        )
+    
+    if cihaz:
+        randevular = randevular.filter(cihaz__isim__icontains=cihaz)
+        
+    if lab:
+        randevular = randevular.filter(cihaz__lab__isim__icontains=lab)
+        
+    if tarih:
+        randevular = randevular.filter(tarih=tarih)
+
+    context = {
+        "randevular": randevular,
+        "search_q": q,
+        "search_cihaz": cihaz,
+        "search_lab": lab,
+        "search_tarih": tarih,
+    }
+    
+    return render(request, "tum_randevular.html", context)
 @login_required
 def randevu_iptal(request, randevu_id):
-    # Randevuyu bul, eğer kullanıcıya ait değilse 404 döndür (Güvenlik için)
+    # Randevuyu bul, eğer kullanıcıya ait değilse 404 döndür
     randevu = get_object_or_404(Randevu, id=randevu_id, kullanici=request.user)
     
+    # --- YENİ ÖZELLİK: İPTAL SÜRESİ KONTROLÜ ---
+    simdi = timezone.now()
+    # Randevu başlangıç zamanını oluşturuyoruz
+    randevu_vakti = timezone.make_aware(datetime.combine(randevu.tarih, randevu.baslangic_saati))
+    
+    # Sabite göre minimum iptal süresi kontrolü (Örn: 1 saat kala iptal engeli)
+    limit_vakti = simdi + timedelta(hours=settings.IPTAL_MIN_SURE_SAAT)
+    
+    if randevu_vakti < limit_vakti:
+        messages.error(request, f"❌ Randevuya {settings.IPTAL_MIN_SURE_SAAT} saatten az kaldığı için artık iptal edemezsiniz.")
+        return redirect("randevularim")
+    # --- KONTROL BİTİŞ ---
+
     # Sadece 'Onay Bekliyor' veya 'Onaylandı' durumundaki randevular iptal edilebilir
     if randevu.durum in ['onay_bekleniyor', 'onaylandi']:
-        randevu.durum = 'iptal_edildi'  # Durumu güncelle
+        randevu.durum = 'iptal_edildi'
         randevu.save()
-        messages.success(request, "Randevunuz başarıyla iptal edildi.")
+        messages.success(request, "✅ Randevunuz başarıyla iptal edildi.")
     else:
         messages.error(request, "Bu randevu şu anki durumu nedeniyle iptal edilemez.")
         
