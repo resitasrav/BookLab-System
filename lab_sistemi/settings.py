@@ -295,3 +295,10 @@ LOGGING = {
         },
     },
 }
+import os
+def link_callback(uri, rel):
+    from django.conf import settings
+    path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    if not os.path.isfile(path):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    return path if os.path.isfile(path) else uri
