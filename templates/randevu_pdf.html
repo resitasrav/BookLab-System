@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="utf-8">
-    <title>BTÜ Randevu Raporu</title>
+    <title>Rezarvasyon Raporu</title>
     <style>
         /* Karakter desteği için DejaVuSans zorunludur */
         @font-face {
@@ -10,15 +10,17 @@
             src: url('DejaVuSans.ttf');
         }
 
-        @page {
-            size: a4 portrait;
-            margin: 1.5cm;
-            @frame footer {
-                -pdf-frame-content: footerContent;
-                bottom: 1cm;
-                height: 1cm;
-            }
+       @page {
+            size: A4 portrait;
+             margin: 1.5cm;
+         }
+
+        @frame footer {
+            -pdf-frame-content: footerContent;
+            bottom: 1cm;
+            height: 1cm;
         }
+
 
         body {
             font-family: 'DejaVuSans', sans-serif !important;
@@ -188,8 +190,8 @@
     </table>
 
     <div id="footerContent">
-        Bu belge BTÜ Okul LabSistemi tarafindan dijital ortamda olusturulmustur. <br/>
-        Dogrulama Kodu: BTÜ-{{ user.username|upper }}-{% now "is" %} | Sayfa: <pdf:pagenumber>
+        Bu belge Booklab Rezevasyon Sistemi tarafindan dijital ortamda olusturulmustur. <br/>
+        Dogrulama Kodu: BookLab-{{ user.username|upper }}-{% now "is" %} | Sayfa: <pdf:pagenumber>
     </div>
 
 </body>

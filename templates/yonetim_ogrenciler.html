@@ -113,9 +113,9 @@
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <h2 class="fw-bold text-primary mb-0">
-                <i class="bi bi-people-fill me-2 text-info"></i>Akademik Öğrenci Listesi
+                <i class="bi bi-people-fill me-2 text-info"></i>Kullanıcı Listesi
             </h2>
-            <p class="text-muted small mb-0">Sisteme kayıtlı tüm öğrencilerin iletişim ve kimlik bilgilerini buradan yönetebilirsiniz.</p>
+            <p class="text-muted small mb-0">Sisteme kayıtlı tüm Kullanıcıların iletişim bilgilerini buradan yönetebilirsiniz.</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm btn-sm">
@@ -130,7 +130,7 @@
                 <div class="d-flex align-items-center">
                     <div class="fs-2 text-info me-3"><i class="bi bi-mortarboard"></i></div>
                     <div>
-                        <small class="text-muted d-block">Kayıtlı Öğrenci</small>
+                        <small class="text-muted d-block">Kayıtlı Kullanıcı</small>
                         <h4 class="fw-bold mb-0 text-dark">{{ ogrenciler|length }}</h4>
                     </div>
                 </div>
@@ -162,7 +162,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th class="ps-4">Öğrenci Profili</th>
+                            <th class="ps-4">Kullanıcı Profilleri</th>
                             <th>Okul Numarası</th>
                             <th>E-Posta Adresi</th>
                             <th>İletişim Hattı</th>
@@ -172,7 +172,7 @@
                     <tbody>
                         {% for profil in ogrenciler %}
                         <tr>
-                            <td data-label="Öğrenci" class="ps-4">
+                            <td data-label="Kullanıcı" class="ps-4">
                                 <div class="d-flex align-items-center">
                                     {% if profil.resim %}
                                         <img src="{{ profil.resim.url }}" class="student-avatar me-3 shadow-sm border">
@@ -218,7 +218,7 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-person-exclamation display-1 text-muted opacity-25"></i>
-                                    <p class="text-muted fs-5 mt-3 mb-0">Aradığınız kriterde öğrenci bulunamadı.</p>
+                                    <p class="text-muted fs-5 mt-3 mb-0">Aradığınız kriterde kullanıcı bulunamadı.</p>
                                 </div>
                             </td>
                         </tr>

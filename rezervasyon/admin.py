@@ -31,9 +31,9 @@ from .models import (
 # ============================================================
 logger = logging.getLogger('admin_operations')
 
-admin.site.site_header = "BTÜ Randevu Sistemi Yönetimi"
-admin.site.site_title = "BTÜ Randevu Paneli"
-admin.site.index_title = "Yönetim Merkezine Hoş Geldiniz"
+admin.site.site_header = "BookLab Yönetim Paneli"
+admin.site.site_title = "BookLab Admin Portal"
+admin.site.index_title = "Sistem Kontrol Merkezine Hoş Geldiniz"
 
 # ============================================================
 # MOBIL UYUMLU BUTON STİLİ (GLOBAL CSS)
@@ -692,7 +692,6 @@ class OnayBekleyenlerAdmin(AdminMassMailMixin, UserAdmin):
     get_full_name.short_description = "Ad - Soyad"
 
     def aktiflik_durumu(self, obj):
-        # ✅ FİXED: format_html → mark_safe (parametre olmadığı için)
         return mark_safe('<span style="background:#dc3545; color:white; padding:4px 10px; border-radius:12px; font-weight:600; font-size:11px;">🔴 PASİF</span>')
     aktiflik_durumu.short_description = "Durum"
 
@@ -736,7 +735,6 @@ class AktifOgrencilerAdmin(AdminMassMailMixin, UserAdmin):
     get_full_name.short_description = "Ad - Soyad"
 
     def aktiflik_durumu(self, obj):
-        # ✅ FİXED: format_html → mark_safe (parametre olmadığı için)
         return mark_safe('<span style="background:#28a745; color:white; padding:4px 10px; border-radius:12px; font-weight:600; font-size:11px;">✅ AKTİF</span>')
     aktiflik_durumu.short_description = "Durum"
 

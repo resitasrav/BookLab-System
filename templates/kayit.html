@@ -1,140 +1,159 @@
 {% extends 'base.html' %}
 
-{% block icerik %} {# base.html içindeki isimle birebir aynı yaptık #}
+{% block icerik %}
 <style>
-    /* Modern Tasarım ve Renk Ayarları */
+    /* BookLab Modern Teması */
     body {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%) !important;
     }
+
     .register-card {
         border: none;
-        border-radius: 1.5rem;
+        border-radius: 2rem;
         background: #ffffff;
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.1) !important;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease-out;
     }
+
     .register-header {
-        background: linear-gradient(135deg, #198754, #157347);
+        background: linear-gradient(135deg, #003366, #0056b3);
         color: white;
-        border-radius: 1.5rem 1.5rem 0 0;
-        padding: 2rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
     }
-    /* Form Kutularını Genişletme ve Belirginleştirme */
+
+    .register-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: #00a8cc; /* BookLab Turkuaz Çizgisi */
+    }
+
+    /* Django Form Elemanlarını Özelleştirme */
     .django-form-wrapper p {
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.5rem;
     }
+
     label {
         font-weight: 700;
-        margin-bottom: 6px;
-        color: #2f3e34;
+        margin-bottom: 8px;
+        color: #003366;
         display: block;
+        font-size: 0.95rem;
     }
+
     input[type="text"], input[type="password"], 
     input[type="email"], input[type="number"] {
         width: 100%;
-        padding: 0.75rem 1rem;
-        border: 2px solid #dee2e6;
-        border-radius: 0.8rem;
-        transition: all 0.2s;
+        padding: 0.85rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+        background-color: #f8fafc;
     }
+
     input:focus {
-        border-color: #198754;
-        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
+        border-color: #00a8cc;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 0.3rem rgba(0, 168, 204, 0.15);
         outline: none;
+        transform: translateY(-2px);
     }
+
     .helptext {
         font-size: 0.75rem;
-        color: #6c757d;
+        color: #64748b;
         display: block;
-        margin-top: 4px;
+        margin-top: 6px;
+        padding-left: 5px;
     }
+
+    /* Profesyonel Buton */
     .register-btn {
-        background: linear-gradient(135deg, #198754, #146c43);
+        background: linear-gradient(135deg, #00a8cc, #0088a8);
         border: none;
-        border-radius: 0.8rem;
-        padding: 0.9rem;
+        border-radius: 1rem;
+        padding: 1.1rem;
         font-weight: 700;
         color: white;
-        transition: transform 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
     }
+
     .register-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+        filter: brightness(1.1);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 168, 204, 0.3);
     }
 
-    /* MOBİL RESPONSIVE */
-    @media (max-width: 768px) {
-        .register-card { border-radius: 1.2rem; }
-        .register-header { padding: 1.5rem; border-radius: 1.2rem 1.2rem 0 0; }
-        .register-header h3 { font-size: 1.3rem; }
-        .card-body { padding: 1.5rem 1rem !important; }
-        label { font-size: 0.9rem; }
-        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
-            font-size: 0.95rem; padding: 0.65rem 0.8rem;
-        }
-        .helptext { font-size: 0.7rem; }
-        .register-btn { padding: 0.8rem; font-size: 0.9rem; }
+    /* Animasyon */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
+    /* MOBİL DÜZENLEMELER */
     @media (max-width: 576px) {
-        .register-card { border-radius: 1rem; }
-        .register-header { padding: 1.2rem; }
-        .register-header h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
-        .register-header p { font-size: 0.8rem; }
-        .card-body { padding: 1rem !important; }
-        .django-form-wrapper { margin-bottom: 1rem; }
-        .django-form-wrapper p { margin-bottom: 1rem; }
-        label { font-size: 0.85rem; margin-bottom: 4px; }
-        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
-            font-size: 16px; padding: 0.6rem 0.7rem;
-        }
-        .helptext { font-size: 0.65rem; margin-top: 2px; }
-        .register-btn { padding: 0.7rem; font-size: 0.85rem; }
-        .card-footer { padding: 0.8rem !important; }
-        .card-footer p { font-size: 0.75rem; }
-    }
-
-    @media (max-width: 360px) {
-        .register-header { padding: 1rem; }
-        .card-body { padding: 0.8rem !important; }
-        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
-            font-size: 16px; padding: 0.5rem 0.6rem;
-        }
-        .register-btn { padding: 0.6rem; font-size: 0.8rem; }
+        .register-header { padding: 2rem 1rem; }
+        .register-header h3 { font-size: 1.4rem; }
+        .card-body { padding: 1.5rem !important; }
+        input { font-size: 16px !important; } /* Mobil zoom engelleme */
     }
 </style>
 
 <div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 85vh;">
-        <div class="col-md-8 col-lg-5">
-            <div class="card shadow-lg register-card">
-                <div class="register-header text-center">
-                    <h3 class="fw-bold mb-1">
-                        <i class="bi bi-person-plus-fill me-2"></i>Yeni Kayıt
-                    </h3>
-                    <p class="small mb-0 opacity-75">Laboratuvar Sistemine Hoş Geldiniz</p>
+    <div class="row justify-content-center align-items-center" style="min-height: 90vh; padding: 20px 0;">
+        <div class="col-md-10 col-lg-6 col-xl-5">
+            <div class="card register-card">
+                <div class="register-header">
+                    <div class="mb-3">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">BookLab Hesabı Oluştur</h3>
+                    <p class="small mb-0 opacity-75">Akıllı Laboratuvar Yönetim Sistemi</p>
                 </div>
 
-                <div class="card-body p-4 p-lg-5">
-                    <form method="post" novalidate>
+                <div class="card-body p-4 p-md-5">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} rounded-4 border-0 shadow-sm mb-4">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate autocomplete="off">
                         {% csrf_token %}
                         
                         <div class="django-form-wrapper">
-                            {# forms.py içindeki tüm alanlar (Meta fields) buraya basılır #}
+                            {# Django Form Alanları #}
                             {{ form.as_p }}
                         </div>
 
-                        <button type="submit" class="btn btn-success register-btn w-100 mt-4">
-                            Hesabımı Oluştur <i class="bi bi-arrow-right-circle ms-2"></i>
+                        <button type="submit" class="btn btn-primary register-btn w-100">
+                            Kaydı Başlat <i class="bi bi-chevron-right ms-2"></i>
                         </button>
                     </form>
                 </div>
 
-                <div class="card-footer text-center bg-light py-3 border-0" style="border-radius: 0 0 1.5rem 1.5rem;">
-                    <p class="mb-0 text-muted small">
-                        Zaten bir hesabın var mı? 
-                        <a href="{% url 'giris' %}" class="fw-bold text-success text-decoration-none">Giriş Yap</a>
+                <div class="card-footer text-center bg-light py-4 border-0">
+                    <p class="mb-0 text-muted">
+                        Zaten üye misiniz? 
+                        <a href="{% url 'giris' %}" class="fw-bold text-info text-decoration-none ms-1">Giriş Yapın</a>
                     </p>
                 </div>
             </div>
+            
+            <p class="text-center mt-4 text-muted small">
+                <i class="bi bi-info-circle me-1"></i> Kayıt sonrası e-posta doğrulaması gereklidir.
+            </p>
         </div>
     </div>
 </div>

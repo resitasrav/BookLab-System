@@ -3,7 +3,7 @@ import logging
 import random
 import string
 from datetime import datetime, timedelta
-
+from django.utils.dateparse import parse_datetime
 # --- DJANGO IMPORTS ---
 from django.utils import timezone
 from django.conf import settings
@@ -302,7 +302,7 @@ def randevu_al(request, cihaz_id):
         if fark <= 0:
             messages.error(request, "⚠️ Bitiş saati başlangıçtan sonra olmalıdır.")
             return redirect("randevu_al", cihaz_id=cihaz_id)
-# Çakışma Kontrolü ve Kayıt
+        # Çakışma Kontrolü ve Kayıt
         with transaction.atomic():
             # 1. Kontrol: Cihaz bazlı çakışma (Mevcut check_overlap fonksiyonun)
             cihaz_cakisiyor = check_overlap(secilen_cihaz, t_obj, b_obj, bit_obj)
@@ -446,86 +446,83 @@ def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
-            # ✅ ADIM 1: User Oluştur (PASİF - Asla Giriş Yapamaz)
-            user = form.save(commit=False)
-            user.is_active = False  # 🔴 Email doğrulana kadar AKTİF OLMAYACAK
-            user.save()
+            # 1. Bilgileri veritabanına yazmıyoruz, session'a alıyoruz
+            user_data = {
+                'username': form.cleaned_data['username'],
+                'email': form.cleaned_data['email'],
+                'password': form.cleaned_data['password'], # Formda temizlenmiş şifre
+                # Varsa diğer alanlar...
+            }
             
-            # ✅ ADIM 2: Profil Oluştur ve Durumunu Belirle
-            # (post_save signal ile otomatik oluşturulur, durumunu set et)
-            profil = Profil.objects.get(user=user)
-            profil.status = 'pasif_ogrenci'          # ← Pasif Öğrenci
-            profil.email_dogrulandi = False          # ← Email henüz doğrulanmadı
-            profil.save()
-            
-            # ✅ ADIM 3: Doğrulama Kodu Üret
             dogrulama_kodu = str(random.randint(100000, 999999))
+            
+            # 2. Her şeyi geçici olarak oturuma kaydediyoruz
+            request.session['temp_user_data'] = user_data
             request.session['dogrulama_kodu'] = dogrulama_kodu
-            request.session['dogrulama_user_id'] = user.id
+            request.session['kod_olusturma_tarihi'] = timezone.now().isoformat()
 
-            # ✅ ADIM 4: Email Gönder
+            # 3. Mail Gönderimi
             try:
                 send_mail(
-                    "BTÜ Lab Kayıt Doğrulama",
-                    f"Doğrulama kodunuz: {dogrulama_kodu}",
+                    "BookLab - Kayıt Doğrulama",
+                    f"Hoş geldiniz! Doğrulama kodunuz: {dogrulama_kodu}\nSüre: 1 Dakika",
                     settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
+                    [user_data['email']],
                     fail_silently=False
                 )
-                messages.success(request, "Kayıt başarılı! Lütfen mailine gelen kodu gir.")
+                messages.success(request, "Doğrulama kodu gönderildi. Kod girilmeden kaydınız tamamlanmayacaktır.")
                 return redirect("email_dogrulama")
-            
             except Exception as e:
-                # ⚠️ EMAIL GÖNDERME HATASI - KULLANICIYI SİL
-                print(f"Mail Hatası: {e}")
-                messages.error(request, "❌ Email gönderilemedi. Lütfen yöneticiye başvurun.")
-                user.delete()  # 🗑️ Başarısız kayıt siliniyor
-                return render(request, "kayit.html", {"form": KayitFormu()})
+                messages.error(request, "E-posta gönderiminde hata oluştu.")
     else:
         form = KayitFormu()
-    
     return render(request, "kayit.html", {"form": form})
 
+
 def email_dogrulama(request):
-    user_id = request.session.get('dogrulama_user_id')
+    # Session verilerini çek
+    user_data = request.session.get('temp_user_data')
     dogrulama_kodu = request.session.get('dogrulama_kodu')
-    
-    # ❌ Session'da veri yoksa kayıt sayfasına gönder
-    if not user_id or not dogrulama_kodu:
-        messages.error(request, "❌ Oturum süresi dolmuş. Lütfen tekrar kayıt olun.")
+    olusturma_str = request.session.get('kod_olusturma_tarihi')
+
+    if not user_data or not dogrulama_kodu:
+        messages.error(request, "❌ Geçersiz oturum. Lütfen yeniden kayıt olun.")
         return redirect("kayit")
 
     if request.method == "POST":
         girilen_kod = request.POST.get("kod", "").strip()
+        olusturma_tarihi = parse_datetime(olusturma_str)
         
-        # ✅ KOD DOĞRU MU?
+        # ⏳ 1 DAKİKALIK SÜRE KONTROLÜ
+        if olusturma_tarihi and timezone.now() > olusturma_tarihi + timedelta(minutes=1):
+            request.session.flush() # Oturumu temizle
+            messages.error(request, "⏳ Süre doldu. Kayıt işleminiz iptal edildi, lütfen tekrar başlayın.")
+            return redirect("kayit")
+
+        # ✅ KOD DOĞRUYSA: ŞİMDİ VERİTABANINA YAZIYORUZ
         if girilen_kod == dogrulama_kodu:
-            user = get_object_or_404(User, id=user_id)
-            
-            # ✨ PROFIL'İ GÜNCELLE - Email Doğrulı Yap
-            profil = Profil.objects.get(user=user)
-            profil.email_dogrulandi = True                      # ✅ Email DOĞRULANDI
-            profil.email_dogrulama_tarihi = timezone.now()      # ✅ Tarih Kaydet
-            profil.status = 'pasif_ogrenci'                     # ✅ Pasif Öğrenci
-            profil.save()
-            
-            # 🔴 USER ASLA AKTİF OLMAYACAK - ADMIN KARAR VERECEK
-            # user.is_active = True  ← YAPILMIYOR!
-            
-            # 🗑️ Session'da Verileri Sil
-            del request.session['dogrulama_user_id']
-            del request.session['dogrulama_kodu']
-            
-            messages.success(
-                request, 
-                "🎉 Email doğrulandı! Admin tarafından onaylanmayı beklemektedir."
+            # 1. Kullanıcıyı Şimdi Oluştur
+            user = User.objects.create_user(
+                username=user_data['username'],
+                email=user_data['email'],
+                password=user_data['password'],
+                is_active=False # Admin onayı için hala pasif
             )
+            
+            # 2. Profil Ayarlarını Güncelle
+            profil = user.profil # post_save sinyali ile oluştuğunu varsayıyoruz
+            profil.status = 'pasif_ogrenci'
+            profil.email_dogrulandi = True
+            profil.email_dogrulama_tarihi = timezone.now()
+            profil.save()
+
+            # 3. Güvenlik için session'ı temizle
+            request.session.flush()
+
+            messages.success(request, "🎉 E-posta doğrulandı! Hesabınız BookLab yöneticisi tarafından onaylandıktan sonra aktif olacaktır.")
             return redirect("giris")
-        
         else:
-            # ❌ KOD YANLIŞ
             messages.error(request, "❌ Hatalı doğrulama kodu.")
-            # Session kalır, tekrar deneyebilir
 
     return render(request, "email_dogrulama.html")
 @login_required
@@ -712,7 +709,7 @@ def sifre_sifirla_talep(request):
 
             # 3. E-posta Nesnesini Oluştur
             email_obj = EmailMultiAlternatives(
-                subject="BTÜ Lab Sistemi | Şifre Sıfırlama",
+                subject="Booklab Laboratuvar Rezervasyon Sistemi | Şifre Sıfırlama",
                 body=text_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[user.email],
@@ -749,7 +746,7 @@ def kod_tekrar_gonder(request):
     
     try:
         send_mail(
-            "BTÜ Lab Sistemi | Yeni Doğrulama Kodu",
+            "Booklab Laboratuvar Rezervasyon Sistemi | Yeni Doğrulama Kodu",
             f"Merhaba {user.username}, yeni doğrulama kodunuz: {yeni_kod}",
             settings.DEFAULT_FROM_EMAIL,
             [user.email],

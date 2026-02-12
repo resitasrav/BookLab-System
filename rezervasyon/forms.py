@@ -55,7 +55,7 @@ class KayitFormu(forms.ModelForm):
     )
     email = forms.EmailField(
         label="E-Posta Adresi",
-        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ogrenci@okul.edu.tr"})
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "asrav@mailuzantisi"})
     )
     okul_numarasi = forms.CharField(
         label="Okul Numarası",
@@ -68,12 +68,13 @@ class KayitFormu(forms.ModelForm):
         validators=[sadece_rakam_validator],
         widget=forms.TextInput(attrs={
             "class": "form-control",
-            "placeholder": "05551234567",
+            "placeholder": "05551112233",
             "maxlength": "11",
             "oninput": "this.value = this.value.replace(/[^0-9]/g, '');"
         }),
         help_text="Başında 0 olacak şekilde yazınız."
     )
+
     password = forms.CharField(
         label="Şifre",
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})

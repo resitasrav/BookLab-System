@@ -196,7 +196,7 @@
             <div id="duyuru-{{ duyuru.id }}" class="announcement-item shadow-sm border-start border-4 border-info mb-3 p-3 bg-white rounded-3" style="display: none;">
                 <div class="d-flex justify-content-between align-items-start mb-1">
                     <span class="announcement-date text-primary fw-bold small">
-                        <i class="bi bi-calendar-event me-1"></i>{{ duyuru.tarih|date:"d.m.Y" }}
+                        <i class="bi bi-calendar-event me-1"></i>{{ duyuru.tarih|date:"d F Y, H:i" }}
                     </span>
                     <button type="button" class="btn-close btn-sm" onclick="duyuruyuKapat({{ duyuru.id }})" aria-label="Kapat"></button>
                 </div>
@@ -204,7 +204,7 @@
                 <p class="announcement-content small mb-2 text-secondary">{{ duyuru.icerik }}</p>
                 <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
                     <small class="text-muted" style="font-size: 0.7rem;">
-                        <i class="bi bi-clock-history me-1"></i> {{ duyuru.tarih|date:"H:i" }}
+                        <i class="bi bi-clock-history me-1"></i> {{ duyuru.tarih|date:"d F Y, H:i" }}
                     </small>
                 </div>
             </div>
@@ -252,8 +252,8 @@
                 <h1 class="fw-bold display-5 mb-2">Merhaba, {{ user.first_name }}! 👋</h1>
                 <p class="lead opacity-75">Bugün hangi laboratuvarda çalışma yapmayı planlıyorsun?</p>
                 {% else %}
-                <h1 class="fw-bold display-5 mb-2">BTÜ Laboratuvar Sistemi</h1>
-                <p class="lead opacity-75">Üniversitemizin teknik altyapısına buradan erişebilirsiniz.</p>
+                <h1 class="fw-bold display-5 mb-2">BookLab Rezervasyon Sistemi</h1>
+                <p class="lead opacity-75">Laboratuvarlardan randevu alabilirsiniz.</p>
                 {% endif %}
             </div>
             <div class="col-md-4 text-end d-none d-md-block">
@@ -267,11 +267,10 @@
         <div class="d-flex justify-content-center align-items-center position-relative" style="z-index: 2;">
             <i class="bi bi-calendar-week-fill fs-3 me-3 text-primary"></i>
             <div class="text-start">
-                <span class="d-block fw-bold h5 mb-0">GENEL KAMPÜS PROGRAMI</span>
+                <span class="d-block fw-bold h5 mb-0">GENEL LABORATUVAR TAKVİMİ</span>
                 <small class="opacity-75">Laboratuvar doluluk oranlarını anlık takip edin</small>
             </div>
         </div>
-        <i class="bi bi-plus-lg position-absolute opacity-10" style="right: 10px; bottom: -10px; font-size: 5rem;"></i>
     </a>
 </div>
 
@@ -356,7 +355,7 @@
                 
                 <h5 class="fw-bold mb-2">Giriş Gerekli</h5>
                 <p class="text-muted mb-4">
-                    Randevu oluşturmak ve laboratuvarlara erişmek için lütfen BTÜ hesabınızla giriş yapın.
+                    Randevu oluşturmak ve laboratuvarlara erişmek için lütfen BookLab hesabınızla giriş yapın.
                 </p>
                 
                 <div class="d-grid gap-3 auth-buttons">
@@ -370,7 +369,7 @@
 
                 <small class="text-muted d-block mt-4 pt-3 border-top">
                     <i class="bi bi-info-circle me-1"></i>
-                    Henüz BTÜ hesabınız yok mu? Kayıt ol sayfasına giderek hemen başlayın.
+                    Henüz BookLab hesabınız yok mu? Kayıt ol sayfasına giderek hemen başlayın.
                 </small>
             </div>
             {% endif %}
