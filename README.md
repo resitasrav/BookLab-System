@@ -1,79 +1,91 @@
 <div align="center">
 
 # 🧪 BookLab-System
-### *Advanced Laboratory Reservation & Management Ecosystem*
+### *Bursa Teknik Üniversitesi Laboratuvar Rezervasyon ve Yönetim Ekosistemi*
 
 [![Python](https://img.shields.io/badge/Python-3.13-blue.svg?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.1-green.svg?style=for-the-badge&logo=django)](https://www.djangoproject.com/)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey.svg?style=for-the-badge&logo=sqlite)](https://www.sqlite.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=for-the-badge)](#)
 
+<img src="screenshots/BookLab_start.png" width="900" alt="BookLab Ana Ekran">
 
+**BookLab**, üniversite laboratuvar kaynaklarının verimli, adil ve güvenli bir şekilde yönetilmesini sağlayan, üretim aşamasına hazır (production-ready) bir web platformudur.
 
-**BookLab** is a robust, production-ready web application designed to streamline the scheduling and management of university laboratory resources. Built for the academic environment, it ensures fair access, secure authentication, and administrative oversight.
-
-[🌐 Live Demo](#) | [📚 Documentation](#) | [🐞 Report Bug](#)
+[🌐 Canlı Demo](https://asravresit.pythonanywhere.com/) | [📚 Dokümantasyon](#) | [🐞 Hata Bildir](#)
 
 </div>
 
 ---
 
-## 📖 Project Overview
+## 📖 Proje Hakkında
 
-Managing laboratory hours and equipment manually is prone to errors and scheduling conflicts. **BookLab** provides a centralized platform where students can request slots, and administrators can monitor usage in real-time. The system features a multi-tiered approval process, ensuring that only verified and authorized students can utilize sensitive lab environments.
-
----
-
-## ✨ Key Features
-
-### 🔐 Advanced Authentication & Security
-- **Passive-to-Active Workflow:** New students are registered as "Passive." Access is only granted after **Email Verification** and manual **Admin Approval**.
-- **Secure Password Reset:** Fully integrated SMTP-based password recovery system.
-- **Session Management:** Secure handling of user sessions and verification codes.
-
-### 📅 Reservation Management
-- **Smart Booking:** Prevent double-booking and schedule overlaps.
-- **Dynamic Status Tracking:** Track lab availability and equipment status in real-time.
-- **User Dashboard:** Students can view, edit, or cancel their upcoming reservations.
-
-### 🛠 Administrative Control (AdminLTE Integrated)
-- **Unified Command Center:** Manage Users, Labs, and Appointments from a modern, responsive dashboard.
-- **One-Click Approval:** Bulk-approve students and toggle account status (`is_active`).
-- **Audit Logs:** Track system activity for security and accountability.
+Laboratuvar saatlerinin ve cihaz kullanımının manuel takibi, çakışmalara ve kaynak israfına yol açar. **BookLab**, BTÜ öğrencileri ve akademisyenleri için merkezi bir randevu sistemi sunar. Sistem, sadece kayıt değil, aynı zamanda **idari onay mekanizması** ve **akıllı çakışma denetimi** ile tam kontrol sağlar.
 
 ---
 
-## 🚀 Tech Stack
+## ✨ Öne Çıkan Özellikler
 
-| Layer | Technology |
-| :--- | :--- |
-| **Backend** | Python 3.13, Django 5.x |
-| **Frontend** | Bootstrap 5, AdminLTE 3, Custom CSS3 |
-| **Database** | SQLite (Development), PostgreSQL (Production) |
-| **Security** | Python-Decouple (Env Var Management), Django Signals |
-| **Mailing** | Google SMTP (TLS/SSL) |
-| **DevOps** | Git, PythonAnywhere Deployment |
+### 🔐 Gelişmiş Güvenlik ve Doğrulama
+- **Pasif-Aktif Üyelik Akışı:** Yeni kayıt olan öğrenciler otomatik olarak "Pasif" statüsünde başlar.
+- **E-Posta Doğrulaması:** Kayıt sırasında gönderilen 6 haneli kod ile gerçek kullanıcı doğrulaması yapılır.
+- **Admin Onay Mekanizması:** Erişim, sadece yönetici tarafından manuel onay verildikten sonra açılır (`is_active`).
+
+### 📅 Rezervasyon Yönetimi
+- **Çakışma Önleyici Takvim:** Aynı saat dilimine mükerrer randevu alınmasını engeller.
+- **Cihaz Bazlı Takip:** Sadece laboratuvar değil, laboratuvar içindeki spesifik cihazlar için de randevu oluşturulabilir.
+
+### 🛠 Yönetim Paneli (AdminLTE Entegrasyonu)
+- **Merkezi Kontrol:** Kullanıcılar, laboratuvarlar, cihazlar ve tüm randevular tek bir ekrandan yönetilir.
+- **Hızlı Aksiyonlar:** Toplu öğrenci onayı ve durum güncelleme özellikleri.
 
 ---
 
-## 📸 Screenshots
+## 📸 Ekran Görüntüleri
 
 <div align="center">
-  <img src="https://via.placeholder.com/400x250?text=Login+Screen+Preview" width="45%" alt="Login Screen"/>
-  <img src="https://via.placeholder.com/400x250?text=Admin+Dashboard+Preview" width="45%" alt="Dashboard"/>
+
+| Kayıt ve Giriş | Laboratuvar Seçimi |
+|:---:|:---:|
+| <img src="screenshots/BookLab_index.png" width="400"> | <img src="screenshots/BookLab_RandevuAlma.png" width="400"> |
+| *Modern ve Sade Giriş Arayüzü* | *Kullanıcı Dostu Rezervasyon Ekranı* |
+
+| Yönetim Paneli | Takvim Görünümü |
+|:---:|:---:|
+| <img src="screenshots/BookLab_yonetimPaneli.png" width="400"> | <img src="screenshots/BookLab_GenelTakvim.png" width="400"> |
+| *Detaylı İstatistikler ve Yönetim* | *Tüm Randevuların Genel Takibi* |
+
+| Şifre Güvenliği | Kontrol Merkezi |
+|:---:|:---:|
+| <img src="screenshots/BookLab_start.png" width="400"> | <img src="screenshots/BookLab_kontrol.png" width="400"> |
+| *Güvenli Şifre Sıfırlama Akışı* | *Gelişmiş Filtreleme ve Arama* |
+
 </div>
 
 ---
 
-## 🛠 Installation & Setup
+## 🚀 Teknoloji Yığını ve Yöntemler
 
-### Prerequisites
-- Python 3.13+
-- Virtualenv
+### **Backend & Mantık**
+- **Python 3.13 & Django:** Güçlü ve ölçeklenebilir bir mimari.
+- **Django Signals:** Kullanıcı oluşturulduğunda otomatik profil oluşturma ve statü atama mantığı.
+- **Python-Decouple:** `.env` dosyası üzerinden güvenli anahtar ve SMTP şifre yönetimi.
 
-### Step-by-Step Guide
+### **Frontend & Kullanıcı Deneyimi**
+- **AdminLTE 3:** Profesyonel, duyarlı (responsive) yönetim paneli tasarımı.
+- **Bootstrap 5:** Modern ve temiz kullanıcı arayüzü bileşenleri.
+- **Custom CSS:** Kurumsal renk paleti (BTÜ Teması) entegrasyonu.
 
-1. **Clone the Repository**
+### **İletişim & Dağıtım**
+- **Google SMTP:** TLS/SSL protokolü ile güvenli doğrulama e-postaları.
+- **Git & GitHub:** Versiyon kontrolü ve CI/CD süreçleri.
+- **PythonAnywhere:** Bulut tabanlı canlı yayınlama (deployment).
+
+---
+
+## 🛠 Kurulum ve Çalıştırma
+
+1. **Depoyu Klonlayın**
    ```bash
-   git clone [https://github.com/yourusername/BookLab-System.git](https://github.com/yourusername/BookLab-System.git)
+   git clone [https://github.com/resitasrav/BookLab-System.git](https://github.com/resitasrav/BookLab-System.git)
    cd BookLab-System
