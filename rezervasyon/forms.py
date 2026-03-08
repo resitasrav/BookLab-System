@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
 from .models import Profil, Ariza
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 # --- CUSTOM LOGIN FORMU (EMAIL + USERNAME DESTEĞİ) ---
 class EmailOrUsernameAuthenticationForm(AuthenticationForm):
@@ -100,8 +102,21 @@ class KayitFormu(forms.ModelForm):
         """
         user = super().save(commit=False)
         pwd = self.cleaned_data.get("password")
+
         if pwd:
-            user.set_password(pwd)
+            try:
+                # 1. ADIM: Şifreyi Django'nun güvenlik süzgecinden geçir
+                # 'user=user' parametresi, şifrenin kullanıcı adıyla aynı olup olmadığını denetler
+                validate_password(pwd, user=user) 
+                
+            except ValidationError as e:
+                # 2. ADIM: Eğer şifre zayıfsa (örn: çok kısa, çok yaygın), sistemi durdur ve hata ver
+                self.add_error('password', e) 
+                # Not: Eğer bu kod bir Form içinde değilse, `self.add_error` yerine 
+                # doğrudan `raise ValidationError(e)` kullanabilirsin.
+
+        # 3. ADIM: Eğer yukarıdaki testten (try bloğundan) başarıyla geçtiyse, şifre güvenlidir. Artık kaydedebilirsin.
+        user.set_password(pwd)
         if commit:
             user.save()
             # Ensure profile exists and save profile fields

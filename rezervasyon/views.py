@@ -27,6 +27,7 @@ from .models import Cihaz
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils.http import url_has_allowed_host_and_scheme
 #from .decorators import staff_member_required # Kendi dekoratörün veya Django'nunki
 from .models import Cihaz
 # --- ŞİFRE SIFIRLAMA İÇİN GEREKLİLER ---
@@ -673,8 +674,25 @@ def ariza_bildir_genel(request):
             messages.success(request, "Sorun bildiriminiz yöneticiye iletildi.")
         else:
             messages.error(request, "Sistemde kayıtlı cihaz bulunamadığı için bildirim yapılamadı.")
+
+    # ============================================================
+    # GÜVENLİ REDIRECT KONTROLÜ (Open Redirect Koruması)
+    # ============================================================
+    hedef_url = request.META.get('HTTP_REFERER')
+
+    # Eğer HTTP_REFERER dolu gelmişse, adresin bizim sunucumuzda kaldığını doğrula
+    if hedef_url:
+        is_safe = url_has_allowed_host_and_scheme(
+            url=hedef_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        )
+        if is_safe:
+            return redirect(hedef_url)
             
-    return redirect(request.META.get('HTTP_REFERER', 'anasayfa'))
+    # Eğer referer yoksa, manipüle edilmişse veya dış bir siteyi işaret ediyorsa
+    # kullanıcıyı her zaman güvenli bir şekilde ana sayfaya gönder
+    return redirect('anasayfa')
 # ============================================================
 #ŞİFRE SIFIRLAMA GÖRÜNÜMLERİ
 # ============================================================# 

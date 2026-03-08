@@ -11,6 +11,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, get_object_or_404, render
+from urllib.parse import urlparse
 from django.urls import path
 from django.utils.html import format_html
 from django.core.mail import send_mail, EmailMultiAlternatives
@@ -19,6 +20,7 @@ from django.db import models
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.apps import apps
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import AdminMassEmailForm
 from .models import (
@@ -51,18 +53,26 @@ BUTTON_WRAPPER = 'display:flex; flex-wrap:wrap; gap:6px; align-items:center;'
 # ============================================================
 # GÜVENLİ REDIRECT
 # ============================================================
-def safe_redirect(request, fallback=".."):
-    """Güvenli redirect - CSRF koruması"""
-    from urllib.parse import urlparse
+def safe_redirect(request, fallback="/"):
+    """Güvenli redirect - Open Redirect ve CSRF Koruması"""
     referer = request.META.get("HTTP_REFERER")
+    
+    # Eğer referer (gelinen sayfa) bilgisi yoksa, varsayılan sayfaya yönlendir
     if not referer:
         return redirect(fallback)
+        
+    # URL'nin gerçekten kendi sunucumuz içinde kalıp kalmadığını kesin olarak denetle
+    is_safe = url_has_allowed_host_and_scheme(
+        url=referer,
+        allowed_hosts={request.get_host()}, # Sadece sitemizin barındığı adrese izin ver
+        require_https=request.is_secure(),  # Sitemiz HTTPS ise yönlendirme de HTTPS olmaya zorlanır
+    )
     
-    parsed = urlparse(referer)
-    if not parsed.netloc or parsed.netloc == request.get_host():
+    if is_safe:
         return redirect(referer)
-    return redirect(fallback)
-
+    else:
+        # Eğer URL manipüle edilmişse (dış bir siteye gidiyorsa), güvenli varsayılan sayfaya at
+        return redirect(fallback)
 # ============================================================
 # GLOBAL ACTION FUNCTIONS
 # ============================================================

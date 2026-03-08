@@ -1,20 +1,30 @@
-# Geliştirici Rehberi
+# 💻 Geliştirici Rehberi
 
-## Kod Standartları
-- Python kodları PEP8 standartlarına uygun olmalı.
-- Django model ve view naming konvansiyonlarına uyun.
+Bu rehber, **BookLab** projesine katkıda bulunmak isteyen veya kodu geliştirmek isteyen geliştiriciler için standartları belirler.
 
-## Branch ve Commit Stratejisi
-- `main` → Kararlı sürümler
-- `develop` → Aktif geliştirme
-- Feature branch: `feature/<özellik_adı>`
+## 🛠️ Kod Standartları
+- **PEP 8:** Python kodları PEP 8 standartlarına uygun olmalıdır.
+- **Docstrings:** Yeni eklenen her fonksiyon ve class için açıklayıcı docstring eklenmelidir.
+- **Type Hinting:** Mümkünse fonksiyon parametreleri için tip belirtimi (`name: str`) kullanılmalıdır.
 
-## Yeni Özellik Ekleme
-1. Feature branch oluştur
-2. Gerekli model, view, template ve migration ekle
-3. Testleri çalıştır ve doğrula
-4. PR oluştur ve review sonrası merge
+## 🌿 Git Workflow (Branch Yönetimi)
+Projede aşağıdaki branch yapısı izlenmelidir:
+- `main`: Sadece stabil ve canlıya çıkmaya hazır kodlar.
+- `develop`: Geliştirme aşamasındaki özelliklerin birleştiği ana dal.
+- `feature/özellik-adı`: Yeni bir özellik eklerken açılacak dal.
+- `bugfix/hata-adı`: Hata düzeltmeleri için açılacak dal.
 
-## Öneriler
-- Kodun modüler ve yeniden kullanılabilir olmasına dikkat edin.
-- Admin panelinde yeni alan eklerken migration dosyasını unutmayın.
+## 🚀 Yeni Özellik Ekleme Adımları
+1. Yeni bir feature branch açın.
+2. Model değişikliği varsa `makemigrations` yapın.
+3. Testlerinizi yerel ortamda (runserver) gerçekleştirin.
+4. Kodunuzu `develop` branch'ine PR (Pull Request) olarak gönderin.
+
+---
+
+<div align="center">
+
+| [⬅️ Önceki: Mimari](06_architecture.md) | [Sonraki: SSS ➡️](08_faq.md) |
+|:---:|:---:|
+
+</div>

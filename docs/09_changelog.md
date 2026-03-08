@@ -1,14 +1,26 @@
-# Changelog
+# 📜 Changelog
 
-## [1.0.0] – 2026-02-13
-- İlk üretim sürümü yayınlandı
-- Kullanıcı kaydı, e-posta doğrulama ve admin onayı eklendi
-- Laboratuvar ve cihaz bazlı rezervasyon sistemi
-- Yönetim paneli ve raporlama özellikleri
-- Çakışma kontrolü ve bildirim sistemi
+**BookLab** projesindeki tüm önemli değişiklikler bu dosya altında kronolojik olarak tutulur.
 
-## [1.1.0] – Planlanan
-- Geliştirilmiş rezervasyon takvimi
-- API dokümantasyonu ve testleri
-- Mobil uyumlu tasarım iyileştirmeleri
-- Geliştirici rehberi güncellemeleri
+## [v1.0.0] - 2026-02-13
+### 🚀 Eklendi
+- Kullanıcı Kayıt ve Login sistemi.
+- OTP (E-posta doğrulama) mekanizması.
+- Pasif/Aktif öğrenci onay hiyerarşisi.
+- AdminLTE 3 entegrasyonu.
+- Rezervasyon çakışma kontrolü algoritması.
+- Profesyonel Dokümantasyon sistemi (docs/).
+
+## [v0.5.0] - 2026-02-10 (Beta)
+### 🛠 Değişti
+- Veritabanı şeması daha optimize bir yapıya kavuşturuldu.
+- Statik dosya yönetimi (whitenoise) iyileştirildi.
+
+---
+
+<div align="center">
+
+| [⬅️ Önceki: SSS](08_faq.md) | [🏠 Ana Sayfa](../README.md) |
+|:---:|:---:|
+
+</div>

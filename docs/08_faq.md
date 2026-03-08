@@ -1,17 +1,24 @@
-# Sık Sorulan Sorular (FAQ)
+# ❓ Sık Sorulan Sorular (SSS)
 
-## 1. E-posta doğrulama gelmedi
-- Spam klasörünü kontrol edin.
-- SMTP ayarlarını ve Google güvenlik izinlerini kontrol edin.
+**BookLab** kullanımı sırasında karşılaşılabilecek yaygın sorular ve çözümleri.
 
-## 2. Çakışan randevu hatası
-- Aynı cihaz ve saat diliminde rezervasyon almaya çalışıyorsunuz demektir.
-- Farklı saat veya cihaz seçin.
+### Q1: E-posta doğrulama kodu (OTP) gelmiyor, ne yapmalıyım?
+- **Cevap:** Öncelikle Spam/Gereksiz klasörünü kontrol edin. Eğer hala gelmediyse, `.env` dosyasındaki SMTP ayarlarını ve "Uygulama Şifresi"nin doğruluğunu teyit edin.
 
-## 3. Şifre sıfırlama çalışmıyor
-- E-posta servis sağlayıcınızı kontrol edin.
-- TLS/SSL ayarlarının doğru olduğundan emin olun.
+### Q2: Kayıt oldum ama randevu alamıyorum, neden?
+- **Cevap:** Hesabınız e-posta ile doğrulanmış olsa bile, bir yönetici tarafından "Aktif Öğrenci" statüsüne geçirilmeniz gerekir. Lütfen bölüm admini ile iletişime geçin.
 
-## 4. Admin panelinde eksik kullanıcı
-- Django admin üzerinden filtrelemeyi kontrol edin.
-- Kullanıcının onaylı ve aktif olduğundan emin olun.
+### Q3: Çakışan randevularda öncelik kimindir?
+- **Cevap:** Sistem, saniye farkıyla bile olsa işlemi ilk tamamlayan randevuyu kabul eder ve aynı saat dilimini diğer kullanıcılara kapatır.
+
+### Q4: Admin paneline (AdminLTE) nasıl erişirim?
+- **Cevap:** Proje adresi sonuna `/admin` ekleyerek (örn: `127.0.0.1:8000/admin`) ve süper kullanıcı bilgilerinizle giriş yapabilirsiniz.
+
+---
+
+<div align="center">
+
+| [⬅️ Önceki: Geliştirici Rehberi](07_dev_guide.md) | [Sonraki: Changelog ➡️](09_changelog.md) |
+|:---:|:---:|
+
+</div>
