@@ -56,3 +56,16 @@ is_conflict = Appointment.objects.filter(
 
 if is_conflict:
     raise ValidationError("Bu saat dilimi zaten dolu!")
+
+
+<div align="center">
+
+| [⬅️ Önceki Sayfa (03. Yönetici Rehberi)](03_admin_guide.md) | [Sonraki Sayfa (05. Veritabanı Yapısı) ➡️](05_database.md) |
+|:---:|:---:|
+
+</div>
+
+---
+<div align="center">
+  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
+</div>
