@@ -21,7 +21,12 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 # Tarayıcıyı açın : http://127.0.0.1:8000/
-
+```
 <div align="center">
   <a href="02_user_guide.md">Sonraki: Kullnıcı Kılavuzu ➡️</a>
+</div>
+
+---
+<div align="center">
+  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
 </div>

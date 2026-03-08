@@ -22,3 +22,8 @@
 |:---:|:---:|
 
 </div>
+
+---
+<div align="center">
+  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
+</div>

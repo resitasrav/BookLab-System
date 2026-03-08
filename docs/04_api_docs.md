@@ -56,7 +56,7 @@ is_conflict = Appointment.objects.filter(
 
 if is_conflict:
     raise ValidationError("Bu saat dilimi zaten dolu!")
-
+```
 
 <div align="center">
 
