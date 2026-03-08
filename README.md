@@ -13,7 +13,7 @@
 
 **BookLab**, üniversite laboratuvar kaynaklarının adil, verimli ve güvenli yönetilmesini sağlayan üretim aşamasına hazır bir web platformudur.  
 
-[🌐 Canlı Demo](https://asravresit.pythonanywhere.com/) | [📚 Dokümantasyon](#) | [🐞 Hata Bildir](#)
+[🌐 Canlı Demo](https://asravresit.pythonanywhere.com/) | [📚 Dokümantasyon](docs/README.md) | [👨‍💻 İletişim & Destek](https://www.linkedin.com/in/resitasrav)
 
 </div>
 
