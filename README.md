@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🧪 BookLab-System
-### *Bursa Teknik Üniversitesi Laboratuvar Rezervasyon ve Yönetim Ekosistemi*
+### *Laboratuvar Rezervasyon ve Yönetim Ekosistemi*
 
 [![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)](https://www.python.org/) 
 [![Django](https://img.shields.io/badge/Django-5.1-green?style=for-the-badge&logo=django)](https://www.djangoproject.com/) 
@@ -13,7 +13,7 @@
 
 **BookLab**, üniversite laboratuvar kaynaklarının adil, verimli ve güvenli yönetilmesini sağlayan üretim aşamasına hazır bir web platformudur.  
 
-[🌐 Canlı Demo](https://asravresit.pythonanywhere.com/) | [📚 Dokümantasyon](docs/README.md) | [👨‍💻 İletişim & Destek](https://www.linkedin.com/in/resitasrav)
+[🌐 Canlı Demo](https://booklabtr.duckdns.org/) | [📚 Dokümantasyon](docs/README.md) | [👨‍💻 İletişim & Destek](https://www.linkedin.com/in/resitasrav)
 
 </div>
 
@@ -84,7 +84,7 @@ Manuel laboratuvar takibi sık sık çakışmalara ve kaynak israfına yol açar
 ### **İletişim & Deployment**
 - **Google SMTP** – TLS/SSL ile güvenli e-posta doğrulaması.  
 - **Git & GitHub** – Versiyon kontrolü ve CI/CD.  
-- **PythonAnywhere** – Bulut tabanlı canlı yayın.  
+- **Oracle Cloude** – Bulut tabanlı canlı yayın.  
 
 ---
 
