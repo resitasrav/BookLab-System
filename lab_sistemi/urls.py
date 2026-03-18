@@ -46,7 +46,7 @@ urlpatterns = [
     # 4. ŞİFRE SIFIRLAMA (PASSWORD RESET - GÖRSEL MAİL ENTEGRELİ)
     # ========================================================
     
-    # 1. Aşama: E-posta isteme (Senin yazdığın görsel mail fonksiyonu)
+    # 1. Aşama: E-posta isteme 
     path('sifre-sifirla/', views.sifre_sifirla_talep, name='password_reset'),
 
     # 2. Aşama: E-posta gönderildi onay sayfası
