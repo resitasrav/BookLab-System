@@ -13,13 +13,13 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.contrib.admin.views.decorators import staff_member_required
-from django.core.mail import send_mail, EmailMultiAlternatives # EmailMultiAlternatives buraya taşındı
+from django.core.mail import send_mail, EmailMultiAlternatives 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count
 from django.db import transaction
-from django.urls import reverse # 🟢 URL tersine çözümleme için eklendi
+from django.urls import reverse 
 from django.db.models import Q 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -28,13 +28,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.http import url_has_allowed_host_and_scheme
-#from .decorators import staff_member_required # Kendi dekoratörün veya Django'nunki
+#from .decorators import staff_member_required 
 from .models import Cihaz
 # --- ŞİFRE SIFIRLAMA İÇİN GEREKLİLER ---
-from django.contrib.auth.tokens import default_token_generator # 🟢 NameError hatasını çözen kritik satır
+from django.contrib.auth.tokens import default_token_generator 
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.utils.html import strip_tags # 🟢 Mail gövdesindeki HTML'i temizlemek için
+from django.utils.html import strip_tags 
 
 # --- MODELS & FORMS ---
 from .models import Laboratuvar, Cihaz, Randevu, Profil, Duyuru, Ariza
@@ -47,7 +47,7 @@ from .forms import (
 )
 
 # --- UTILS ---
-from .utils import render_to_pdf # 🟢 PDF çıktısı almak için eklendi
+from .utils import render_to_pdf # PDF çıktısı almak için eklendi
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +235,7 @@ def randevu_al(request, cihaz_id):
         messages.error(request, f"⛔ '{secilen_cihaz.isim}' bakımda.")
         return redirect("lab_detay", lab_id=secilen_cihaz.lab.id)
 
-    # Tarih belirleme (Hata korumalı)
+    # Tarih belirleme 
     secilen_tarih_str = request.GET.get("tarih")
     try:
         secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date() if secilen_tarih_str else timezone.now().date()
@@ -338,7 +338,7 @@ def randevu_al(request, cihaz_id):
     mevcut_randevular = Randevu.objects.filter(
         cihaz=secilen_cihaz, 
         tarih=secilen_tarih,
-        durum__in=['onay_bekleniyor', 'onaylandi'] # 🟢 Bu kısım iptalleri gizler
+        durum__in=['onay_bekleniyor', 'onaylandi'] r
     ).order_by("baslangic_saati")
 
     return render(request, "randevu_form.html", {
@@ -398,10 +398,10 @@ def onay_bekleyen_sayisi(request):
     Sol menüdeki bildirimleri (badge) ait oldukları sekmelere dağıtır.
     Pasif öğrenciler ve Bekleyen randevular artık ayrı sayılır.
     """
-    # 1. Onay Bekleyen Pasif Öğrenciler (image_1c8dc0.png'deki kırmızı balon için)
+    # 1. Onay Bekleyen Pasif Öğrenciler 
     pasif_ogrenci = User.objects.filter(is_active=False).count()
     
-    # 2. Onay Bekleyen Randevular (image_792300.png'de menünün yanındaki sayaç için)
+    # 2. Onay Bekleyen Randevular 
     bekleyen_randevu = Randevu.objects.filter(durum='onay_bekleniyor').count()
     
     # 3. Çözülmemiş Arıza Bildirimleri
@@ -447,22 +447,21 @@ def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
-            # 1. Bilgileri veritabanına yazmıyoruz, session'a alıyoruz
+          
             user_data = {
                 'username': form.cleaned_data['username'],
                 'email': form.cleaned_data['email'],
-                'password': form.cleaned_data['password'], # Formda temizlenmiş şifre
-                # Varsa diğer alanlar...
+                'password': form.cleaned_data['password'], 
+
             }
             
             dogrulama_kodu = str(random.randint(100000, 999999))
             
-            # 2. Her şeyi geçici olarak oturuma kaydediyoruz
             request.session['temp_user_data'] = user_data
             request.session['dogrulama_kodu'] = dogrulama_kodu
             request.session['kod_olusturma_tarihi'] = timezone.now().isoformat()
 
-            # 3. Mail Gönderimi
+            #  Mail Gönderimi
             try:
                 send_mail(
                     "BookLab - Kayıt Doğrulama",
@@ -500,7 +499,7 @@ def email_dogrulama(request):
             messages.error(request, "⏳ Süre doldu. Kayıt işleminiz iptal edildi, lütfen tekrar başlayın.")
             return redirect("kayit")
 
-        # ✅ KOD DOĞRUYSA: ŞİMDİ VERİTABANINA YAZIYORUZ
+        # ✅ KOD DOĞRUYSA:  VERİTABANINA YAZIYORUZ
         if girilen_kod == dogrulama_kodu:
             # 1. Kullanıcıyı Şimdi Oluştur
             user = User.objects.create_user(
@@ -517,7 +516,7 @@ def email_dogrulama(request):
             profil.email_dogrulama_tarihi = timezone.now()
             profil.save()
 
-            # 3. Güvenlik için session'ı temizle
+            # 3. Güvenlik için session'ı temizler
             request.session.flush()
 
             messages.success(request, "🎉 E-posta doğrulandı! Hesabınız BookLab yöneticisi tarafından onaylandıktan sonra aktif olacaktır.")
@@ -548,7 +547,7 @@ def randevu_pdf_indir(request):
     )
 @staff_member_required
 def ogrenci_listesi(request):
-    # Öğrencileri en son kayıt olandan (ID'ye göre ters) başlayarak alıyoruz
+    # kullanıcılar en son kayıt olandan (ID'ye göre ters) başlayarak alıyoruz
     ogrenciler = Profil.objects.all().order_by('-id')
 
     # Arama parametresini URL'den yakala (?q=...)
@@ -585,8 +584,6 @@ def cihaz_durum_degistir(request, cihaz_id):
     cihaz.aktif_mi = not cihaz.aktif_mi
     
     if cihaz.aktif_mi:
-        # Notu silmek yerine arşive almak istersen burayı değiştirebilirsin
-        # Şimdilik senin isteğin üzerine temizliyoruz:
         cihaz.aciklama = "" 
         messages.success(request, f"✅ {cihaz.isim} aktif edildi ve arıza notu temizlendi.")
     else:
