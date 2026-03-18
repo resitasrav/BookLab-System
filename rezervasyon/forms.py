@@ -41,7 +41,7 @@ sadece_rakam_validator = RegexValidator(
     message="Lütfen sadece rakam giriniz (Boşluk veya harf kullanmayınız).",
 )
 
-# --- KAYIT FORMU (GÜNCELLENDİ) ---
+# --- KAYIT FORMU  ---
 class KayitFormu(forms.ModelForm):
     username = forms.CharField(
         label="Kullanıcı Adı",
@@ -105,17 +105,11 @@ class KayitFormu(forms.ModelForm):
 
         if pwd:
             try:
-                # 1. ADIM: Şifreyi Django'nun güvenlik süzgecinden geçir
-                # 'user=user' parametresi, şifrenin kullanıcı adıyla aynı olup olmadığını denetler
                 validate_password(pwd, user=user) 
                 
             except ValidationError as e:
-                # 2. ADIM: Eğer şifre zayıfsa (örn: çok kısa, çok yaygın), sistemi durdur ve hata ver
                 self.add_error('password', e) 
-                # Not: Eğer bu kod bir Form içinde değilse, `self.add_error` yerine 
-                # doğrudan `raise ValidationError(e)` kullanabilirsin.
 
-        # 3. ADIM: Eğer yukarıdaki testten (try bloğundan) başarıyla geçtiyse, şifre güvenlidir. Artık kaydedebilirsin.
         user.set_password(pwd)
         if commit:
             user.save()
@@ -149,7 +143,7 @@ class KayitFormu(forms.ModelForm):
             self.add_error("password_confirm", "Şifreler birbiriyle eşleşmiyor.")
         return cleaned_data
 
-# --- DİĞER FORMLAR AYNI KALIYOR ---
+# ---  FORMLAR---
 class KullaniciGuncellemeFormu(forms.ModelForm):
     class Meta:
         model = User
