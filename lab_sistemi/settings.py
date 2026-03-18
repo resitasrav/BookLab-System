@@ -32,14 +32,16 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # 1. Sitenin çalışacağı adresler 
 ALLOWED_HOSTS = [
-    'asravresit.pythonanywhere.com', 
+    'booklabtr.duckdns.org', 
     'localhost', 
     '127.0.0.1'
 ]
 
 # 2. Form güvenliği için gerekli ayar (CSRF hatalarını önler)
 CSRF_TRUSTED_ORIGINS = [
-    'https://asravresit.pythonanywhere.com',
+    'https://booklabtr.duckdns.org',
+    'http://booklabtr.duckdns.org',
+    'https://129.151.44.240',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
@@ -65,16 +67,16 @@ INSTALLED_APPS = [
     
     # 3. Üçüncü Parti Araçlar
     "xhtml2pdf",     # PDF Üretimi
-    "widget_tweaks", # Formları güzelleştirmek için
-    "django_extensions", # (Opsiyonel) Geliştirici araçları
+    "widget_tweaks", 
+    "django_extensions", 
 
-    # 4. Sizin Uygulamalarınız
+    
     "rezervasyon",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # WhiteNoise Middleware (Hemen Security'den sonra olmalı)
+    # WhiteNoise Middleware 
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
