@@ -35,7 +35,7 @@ class Cihaz(models.Model):
 
 # 3. İşlem: Randevu
 class Randevu(models.Model):
-    # DURUM SABİTLERİ (En güvenli yöntem)
+    # DURUM SABİTLERİ 
     ONAY_BEKLENIYOR = "onay_bekleniyor"
     ONAYLANDI = "onaylandi"
     REDDEDILDI = "reddedildi"
@@ -62,7 +62,7 @@ class Randevu(models.Model):
     durum = models.CharField(
         max_length=20,
         choices=DURUM_SECENEKLERI,
-        default=ONAY_BEKLENIYOR, # Hata düzeltildi
+        default=ONAY_BEKLENIYOR, 
         verbose_name="Rezervasyon Durumu",
     )
 
@@ -116,7 +116,7 @@ class Randevu(models.Model):
 
     def sonradan_iptal(self):
         """Herhangi bir aşamada randevuyu iptal/red durumuna çeker"""
-        self.durum = self.REDDEDILDI  # Veya self.IPTAL, tercihe göre
+        self.durum = self.REDDEDILDI  # Veya self.IPTAL
 
 # 4. Profil
 class Profil(models.Model):
@@ -169,8 +169,7 @@ def create_or_save_user_profile(sender, instance, created, **kwargs):
     try:
         profil.save()
     except Exception:
-        # Profil kaydı sırasında nadiren bir hata çıkarsa uygulamanın
-        # tamamı etkilenmesin; loglamak daha iyi olacaktır.
+        
         pass
 
 
