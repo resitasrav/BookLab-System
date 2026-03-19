@@ -7,7 +7,8 @@
 [![Django](https://img.shields.io/badge/Django-5.1-green?style=for-the-badge&logo=django)](https://www.djangoproject.com/) 
 [![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey?style=for-the-badge&logo=sqlite)](https://www.sqlite.org/) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT) 
-[![Deployment](https://img.shields.io/badge/Deployment-PythonAnywhere-blueviolet?style=for-the-badge&logo=python)](https://www.pythonanywhere.com/)
+[![Deployment](![Oracle Cloud](https://img.shields.io)
+)](https://www.oracle.com/cloud/)
 
 <img src="screenshots/BookLab_start.png" width="900" alt="BookLab Ana Ekran" style="border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3)">
 
