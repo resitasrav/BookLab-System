@@ -4,13 +4,13 @@
 {% block icerik %}
 <style>
     /* BTÜ Temalı Arıza Takip Paneli Tasarımı */
-    :root { --btu-blue: #003366; --btu-danger: #dc3545; --btu-warning: #ffc107; }
+    :root { --btu-blue: #003366; --btu-danger: #dc3545; --btu-warning: #ffc107; --btu-success: #28a745; }
 
     .status-card {
         border: none;
         border-radius: 20px;
         background: #ffffff;
-        box-shadow: 0 10px 30px rgba(220, 53, 69, 0.08); /* Hafif kırmızı gölge */
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.05);
         overflow: hidden;
     }
 
@@ -31,15 +31,17 @@
         border-left: 5px solid transparent;
     }
     .faulty-row:hover {
-        background-color: #fff5f5 !important;
-        border-left: 5px solid var(--btu-danger);
+        background-color: rgba(0, 51, 102, 0.02) !important;
         transform: scale(1.002);
     }
+    
+    /* Arızalı cihazlar için özel vurgu */
+    .is-broken {
+        border-left: 5px solid var(--btu-danger);
+        background-color: #fff5f5 !important;
+    }
 
-    .badge-maintenance {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
+    .badge-status {
         padding: 6px 12px;
         border-radius: 50px;
         font-weight: 700;
@@ -47,18 +49,71 @@
     }
 
     .device-name { color: var(--btu-blue); font-weight: 800; }
+
+    /* 📱 MOBİL UYUMLULUK AYARLARI */
+    @media (max-width: 992px) {
+        .table thead { display: none; }
+        .table tbody tr {
+            display: block;
+            border-bottom: 2px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid transparent;
+        }
+        .table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: none;
+            padding: 8px 0;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .table td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: var(--btu-blue);
+            text-align: left;
+            margin-right: 10px;
+            min-width: 100px;
+        }
+        .status-card { border-radius: 15px; }
+        .container { padding-left: 12px; padding-right: 12px; }
+    }
+
+    @media (max-width: 768px) {
+        .table tbody tr { padding: 12px; margin-bottom: 8px; }
+        .table td { padding: 6px 0; font-size: 0.8rem; }
+        .table td::before { min-width: 80px; font-size: 0.75rem; }
+        .badge-status { padding: 4px 8px; font-size: 0.65rem; }
+        .device-name { font-size: 0.9rem; }
+        h2 { font-size: 1.2rem; }
+        .container { padding-left: 8px; padding-right: 8px; }
+    }
+
+    @media (max-width: 576px) {
+        .table tbody tr { padding: 10px; margin-bottom: 0.8rem; border-left: 3px solid var(--btu-danger); }
+        .table.is-broken tbody tr { background-color: #fff5f5 !important; }
+        .table td { font-size: 0.75rem; padding: 5px 0; }
+        .table td::before { min-width: 70px; font-size: 0.7rem; margin-right: 5px; }
+        .badge-status { padding: 3px 6px; font-size: 0.6rem; }
+        .status-card { border-radius: 12px; }
+        h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+        p { font-size: 0.75rem; }
+        .container { padding-left: 4px; padding-right: 4px; }
+    }
 </style>
 
 <div class="container mt-2 mb-5 px-lg-4">
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
-            <h2 class="fw-bold text-danger mb-0">
-                <i class="bi bi-tools me-2"></i>Teknik Bakım & Arıza Takibi
+            <h2 class="fw-bold text-primary mb-0">
+                <i class="bi bi-tools me-2"></i>Teknik Bakım & Cihaz Yönetimi
             </h2>
-            <p class="text-muted small mb-0">Laboratuvarlarda şu an servis dışı veya arızalı olan cihazların listesi.</p>
+            <p class="text-muted small mb-0">Laboratuvar cihazlarının aktiflik durumunu ve arıza kayıtlarını buradan yönetin.</p>
         </div>
-        <div class="col-md-4 text-md-end">
-            <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm mt-3 mt-md-0">
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm btn-sm">
                 <i class="bi bi-arrow-left me-2"></i>Panele Dön
             </a>
         </div>
@@ -66,13 +121,15 @@
 
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-danger text-white">
+            <div class="card border-0 shadow-sm rounded-4 p-3 {% if cihazlar.count > 0 %}bg-danger{% else %}bg-success{% endif %} text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0 opacity-75">Toplam Arıza</h6>
-                        <h3 class="fw-bold mb-0">{{ cihazlar|length }} Cihaz</h3>
+                        <h6 class="mb-0 opacity-75">Sistem Durumu</h6>
+                        <h3 class="fw-bold mb-0">
+                            {% if cihazlar.count > 0 %}{{ cihazlar.count }} Arızalı Cihaz{% else %}Tüm Cihazlar Aktif{% endif %}
+                        </h3>
                     </div>
-                    <i class="bi bi-exclamation-octagon fs-1 opacity-50"></i>
+                    <i class="bi {% if cihazlar.count > 0 %}bi-exclamation-octagon{% else %}bi-check-all{% endif %} fs-1 opacity-50"></i>
                 </div>
             </div>
         </div>
@@ -85,52 +142,78 @@
                     <thead>
                         <tr>
                             <th class="ps-4">Cihaz Bilgisi</th>
-                            <th>Laboratuvar Konumu</th>
-                            <th>Arıza / Bakım Detayı</th>
-                            <th class="text-center">Durum</th>
+                            <th>Konum</th>
+                            <th>Arıza / Bakım Notu</th>
+                            <th class="text-center">İşlem</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for cihaz in cihazlar %}
-                        <tr class="faulty-row">
-                            <td class="ps-4">
+                                            {% for cihaz in cihazlar %}
+                    <tr class="faulty-row {% if not cihaz.aktif_mi %}is-broken{% endif %}">
+                        <td data-label="Cihaz" class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="p-2 rounded-3 me-3 {% if cihaz.aktif_mi %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                                    <i class="bi bi-pc-display fs-4"></i>
+                                </div>
+                                <div>
+                                    <span class="device-name d-block">{{ cihaz.isim }}</span>
+                                    <small class="text-muted">SN: #{{ cihaz.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Konum">
+                            <span class="badge bg-light text-dark border fw-bold">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>{{ cihaz.lab.isim }}
+                            </span>
+                        </td>
+                        <td data-label="Arıza Notu">
+                            {% if cihaz.aciklama %}
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded-3 me-3 text-danger">
-                                        <i class="bi bi-pc-display fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <span class="device-name d-block">{{ cihaz.isim }}</span>
-                                        <small class="text-muted">ID: #{{ cihaz.id }}</small>
+                                    <button type="button" class="btn btn-sm btn-link text-info p-0 me-2" 
+                                            data-bs-toggle="modal" data-bs-target="#notModal{{ cihaz.id }}">
+                                        <i class="bi bi-info-circle-fill fs-5"></i>
+                                    </button>
+                                    <span class="text-truncate d-inline-block" style="max-width: 150px; font-size: 0.85rem;">
+                                        {{ cihaz.aciklama|truncatechars:20 }}
+                                    </span>
+                                </div>
+
+                                <div class="modal fade" id="notModal{{ cihaz.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                                            <div class="modal-header bg-danger text-white border-0" style="border-radius: 15px 15px 0 0;">
+                                                <h5 class="modal-title fw-bold">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>Arıza Kaydı: {{ cihaz.isim }}
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4 text-dark text-start">
+                                                <h6 class="fw-bold mb-2">Detaylı Açıklama:</h6>
+                                                <p class="bg-light p-3 rounded-3 border" style="white-space: pre-wrap;">{{ cihaz.aciklama }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border fw-bold">
-                                    <i class="bi bi-geo-alt-fill text-primary me-1"></i>{{ cihaz.lab.isim }}
-                                </span>
-                            </td>
-                            <td>
-                                <p class="mb-0 small text-secondary fst-italic">
-                                    {{ cihaz.aciklama|default:"Arıza açıklaması girilmemiş." }}
-                                </p>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge-maintenance">
-                                    <i class="bi bi-clock-history me-1"></i>PASİF
-                                </span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <div class="opacity-50">
-                                    <i class="bi bi-check2-circle display-1 text-success mb-3"></i>
-                                    <h4 class="fw-bold text-dark">Her Şey Yolunda!</h4>
-                                    <p class="mb-0">Şu an sistemde arızalı cihaz kaydı bulunmuyor.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                            {% else %}
+                                <span class="text-muted small"><em>Not bildirilmemiş.</em></span>
+                            {% endif %}
+                        </td>
+                        <td data-label="İşlem" class="text-center">
+                            <form action="{% url 'cihaz_durum_degistir' cihaz.id %}" method="POST">
+                                {% csrf_token %}
+                                {% if cihaz.aktif_mi %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">
+                                        <i class="bi bi-pause-circle me-1"></i> Pasife Al
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                                        <i class="bi bi-play-circle me-1"></i> Arızayı Gider
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>

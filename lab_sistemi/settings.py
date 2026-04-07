@@ -7,6 +7,7 @@ Bu dosya:
 3. Gmail ve PDF ayarlarını aktif eder.
 """
 
+from datetime import datetime
 from pathlib import Path
 import os
 from decouple import config  # pip install python-decouple
@@ -41,6 +42,8 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     'https://booklabtr.duckdns.org',
     'http://booklabtr.duckdns.org',
+    'https://129.151.44.240',
+    'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
 
@@ -65,16 +68,16 @@ INSTALLED_APPS = [
     
     # 3. Üçüncü Parti Araçlar
     "xhtml2pdf",     # PDF Üretimi
-    "widget_tweaks", # Formları güzelleştirmek için
-    "django_extensions", # (Opsiyonel) Geliştirici araçları
+    "widget_tweaks", 
+    "django_extensions", 
 
-    # 4. Sizin Uygulamalarınız
+    
     "rezervasyon",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # WhiteNoise Middleware (Hemen Security'den sonra olmalı)
+    # WhiteNoise Middleware 
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -170,12 +173,13 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# Bilgileri .env dosyasından gizlice çeker, yoksa boş döner
-EMAIL_HOST_USER = config("EMAIL_USER", default="")
-EMAIL_HOST_PASSWORD = config("EMAIL_PASS", default="")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# BookLab Yeni Yapılandırma
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 
+# Gönderen kısmında "BookLab Sistemi" yazması için:
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 # ========================================================
 # 8. GİRİŞ / ÇIKIŞ YÖNLENDİRMELERİ
 # ========================================================
@@ -202,7 +206,7 @@ SESSION_COOKIE_SAMESITE = "Lax"
 
 MAX_RANDEVU_SAATI = 3
 IPTAL_MIN_SURE_SAAT = 1
-OKUL_MAIL_UZANTISI = "@ogr.btu.edu.tr"
+#OKUL_MAIL_UZANTISI = "@ogr.btu.edu.tr"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
@@ -211,11 +215,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ========================================================
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Labratuvar Randevu Sistemi",
-    "site_header": "BTÜ Labratuvar Sistemi",
+    "site_title": "Laboratuvar Rezervasyon Sistemi",
+    "site_header": "BookLab Rezervasyon Sistemi",
     "site_brand": "Yönetim Paneli",
-    "welcome_sign": "Laboratuvar Yönetim Merkezine Hoşgeldiniz",
-    "copyright": "BTÜ Labratuvar Sistemi 2026",
+    "welcome_sign": " Yönetim Merkezine Hoşgeldiniz",
+    "copyright": f"BookLab Rezervasyon Sistemi {datetime.now().year}",
     "search_model": "auth.User",
     "custom_css": "fonts/css/custom_admin.css",
     "user_avatar": None,
@@ -223,7 +227,7 @@ JAZZMIN_SETTINGS = {
     "custom_js": "fonts/js/admin_ozel.js",
     "topmenu_links": [
         {"name": "Ana Sayfa", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Randevu Sayfası", "url": "/", "new_window": True},
+        {"name": "Rezervasyon Sayfası", "url": "/", "new_window": True},
     ],
     "icons": {
         "auth": "fas fa-users-cog",
@@ -294,3 +298,10 @@ LOGGING = {
         },
     },
 }
+import os
+def link_callback(uri, rel):
+    from django.conf import settings
+    path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    if not os.path.isfile(path):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    return path if os.path.isfile(path) else uri

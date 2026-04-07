@@ -50,6 +50,52 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 992px) {
+        .attendance-card { border-radius: 1.2rem; }
+        .table thead th { padding: 12px; font-size: 0.7rem; }
+        .table tbody tr { font-size: 0.9rem; }
+        h2 { font-size: 1.3rem; }
+        .badge-btu { padding: 0.5em 0.8em; font-size: 0.75rem; }
+    }
+
+    @media (max-width: 768px) {
+        .container { padding-left: 8px; padding-right: 8px; }
+        .attendance-card { border-radius: 1rem; }
+        .table thead { font-size: 0.65rem; }
+        .table thead th { padding: 10px 5px; }
+        .table tbody tr { font-size: 0.8rem; }
+        .table tbody td { padding: 8px 5px; }
+        h2 { font-size: 1.1rem; }
+        h5 { font-size: 0.95rem; }
+        .border-bottom { padding-bottom: 0.5rem !important; }
+        .btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
+        .badge { font-size: 0.65rem; }
+        .avatar-circle { width: 35px; height: 35px; }
+    }
+
+    @media (max-width: 576px) {
+        .container { padding-left: 4px; padding-right: 4px; }
+        .d-flex.justify-content-between { flex-direction: column; }
+        .table-responsive { font-size: 0.75rem; }
+        .table thead { display: none; }
+        .table tbody tr { display: block; margin-bottom: 1rem; border-left: 4px solid #00a8cc; }
+        .table tbody td { display: block; padding: 6px 0 !important; }
+        .table tbody td::before { content: attr(data-label); font-weight: 700; color: #003366; display: block; font-size: 0.75rem; }
+        .table tbody .text-start { text-align: left; }
+        h2 { font-size: 1rem; margin-bottom: 0.3rem; }
+        p { font-size: 0.75rem; }
+        .badge { font-size: 0.6rem; padding: 0.3rem 0.5rem; }
+        .btn { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+        .avatar-circle { width: 30px; height: 30px; font-size: 0.8rem; }
+        .card { border-radius: 10px; }
+    }
+
+    @media (max-width: 360px) {
+        .table tbody td { font-size: 0.7rem; }
+        .btn { font-size: 0.65rem; }
+    }
 </style>
 
 <div class="container mt-2 mb-5">

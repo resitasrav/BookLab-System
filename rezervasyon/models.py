@@ -19,7 +19,7 @@ class Laboratuvar(models.Model):
 
 # 2. Rezerve Edilecek Nesne: Cihaz
 class Cihaz(models.Model):
-    lab = models.ForeignKey(Laboratuvar, on_delete=models.CASCADE, verbose_name="Bağlı Olduğu Lab")
+    lab = models.ForeignKey(Laboratuvar, on_delete=models.CASCADE, verbose_name="Bağlı Olduğu Laboratuvar")
     isim = models.CharField(max_length=100, verbose_name="Cihaz Adı")
     aktif_mi = models.BooleanField(default=True, verbose_name="Kullanıma Açık mı?")
     aciklama = models.TextField(blank=True, null=True, verbose_name="Açıklama")
@@ -35,7 +35,7 @@ class Cihaz(models.Model):
 
 # 3. İşlem: Randevu
 class Randevu(models.Model):
-    # DURUM SABİTLERİ (En güvenli yöntem)
+    # DURUM SABİTLERİ 
     ONAY_BEKLENIYOR = "onay_bekleniyor"
     ONAYLANDI = "onaylandi"
     REDDEDILDI = "reddedildi"
@@ -62,8 +62,8 @@ class Randevu(models.Model):
     durum = models.CharField(
         max_length=20,
         choices=DURUM_SECENEKLERI,
-        default=ONAY_BEKLENIYOR, # Hata düzeltildi
-        verbose_name="Randevu Durumu",
+        default=ONAY_BEKLENIYOR, 
+        verbose_name="Rezervasyon Durumu",
     )
 
     onaylayan_admin = models.ForeignKey(
@@ -116,15 +116,39 @@ class Randevu(models.Model):
 
     def sonradan_iptal(self):
         """Herhangi bir aşamada randevuyu iptal/red durumuna çeker"""
-        self.durum = self.REDDEDILDI  # Veya self.IPTAL, hangisini tercih edersen
+        self.durum = self.REDDEDILDI  # Veya self.IPTAL
 
 # 4. Profil
 class Profil(models.Model):
+    # ✨ ÖĞRENCI STATUS SEÇENEKLERI
+    STATUS_CHOICES = [
+        ('pasif_ogrenci', 'Pasif Öğrenci (Email Doğrulı)'),
+        ('aktif_ogrenci', 'Aktif Öğrenci (Admin Onaylı)'),
+        ('iptal', 'İptal Edildi'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Kullanıcı")
     okul_numarasi = models.CharField(max_length=20, blank=True, verbose_name="Okul Numarası")
     telefon = models.CharField(max_length=15, blank=True, verbose_name="Telefon Numarası")
     resim = models.ImageField(upload_to="profil_resimleri/", blank=True, null=True, verbose_name="Profil Resmi")
     dogrulama_kodu = models.CharField(max_length=6, blank=True, null=True, verbose_name="E-Posta Doğrulama Kodu")
+    kod_olusturma_tarihi = models.DateTimeField(null=True, blank=True)
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pasif_ogrenci',
+        verbose_name="Öğrenci Durumu"
+    )
+    email_dogrulandi = models.BooleanField(
+        default=False,
+        verbose_name="Email Doğrulandı mı?"
+    )
+    email_dogrulama_tarihi = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Email Doğrulama Tarihi"
+    )
 
     class Meta:
         verbose_name = "Kullanıcı Profili"
@@ -145,8 +169,7 @@ def create_or_save_user_profile(sender, instance, created, **kwargs):
     try:
         profil.save()
     except Exception:
-        # Profil kaydı sırasında nadiren bir hata çıkarsa uygulamanın
-        # tamamı etkilenmesin; loglamak daha iyi olacaktır.
+        
         pass
 
 

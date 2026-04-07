@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 # ÖNEMLİ: Fontu sunucu başladığında bir kez kaydetmek Windows hatalarını önler
 def register_font():
     try:
-        # Görseldeki klasör yapına göre yol: rezervasyon/static/fonts/
         font_path = os.path.join(
             settings.BASE_DIR,
             "rezervasyon",
@@ -63,11 +62,10 @@ def link_callback(uri, rel):
     return path if os.path.isfile(path) else None
 
 
-def render_to_pdf(template_src="randevu_pdf.html", context_dict=None, filename="btu_rapor.pdf"):
+def render_to_pdf(template_src="randevu_pdf.html", context_dict=None, filename="BookLab_rapor.pdf"):
     if context_dict is None:
         context_dict = {}
 
-    # Her üretim öncesi fontun kayıtlı olduğundan emin ol (Windows Fix)
     register_font()
 
     template = get_template(template_src)

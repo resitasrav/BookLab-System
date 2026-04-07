@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
 from .models import Profil, Ariza
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 # --- CUSTOM LOGIN FORMU (EMAIL + USERNAME DESTEĞİ) ---
 class EmailOrUsernameAuthenticationForm(AuthenticationForm):
@@ -39,7 +41,7 @@ sadece_rakam_validator = RegexValidator(
     message="Lütfen sadece rakam giriniz (Boşluk veya harf kullanmayınız).",
 )
 
-# --- KAYIT FORMU (GÜNCELLENDİ) ---
+# --- KAYIT FORMU  ---
 class KayitFormu(forms.ModelForm):
     username = forms.CharField(
         label="Kullanıcı Adı",
@@ -55,7 +57,7 @@ class KayitFormu(forms.ModelForm):
     )
     email = forms.EmailField(
         label="E-Posta Adresi",
-        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ogrenci@okul.edu.tr"})
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "asrav@mailuzantisi"})
     )
     okul_numarasi = forms.CharField(
         label="Okul Numarası",
@@ -68,12 +70,13 @@ class KayitFormu(forms.ModelForm):
         validators=[sadece_rakam_validator],
         widget=forms.TextInput(attrs={
             "class": "form-control",
-            "placeholder": "05551234567",
+            "placeholder": "05551112233",
             "maxlength": "11",
             "oninput": "this.value = this.value.replace(/[^0-9]/g, '');"
         }),
         help_text="Başında 0 olacak şekilde yazınız."
     )
+
     password = forms.CharField(
         label="Şifre",
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
@@ -99,8 +102,15 @@ class KayitFormu(forms.ModelForm):
         """
         user = super().save(commit=False)
         pwd = self.cleaned_data.get("password")
+
         if pwd:
-            user.set_password(pwd)
+            try:
+                validate_password(pwd, user=user) 
+                
+            except ValidationError as e:
+                self.add_error('password', e) 
+
+        user.set_password(pwd)
         if commit:
             user.save()
             # Ensure profile exists and save profile fields
@@ -133,7 +143,7 @@ class KayitFormu(forms.ModelForm):
             self.add_error("password_confirm", "Şifreler birbiriyle eşleşmiyor.")
         return cleaned_data
 
-# --- DİĞER FORMLAR AYNI KALIYOR ---
+# ---  FORMLAR---
 class KullaniciGuncellemeFormu(forms.ModelForm):
     class Meta:
         model = User
