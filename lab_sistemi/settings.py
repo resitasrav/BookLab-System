@@ -33,6 +33,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 # 1. Sitenin çalışacağı adresler 
 ALLOWED_HOSTS = [
     'booklabtr.duckdns.org', 
+    'https://booklabtr.duckdns.org',
+    'http://booklabtr.duckdns.org',
+    'https://129.151.44.240',
     'localhost', 
     '127.0.0.1',
     
@@ -204,8 +207,8 @@ SESSION_COOKIE_SAMESITE = "Lax"
 # 9. UYGULAMA-SPESİFİK AYARLAR
 # ========================================================
 
-MAX_RANDEVU_SAATI = 3
-IPTAL_MIN_SURE_SAAT = 1
+MAX_RANDEVU_SAATI = 24
+IPTAL_MIN_SURE_SAAT = 0
 #OKUL_MAIL_UZANTISI = "@ogr.btu.edu.tr"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -240,10 +243,10 @@ JAZZMIN_SETTINGS = {
         "rezervasyon.Duyuru": "fas fa-bullhorn",
         "rezervasyon.Profil": "fas fa-id-card",
         "rezervasyon.OnayBekleyenler": "fas fa-user-clock",
-        "rezervasyon.AktifOgrenciler": "fas fa-user-graduate",
+        "rezervasyon.AktifKullanicilar": "fas fa-user-graduate",
     },
     "order_with_respect_to": [
-        "rezervasyon.AktifOgrenciler",
+        "rezervasyon.AktifKullanicilar",
         "rezervasyon.OnayBekleyenler",
         "rezervasyon.Randevu",
         "rezervasyon.Ariza",

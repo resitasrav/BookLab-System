@@ -17,9 +17,9 @@ Sistemin arka planında çalışan statü yönetim tablosu aşağıdaki gibidir:
 
 | Kullanıcı Aşaması | Sistem Statüsü (`status`) | E-Posta Onayı | Hesap (`is_active`) | Giriş İzni (Login) |
 | :--- | :--- | :---: | :---: | :---: |
-| **Kayıt Anı** | `pasif_ogrenci` | ❌ *False* | ❌ *False* | 🚫 Giremez |
-| **E-Posta Onaylandı** | `pasif_ogrenci` | ✅ *True* | ❌ *False* | ⏳ Admin Bekleniyor |
-| **Admin Onayladı** | `aktif_ogrenci` | ✅ *True* | ✅ *True* | ✅ Başarılı |
+| **Kayıt Anı** | `pasif_kullanici` | ❌ *False* | ❌ *False* | 🚫 Giremez |
+| **E-Posta Onaylandı** | `pasif_okullanici` | ✅ *True* | ❌ *False* | ⏳ Admin Bekleniyor |
+| **Admin Onayladı** | `aktif_kullanici` | ✅ *True* | ✅ *True* | ✅ Başarılı |
 | **Admin İptal Etti** | `iptal` | ✅ *True* | ❌ *False* | 🚫 Giremez |
 
 ---

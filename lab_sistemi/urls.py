@@ -101,7 +101,7 @@ urlpatterns = [
 
     # Eğitmen Paneli
     path("yonetim/", views.egitmen_paneli, name="egitmen_paneli"),
-    path("yonetim/ogrenciler/", views.ogrenci_listesi, name="ogrenci_listesi"),
+    path("yonetim/kullanicilar/", views.kullanici_listesi, name="kullanici_listesi"),
     path("yonetim/arizali-cihazlar/", views.arizali_cihaz_listesi, name="arizali_cihaz_listesi"),
     path("yonetim/tum-randevular/", views.tum_randevular, name="tum_randevular"),
     path("durum-degis/<int:randevu_id>/<str:yeni_durum>/", views.durum_guncelle, name="durum_guncelle"),

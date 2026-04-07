@@ -122,8 +122,8 @@ class Randevu(models.Model):
 class Profil(models.Model):
     # ✨ ÖĞRENCI STATUS SEÇENEKLERI
     STATUS_CHOICES = [
-        ('pasif_ogrenci', 'Pasif Öğrenci (Email Doğrulı)'),
-        ('aktif_ogrenci', 'Aktif Öğrenci (Admin Onaylı)'),
+        ('pasif_kullanici', 'Pasif kullanıcı (Email Doğrulı)'),
+        ('aktif_kullanici', 'Aktif Kullanıcı (Admin Onaylı)'),
         ('iptal', 'İptal Edildi'),
     ]
     
@@ -137,8 +137,8 @@ class Profil(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='pasif_ogrenci',
-        verbose_name="Öğrenci Durumu"
+        default='pasif_kullanici',
+        verbose_name="Kullanıcı Durumu"
     )
     email_dogrulandi = models.BooleanField(
         default=False,
@@ -213,8 +213,8 @@ class OnayBekleyenler(User):
         verbose_name = "Onay Bekleyen (Pasif)"
         verbose_name_plural = "🔴 Onay Bekleyenler"
 
-class AktifOgrenciler(User):
+class AktifKullanicilar(User):
     class Meta:
         proxy = True
-        verbose_name = "Aktif Öğrenci"
-        verbose_name_plural = "🟢 Aktif Öğrenciler"
+        verbose_name = "Aktif Kullanıcı"
+        verbose_name_plural = "🟢 Aktif Kullanıcılar"

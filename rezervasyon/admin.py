@@ -25,7 +25,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import AdminMassEmailForm
 from .models import (
     Laboratuvar, Cihaz, Randevu, Profil, Ariza, Duyuru,
-    OnayBekleyenler, AktifOgrenciler
+    OnayBekleyenler, AktifKullanicilar
 )
 
 # ============================================================
@@ -730,8 +730,8 @@ class OnayBekleyenlerAdmin(AdminMassMailMixin, UserAdmin):
             messages.error(request, f"❌ Hata: {str(e)}")
         return safe_redirect(request)
 
-@admin.register(AktifOgrenciler)
-class AktifOgrencilerAdmin(AdminMassMailMixin, UserAdmin):
+@admin.register(AktifKullanicilar)
+class AktifKullanicilarAdmin(AdminMassMailMixin, UserAdmin):
     actions = [pasif_yap, mail_gonder, ozel_mail_action]
     list_display = ("username", "email", "get_full_name", "aktiflik_durumu", "tek_tik_pasif_et")
     list_filter = ("date_joined",)
@@ -809,18 +809,18 @@ class ProfilAdmin(AdminMassMailMixin, admin.ModelAdmin):
     def status_badge(self, obj):
         """Status'u renk-kodlu badge olarak göster"""
         colors = {
-            'pasif_ogrenci': '#ffc107',      # Sarı
-            'aktif_ogrenci': '#28a745',      # Yeşil
+            'pasif_kullanici': '#ffc107',      # Sarı
+            'aktif_kullanici': '#28a745',      # Yeşil
             'iptal': '#dc3545',               # Kırmızı
         }
         labels = {
-            'pasif_ogrenci': '⏳ Pasif Öğrenci',
-            'aktif_ogrenci': '✅ Aktif Öğrenci',
+            'pasif_kullanici': '⏳ Pasif Kullanıcı',
+            'aktif_kullanici': '✅ Aktif Kullanıcı',
             'iptal': '❌ İptal',
         }
         color = colors.get(obj.status, '#6c757d')
         label = labels.get(obj.status, 'Bilinmiyor')
-        text_color = '#000' if obj.status == 'pasif_ogrenci' else '#fff'
+        text_color = '#000' if obj.status == 'pasif_kullanici' else '#fff'
         
         return mark_safe(
             f'<span style="background:{color}; color:{text_color}; padding:6px 12px; '
@@ -867,7 +867,7 @@ class ProfilAdmin(AdminMassMailMixin, admin.ModelAdmin):
         try:
             updated = 0
             for profil in queryset:
-                profil.status = 'aktif_ogrenci'
+                profil.status = 'aktif_kullanici'
                 profil.user.is_active = True
                 profil.save()
                 profil.user.save()
@@ -887,7 +887,7 @@ class ProfilAdmin(AdminMassMailMixin, admin.ModelAdmin):
         try:
             updated = 0
             for profil in queryset:
-                profil.status = 'pasif_ogrenci'
+                profil.status = 'pasif_kullanici'
                 profil.user.is_active = False
                 profil.save()
                 profil.user.save()

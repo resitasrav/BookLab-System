@@ -101,8 +101,8 @@ class CustomLoginView(auth_views.LoginView):
 # ============================================================
 # 1️⃣ AYARLAR & YARDIMCI FONKSİYONLAR
 # ============================================================
-MAX_RANDEVU_SAATI = getattr(settings, "MAX_RANDEVU_SAATI", 3)
-IPTAL_MIN_SURE_SAAT = getattr(settings, "IPTAL_MIN_SURE_SAAT", 1)
+MAX_RANDEVU_SAATI = getattr(settings, "MAX_RANDEVU_SAATI", 24)
+IPTAL_MIN_SURE_SAAT = getattr(settings, "IPTAL_MIN_SURE_SAAT", 0)
 
 def check_overlap(cihaz, tarih, baslangic, bitis, exclude_id=None):
     """Çakışma kontrolü: Aynı saatte başka randevu var mı?"""
@@ -141,7 +141,7 @@ def anasayfa(request):
         context["siradaki_randevu"] = aktif_sorgu.order_by("tarih", "baslangic_saati").first()
 
     return render(request, "index.html", context)
-
+@login_required
 def lab_detay(request, lab_id):
     secilen_lab = get_object_or_404(Laboratuvar, id=lab_id)
     cihaz_listesi = Cihaz.objects.filter(lab=secilen_lab)
@@ -338,7 +338,7 @@ def randevu_al(request, cihaz_id):
     mevcut_randevular = Randevu.objects.filter(
         cihaz=secilen_cihaz, 
         tarih=secilen_tarih,
-        durum__in=['onay_bekleniyor', 'onaylandi'] r
+        durum__in=['onay_bekleniyor', 'onaylandi'] 
     ).order_by("baslangic_saati")
 
     return render(request, "randevu_form.html", {
@@ -546,24 +546,24 @@ def randevu_pdf_indir(request):
         filename
     )
 @staff_member_required
-def ogrenci_listesi(request):
+def kullanici_listesi(request):
     # kullanıcılar en son kayıt olandan (ID'ye göre ters) başlayarak alıyoruz
-    ogrenciler = Profil.objects.all().order_by('-id')
+    kullanicilar = Profil.objects.all().order_by('-id')
 
     # Arama parametresini URL'den yakala (?q=...)
     query = request.GET.get('q', '').strip()
 
     if query:
         # İsim, soyisim, kullanıcı adı veya okul numarasına göre ara
-        ogrenciler = ogrenciler.filter(
+        kullanicilar = kullanicilar.filter(
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
             Q(user__username__icontains=query) |
             Q(okul_numarasi__icontains=query)
         ).distinct()
 
-    return render(request, "yonetim_ogrenciler.html", {
-        "ogrenciler": ogrenciler,
+    return render(request, "yonetim_kullanicilar.html", {
+        "kullanicilar": kullanicilar,
         "search_q": query  # Arama kutusunda kelimenin kalması için geri gönderiyoruz
     })
 @staff_member_required
