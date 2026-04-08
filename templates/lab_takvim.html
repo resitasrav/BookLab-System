@@ -160,8 +160,11 @@
             initialView: 'dayGridMonth',
             locale: 'tr',
             firstDay: 1,
-            dayMaxEvents: 4, 
-            displayEventTime: false, // Hücre taşmasını engelleyen kritik ayar
+            // GELİŞTİRME 1: Dinamik sığdırma ve Türkçe 'daha fazla' yazısı
+            dayMaxEvents: true, 
+            moreLinkText: 'daha', 
+            
+            displayEventTime: false,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -171,7 +174,7 @@
             events: '/api/lab/{{ lab.id }}/events/',
             selectable: true,
 
-            // İkon Entegrasyonu ve Temiz Görünüm
+            // GELİŞTİRME 2: Randevu saatini de hücrede göstermek
             eventContent: function(arg) {
                 let icon = "⚪";
                 let status = arg.event.extendedProps.durum || "";
@@ -181,9 +184,16 @@
                 else if (status.includes("Gelmedi")) icon = "🟥";
                 else icon = "❌";
 
+                // Başlangıç saatini al (örn: 14:30)
+                let timeString = "";
+                if (arg.event.start) {
+                    timeString = arg.event.start.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                }
+
                 let container = document.createElement('div');
                 container.className = 'custom-event-node';
-                container.innerHTML = `<span>${icon}</span><span class="fw-bold">${arg.event.title}</span>`;
+                // Saati ve başlığı yan yana göster
+                container.innerHTML = `<span>${icon}</span><span class="text-secondary fw-bold me-1">${timeString}</span><span class="fw-bold">${arg.event.title}</span>`;
                 return { domNodes: [container] };
             },
 
@@ -204,14 +214,19 @@
 
                 document.getElementById('mcTitle').innerText = info.event.title;
                 document.getElementById('mcSaat').innerText = `${startTime} - ${endTime}`;
-                document.getElementById('mcKullanici').innerText = props.kullanici;
-                document.getElementById('mcDurum').innerText = props.durum;
+                document.getElementById('mcKullanici').innerText = props.kullanici || "Bilinmiyor";
+                document.getElementById('mcDurum').innerText = props.durum || "Durum Belirtilmemiş";
                 
                 var durumBadge = document.getElementById('mcDurum');
                 durumBadge.className = 'badge rounded-pill px-3 py-2'; 
-                if(props.durum.includes('Onaylandı') || props.durum.includes('Geldi')) durumBadge.classList.add('bg-success');
-                else if(props.durum.includes('Bekliyor')) durumBadge.classList.add('bg-warning', 'text-dark');
-                else durumBadge.classList.add('bg-danger');
+                
+                if(props.durum && (props.durum.includes('Onaylandı') || props.durum.includes('Geldi'))) {
+                    durumBadge.classList.add('bg-success');
+                } else if(props.durum && props.durum.includes('Bekliyor')) {
+                    durumBadge.classList.add('bg-warning', 'text-dark');
+                } else {
+                    durumBadge.classList.add('bg-danger');
+                }
 
                 new bootstrap.Modal(document.getElementById('eventModal')).show();
             }

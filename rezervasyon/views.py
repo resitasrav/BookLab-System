@@ -179,6 +179,7 @@ def tum_events_api(request):
 
         if goster:
             events.append({
+                'id': r.id,  # İŞTE EKSİK OLAN HAYAT KURTARICI SATIR BURASI!
                 'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
                 'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
                 'end': f"{r.tarih.isoformat()}T{r.bitis_saati.strftime('%H:%M:%S')}",
@@ -772,3 +773,29 @@ def kod_tekrar_gonder(request):
         messages.error(request, "❌ Kod gönderilirken bir hata oluştu.")
 
     return redirect('email_dogrulama')
+
+
+def cihaz_durum_degistir(request, cihaz_id):
+    cihaz = get_object_or_404(Cihaz, id=cihaz_id)
+    
+    if cihaz.aktif_mi:
+        # 1. Cihazı pasife al
+        cihaz.aktif_mi = False
+        
+        # 2. ADMIN PANELE OTOMATİK KAYIT DÜŞÜR
+        Ariza.objects.create(
+            cihaz=cihaz,
+            kullanici=request.user, # Yönetici kapattı
+            aciklama="Cihaz yönetim paneli üzerinden manuel olarak pasife alındı.",
+            cozuldu_mu=False
+        )
+    else:
+        # 1. Cihazı tekrar aktif eder
+        cihaz.aktif_mi = True
+        
+        # 2. ADMIN PANELDEKİ AÇIK ARIZALARI "ÇÖZÜLDÜ" YAPAR
+        # Bu cihaza ait çözülmemiş ne kadar arıza varsa hepsini çözüldü olarak işaretler
+        cihaz.ariza_set.filter(cozuldu_mu=False).update(cozuldu_mu=True)
+        
+    cihaz.save()
+    return redirect('arizali_cihaz_listesi') 

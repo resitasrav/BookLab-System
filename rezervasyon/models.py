@@ -18,6 +18,7 @@ class Laboratuvar(models.Model):
 
 
 # 2. Rezerve Edilecek Nesne: Cihaz
+# 2. Rezerve Edilecek Nesne: Cihaz
 class Cihaz(models.Model):
     lab = models.ForeignKey(Laboratuvar, on_delete=models.CASCADE, verbose_name="Bağlı Olduğu Laboratuvar")
     isim = models.CharField(max_length=100, verbose_name="Cihaz Adı")
@@ -32,6 +33,14 @@ class Cihaz(models.Model):
     def __str__(self):
         return f"{self.isim} ({self.lab.isim})"
 
+
+    @property
+    def son_ariza_notu(self):
+        # Bu cihaza ait olan ve henüz çözülmemiş en son arıza kaydını bul
+        son_ariza = self.ariza_set.filter(cozuldu_mu=False).last() 
+        if son_ariza:
+            return son_ariza.aciklama
+        return "Manuel pasife alındı veya not yok."
 
 # 3. İşlem: Randevu
 class Randevu(models.Model):
@@ -117,6 +126,9 @@ class Randevu(models.Model):
     def sonradan_iptal(self):
         """Herhangi bir aşamada randevuyu iptal/red durumuna çeker"""
         self.durum = self.REDDEDILDI  # Veya self.IPTAL
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 # 4. Profil
 class Profil(models.Model):
@@ -159,18 +171,8 @@ class Profil(models.Model):
 
 @receiver(post_save, sender=User)
 def create_or_save_user_profile(sender, instance, created, **kwargs):
-    # Güvenli profil oluşturma / güncelleme
-    if created:
-        Profil.objects.create(user=instance)
-        return
-
-    # Eğer oluşturulmamışsa get_or_create ile güvenli hale getir
-    profil, _ = Profil.objects.get_or_create(user=instance)
-    try:
-        profil.save()
-    except Exception:
-        
-        pass
+    profil, created = Profil.objects.get_or_create(user=instance)
+    profil.save()
 
 
 # 5. Arıza Bildirimi
@@ -188,7 +190,7 @@ class Ariza(models.Model):
     
     def __str__(self):
         return f"Arıza: {self.cihaz.isim} - {self.kullanici.username}"
-
+        
 
 # 6. Duyurular
 class Duyuru(models.Model):

@@ -2,17 +2,14 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
-from .models import Profil, Ariza
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .models import Profil, Ariza
 
-# --- CUSTOM LOGIN FORMU (EMAIL + USERNAME DESTEĞİ) ---
+# --- CUSTOM LOGIN FORMU ---
 class EmailOrUsernameAuthenticationForm(AuthenticationForm):
-    """
-    Custom authentication form that accepts either username or email.
-    Uses the custom backend EmailOrUsernameModelBackend.
-    """
     username = forms.CharField(
+        label="Kullanıcı Adı veya E-Posta",
         max_length=254,
         widget=forms.TextInput(attrs={
             'autofocus': True,
@@ -30,40 +27,37 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
         }),
     )
 
-    def __init__(self, request=None, *args, **kwargs):
-        super().__init__(request, *args, **kwargs)
-        # Form labels'i Türkçe yap
-        self.fields['username'].label = "Kullanıcı Adı veya E-Posta"
-
-# --- ÖZEL VALİDATÖRLER ---
+# --- ÖZEL VALİDATÖR ---
 sadece_rakam_validator = RegexValidator(
     regex=r"^\d+$",
-    message="Lütfen sadece rakam giriniz (Boşluk veya harf kullanmayınız).",
+    message="Lütfen sadece rakam giriniz.",
 )
 
-# --- KAYIT FORMU  ---
+# --- KAYIT FORMU ---
 class KayitFormu(forms.ModelForm):
     username = forms.CharField(
         label="Kullanıcı Adı",
+        required=True,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kullanıcı adınızı seçin"})
     )
     first_name = forms.CharField(
-        label="Adınız", 
+        label="Adınız",
+        required=True,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Adınız"})
     )
     last_name = forms.CharField(
-        label="Soyadınız", 
+        label="Soyadınız",
+        required=True,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Soyadınız"})
     )
     email = forms.EmailField(
         label="E-Posta Adresi",
-        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "asrav@mailuzantisi"})
-    )
-    okul_numarasi = forms.CharField(
-        label="Okul Numarası",
         required=True,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Örn: 2025101"})
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ornek@mail.com"})
     )
+
+    # ❌ okul_numarasi KALDIRILDI
+
     telefon = forms.CharField(
         label="Telefon Numarası",
         required=True,
@@ -71,79 +65,79 @@ class KayitFormu(forms.ModelForm):
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "05551112233",
-            "maxlength": "11",
-            "oninput": "this.value = this.value.replace(/[^0-9]/g, '');"
+            "maxlength": "11"
         }),
-        help_text="Başında 0 olacak şekilde yazınız."
+        help_text="Başında 0 olacak şekilde 11 haneli yazınız."
     )
 
     password = forms.CharField(
         label="Şifre",
+        required=True,
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
     )
     password_confirm = forms.CharField(
         label="Şifre Tekrar",
+        required=True,
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
     )
 
     class Meta:
         model = User
-        # USER modeline ait alanlar. Profil alanları (okul_numarasi, telefon)
-        # form üzerinde tutuluyor ancak ModelForm.Meta.fields sadece model
-        # alanlarını içermelidir.
         fields = ["username", "first_name", "last_name", "email", "password"]
 
-    def save(self, commit=True):
-        """Create User with hashed password and populate/create Profil.
-
-        Notes:
-        - `okul_numarasi` and `telefon` are stored on `Profil` model.
-        - post_save signal may create a Profil; ensure profil exists and set fields.
-        """
-        user = super().save(commit=False)
-        pwd = self.cleaned_data.get("password")
-
-        if pwd:
-            try:
-                validate_password(pwd, user=user) 
-                
-            except ValidationError as e:
-                self.add_error('password', e) 
-
-        user.set_password(pwd)
-        if commit:
-            user.save()
-            # Ensure profile exists and save profile fields
-            try:
-                profil = user.profil
-            except Profil.DoesNotExist:
-                profil = Profil.objects.create(user=user)
-
-            okul = self.cleaned_data.get("okul_numarasi")
-            telefon = self.cleaned_data.get("telefon")
-            if okul:
-                profil.okul_numarasi = okul
-            if telefon:
-                profil.telefon = telefon
-            profil.save()
-
-        return user
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Bu kullanıcı adı zaten alınmış.")
+        return username
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Bu e-posta adresi zaten kullanımda.")
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Bu e-posta adresi sistemde zaten kayıtlı.")
         return email
+
+    def clean_telefon(self):
+        telefon = self.cleaned_data.get("telefon")
+        if telefon:
+            if not telefon.startswith('0'):
+                raise forms.ValidationError("Telefon numarası '0' ile başlamalıdır.")
+            if len(telefon) != 11:
+                raise forms.ValidationError("Telefon numarası tam 11 haneli olmalıdır.")
+        return telefon
 
     def clean(self):
         cleaned_data = super().clean()
         p1 = cleaned_data.get("password")
         p2 = cleaned_data.get("password_confirm")
-        if p1 and p2 and p1 != p2:
-            self.add_error("password_confirm", "Şifreler birbiriyle eşleşmiyor.")
+
+        if p1 and p2:
+            if p1 != p2:
+                self.add_error("password_confirm", "Şifreler eşleşmiyor.")
+            else:
+                try:
+                    validate_password(p1)
+                except ValidationError as e:
+                    self.add_error('password', e)
         return cleaned_data
 
-# ---  FORMLAR---
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data.get("password"))
+
+        if commit:
+            user.save()
+            profil, created = Profil.objects.get_or_create(user=user)
+
+            # ❌ okul_numarasi kaldırıldı
+            profil.telefon = self.cleaned_data.get("telefon")
+
+            profil.save()
+
+        return user
+
+
+# --- DİĞER FORMLAR ---
 class KullaniciGuncellemeFormu(forms.ModelForm):
     class Meta:
         model = User
@@ -162,10 +156,9 @@ class AdminMassEmailForm(forms.Form):
 class ProfilGuncellemeFormu(forms.ModelForm):
     class Meta:
         model = Profil
-        fields = ["telefon", "okul_numarasi", "resim"]
+        fields = ["telefon", "resim"]  # ❌ okul_numarasi kaldırıldı
         widgets = {
             "telefon": forms.TextInput(attrs={"class": "form-control", "maxlength": "11"}),
-            "okul_numarasi": forms.TextInput(attrs={"class": "form-control"}),
             "resim": forms.FileInput(attrs={"class": "form-control"}),
         }
 

@@ -146,13 +146,36 @@
                     </thead>
                     <tbody>
                         {% for randevu in randevular %}
+                        
+                        {% ifchanged randevu.tarih %}
+                        <tr class="table-light">
+                            <td colspan="4" class="text-center py-2" style="background-color: #f8f9fa;">
+                                <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 0.8rem;">
+                                    <i class="bi bi-calendar-event me-2"></i>{{ randevu.tarih|date:"d F Y, l" }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endifchanged %}
+
                         <tr>
                             <td data-label="Öğrenci" class="ps-4">
                                 <div class="student-info">
                                     <span class="fw-bold text-dark d-block">
-                                        {{ randevu.kullanici.first_name }} {{ randevu.kullanici.last_name }}
+                                        {% if randevu.kullanici.first_name or randevu.kullanici.last_name %}
+                                            {{ randevu.kullanici.first_name }} {{ randevu.kullanici.last_name }}
+                                        {% else %}
+                                            {{ randevu.kullanici.username }} <span class="badge bg-light text-dark border" style="font-size: 0.6rem;">İsimsiz</span>
+                                        {% endif %}
                                     </span>
-                                    <small class="text-muted"><i class="bi bi-hash me-1"></i>{{ randevu.kullanici.profil.okul_numarasi|default:"--" }}</small>
+                                    
+                                    <small class="{% if randevu.kullanici.profil.okul_numarasi %}text-muted{% else %}text-danger{% endif %}">
+                                        <i class="bi bi-person-badge me-1"></i>
+                                        {% if randevu.kullanici.profil.okul_numarasi %}
+                                            {{ randevu.kullanici.profil.okul_numarasi }}
+                                        {% else %}
+                                            Numara Kayıtlı Değil
+                                        {% endif %}
+                                    </small>
                                 </div>
                             </td>
 
@@ -167,11 +190,8 @@
 
                             <td data-label="Tarih/Saat">
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold"><i class="bi bi-calendar3 me-1 text-secondary"></i>{{ randevu.tarih|date:"d.m.Y" }}</span>
-                                    <small class="text-info fw-bold">
-                                        {{ randevu.baslangic_saati|time:"H:i" }} - {{ randevu.bitis_saati|time:"H:i" }}
-                                    </small>
-                                </div>
+                                    <span class="fw-bold"><i class="bi bi-clock me-1 text-secondary"></i>{{ randevu.baslangic_saati|time:"H:i" }} - {{ randevu.bitis_saati|time:"H:i" }}</span>
+                                    </div>
                             </td>
 
                             <td data-label="Durum" class="text-center">

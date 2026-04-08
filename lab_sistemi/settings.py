@@ -219,13 +219,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 JAZZMIN_SETTINGS = {
     "site_title": "Laboratuvar Rezervasyon Sistemi",
-    "site_header": "BookLab Rezervasyon Sistemi",
+    "site_header": "BTU PMM", 
     "site_brand": "Yönetim Paneli",
     "welcome_sign": " Yönetim Merkezine Hoşgeldiniz",
     "copyright": f"BookLab Rezervasyon Sistemi {datetime.now().year}",
     "search_model": "auth.User",
     "custom_css": "fonts/css/custom_admin.css",
-    "user_avatar": None,
+    "user_avatar":None,
+    "site_logo": "",
+    "login_logo": "",
+    "site_logo_dark": "",
+    "login_logo_dark": "",
     # Kırmızı Bildirim Scripti
     "custom_js": "fonts/js/admin_ozel.js",
     "topmenu_links": [
