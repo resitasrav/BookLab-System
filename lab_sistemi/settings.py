@@ -32,23 +32,26 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # 1. Sitenin çalışacağı adresler 
 ALLOWED_HOSTS = [
-    'booklabtr.duckdns.org', 
-    'https://booklabtr.duckdns.org',
-    'http://booklabtr.duckdns.org',
-    'https://129.151.44.240',
-    'localhost', 
-    '127.0.0.1',
-    
+    "booklabtr.duckdns.org",
+    "129.151.44.240",
+    "localhost",
+    "127.0.0.1",
+    "asravresit.pythonanywhere.com",
 ]
+
 
 # 2. Form güvenliği için gerekli ayar (CSRF hatalarını önler)
 CSRF_TRUSTED_ORIGINS = [
-    'https://booklabtr.duckdns.org',
-    'http://booklabtr.duckdns.org',
-    'https://129.151.44.240',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
+    "https://booklabtr.duckdns.org",
+    "http://booklabtr.duckdns.org",        
+    "https://129.151.44.240",  
+    "http://129.151.44.240",              
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://asravresit.pythonanywhere.com",
+     "http://asravresit.pythonanywhere.com"
 ]
+
 
 # ========================================================
 # 2. UYGULAMA TANIMLARI
