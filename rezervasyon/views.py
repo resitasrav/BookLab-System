@@ -304,11 +304,12 @@ def randevu_al(request, cihaz_id):
         if fark <= 0:
             messages.error(request, "⚠️ Bitiş saati başlangıçtan sonra olmalıdır.")
             return redirect("randevu_al", cihaz_id=cihaz_id)
+        
         # Çakışma Kontrolü ve Kayıt
         with transaction.atomic():
             # 1. Kontrol: Cihaz bazlı çakışma (Mevcut check_overlap fonksiyonun)
             cihaz_cakisiyor = check_overlap(secilen_cihaz, t_obj, b_obj, bit_obj)
-
+            """
             # 2. Kontrol: Kullanıcı bazlı çakışma (Kullanıcı başka bir cihazda mı?)
             # Sadece onay bekleyen veya onaylanan randevulara bakar, iptalleri saymaz.
             kullanici_cakisiyor = Randevu.objects.filter(
@@ -318,11 +319,13 @@ def randevu_al(request, cihaz_id):
                 baslangic_saati__lt=bit_obj, # Başlangıç saati bitişten önceyse
                 bitis_saati__gt=b_obj        # Bitiş saati başlangıçtan sonraysa
             ).exists()
+            """
 
             if cihaz_cakisiyor:
                 messages.error(request, "⚠️ Bu saat aralığı DOLU veya yuvarlanan saatler çakışmaya neden oldu!")
-            elif kullanici_cakisiyor:
-                messages.error(request, "⚠️ Aynı zaman diliminde başka bir laboratuvar/cihaz için zaten bir randevunuz bulunuyor!")
+            
+            #elif kullanici_cakisiyor:
+            #    messages.error(request, "⚠️ Aynı zaman diliminde başka bir laboratuvar/cihaz için zaten bir randevunuz bulunuyor!")
             else:
                 # Her iki kontrol de geçerliyse kaydı yap
                 Randevu.objects.create(
