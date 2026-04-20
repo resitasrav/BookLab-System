@@ -161,8 +161,7 @@ def tum_events_api(request):
     }
 
     for r in randevular:
-        goster = (r.tarih >= bugun and r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]) or \
-                 (r.tarih < bugun and r.durum in [Randevu.GELDI, Randevu.GELMEDI])
+        goster = r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI]
 
         if goster:
             events.append({
@@ -191,8 +190,7 @@ def lab_events_api(request, lab_id):
     randevular = Randevu.objects.filter(cihaz__lab_id=lab_id)
     events = []
     for r in randevular:
-        if (r.tarih >= bugun and r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]) or \
-           (r.tarih < bugun and r.durum in [Randevu.GELDI, Randevu.GELMEDI]):
+        if r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI]:
             events.append({
                 'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
                 'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
@@ -610,7 +608,11 @@ def tum_randevular(request):
     q     = request.GET.get('q', '').strip()
     cihaz = request.GET.get('cihaz', '').strip()
     lab   = request.GET.get('lab', '').strip()
-    tarih = request.GET.get('tarih_ara', '')
+    
+    # Ay bazlı filtreleme, varsayılan olarak şu anki ayı gösterir
+    ay_ara = request.GET.get('ay_ara')
+    if ay_ara is None:
+        ay_ara = timezone.now().strftime('%Y-%m')
 
     if q:
         randevular = randevular.filter(
@@ -622,15 +624,20 @@ def tum_randevular(request):
         randevular = randevular.filter(cihaz__isim__icontains=cihaz)
     if lab:
         randevular = randevular.filter(cihaz__lab__isim__icontains=lab)
-    if tarih:
-        randevular = randevular.filter(tarih=tarih)
+    
+    if ay_ara:
+        try:
+            yil, ay = ay_ara.split('-')
+            randevular = randevular.filter(tarih__year=yil, tarih__month=ay)
+        except ValueError:
+            pass
 
     context = {
         "randevular": randevular,
         "search_q":     q,
         "search_cihaz": cihaz,
         "search_lab":   lab,
-        "search_tarih": tarih,
+        "search_ay":    ay_ara,
     }
     return render(request, "tum_randevular.html", context)
 
