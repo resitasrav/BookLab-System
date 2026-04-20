@@ -127,7 +127,7 @@ def mail_gonder(modeladmin, request, queryset):
             
             try:
                 send_mail(
-                    subject="BTÜ Laboratuvar Sistemi - Bilgilendirme",
+                    subject="BookLab Sistemi - Bilgilendirme",
                     message="Hesabınızla ilgili önemli bir bildirimi size göndermekteyiz.",
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
@@ -159,13 +159,13 @@ def ozel_mail_action(modeladmin, request, queryset):
     }
     return redirect('admin:rezervasyon_ozel_mail')
 
-@admin.action(description="🌟 Seçilenleri Yönetici Yap")
-def super_kullanici_yap(modeladmin, request, queryset):
-    """Seçili kullanıcıları admin yetkisine yükselt"""
+@admin.action(description="🔻 Yönetici Yetkisini Geri Al")
+def yetkiyi_al(modeladmin, request, queryset):
+    """Seçili kullanıcıların yönetici yetkisini geri al (sadece superuser yapabilir)"""
     if not request.user.is_superuser:
         modeladmin.message_user(request, "❌ Bu işlem için yeterli izniniz yok.", messages.ERROR)
         return
-    
+
     guncellenen = 0
     for obj in queryset:
         user = None
@@ -175,13 +175,43 @@ def super_kullanici_yap(modeladmin, request, queryset):
             user = obj.user
         elif hasattr(obj, 'kullanici'):
             user = obj.kullanici
-        
+
+        if user and user != request.user:
+            if user.is_staff or user.is_superuser:
+                user.is_staff = False
+                user.is_superuser = False
+                user.save()
+                guncellenen += 1
+
+    if guncellenen > 0:
+        modeladmin.message_user(request, f"✅ {guncellenen} kullanıcının yönetici yetkisi geri alındı.", messages.SUCCESS)
+    else:
+        modeladmin.message_user(request, "⚠️ Hiçbir kullanıcı güncellenemedi (kendini indirgeyemezsiniz).", messages.WARNING)
+
+
+@admin.action(description="🌟 Seçilenleri Yönetici Yap")
+def super_kullanici_yap(modeladmin, request, queryset):
+    """Seçili kullanıcıları admin yetkisine yükselt"""
+    if not request.user.is_superuser:
+        modeladmin.message_user(request, "❌ Bu işlem için yeterli izniniz yok.", messages.ERROR)
+        return
+
+    guncellenen = 0
+    for obj in queryset:
+        user = None
+        if isinstance(obj, User):
+            user = obj
+        elif hasattr(obj, 'user'):
+            user = obj.user
+        elif hasattr(obj, 'kullanici'):
+            user = obj.kullanici
+
         if user and not user.is_superuser:
             user.is_staff = True
             user.is_superuser = True
             user.save()
             guncellenen += 1
-    
+
     if guncellenen > 0:
         modeladmin.message_user(request, f"✅ {guncellenen} kullanıcı yönetici yapıldı.", messages.SUCCESS)
     else:
@@ -440,7 +470,7 @@ class CihazAdmin(admin.ModelAdmin):
 class RandevuAdmin(AdminMassMailMixin, admin.ModelAdmin):
     list_display = ("kullanici", "cihaz", "tarih", "saat_araligi", "durum_renkli", "butonlar")
     list_filter = ("durum", "tarih", "cihaz__lab")
-    actions = [excel_indir, mail_gonder, ozel_mail_action]
+    actions = [excel_indir, mail_gonder, ozel_mail_action, super_kullanici_yap]
     search_fields = ("kullanici__username", "cihaz__isim")
     date_hierarchy = "tarih"
 
@@ -663,7 +693,7 @@ admin.site.unregister(User)
 
 @admin.register(User)
 class CustomUserAdmin(AdminMassMailMixin, UserAdmin):
-    actions = [aktif_yap, pasif_yap, mail_gonder, ozel_mail_action, super_kullanici_yap]
+    actions = [aktif_yap, pasif_yap, mail_gonder, ozel_mail_action, super_kullanici_yap, yetkiyi_al]
     list_display = ("username", "email", "get_full_name", "is_active_badge", "is_staff_badge")
     list_filter = ("is_active", "is_staff", "date_joined")
     search_fields = ("username", "email", "first_name", "last_name")

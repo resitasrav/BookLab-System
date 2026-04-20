@@ -3,7 +3,12 @@
 {% block icerik %}
 <style>
     /* BTÜ Kurumsal Renk Paleti */
-    :root { --btu-blue: #003366; --btu-accent: #00a8cc; --btu-danger: #c0392b; --btu-success: #27ae60; }
+    :root {
+        --btu-blue: #003366;
+        --btu-accent: #00a8cc;
+        --btu-danger: #c0392b;
+        --btu-success: #27ae60;
+    }
 
     .booking-wrapper {
         animation: fadeIn 0.5s ease-in;
@@ -36,15 +41,24 @@
         border: 1px dashed #feb2b2;
         transition: transform 0.2s;
     }
-    .occupied-slot:hover { transform: translateX(5px); }
+
+    .occupied-slot:hover {
+        transform: translateX(5px);
+    }
 
     /* Form Elemanları */
-    .form-label { font-weight: 700; color: var(--btu-blue); font-size: 0.9rem; }
+    .form-label {
+        font-weight: 700;
+        color: var(--btu-blue);
+        font-size: 0.9rem;
+    }
+
     .form-control-btu {
         border-radius: 10px;
         border: 2px solid #edf2f7;
         padding: 12px;
     }
+
     .form-control-btu:focus {
         border-color: var(--btu-accent);
         box-shadow: 0 0 0 3px rgba(0, 168, 204, 0.1);
@@ -59,40 +73,136 @@
         letter-spacing: 1px;
     }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
     /* MOBİL RESPONSIVE - TELEFON & TABLET */
     @media (max-width: 992px) {
-        .booking-wrapper { padding: 1rem 0.5rem; }
-        .schedule-card, .form-card { padding: 1.5rem !important; border-radius: 15px; }
-        .form-label { font-size: 0.85rem; }
-        .form-control-btu { padding: 10px; font-size: 0.9rem; }
-        .btn-confirm { padding: 12px; font-size: 0.9rem; }
-        .occupied-slot { padding: 10px 12px; font-size: 0.85rem; }
-        h2 { font-size: 1.4rem; }
-        h5 { font-size: 1rem; }
+        .booking-wrapper {
+            padding: 1rem 0.5rem;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1.5rem !important;
+            border-radius: 15px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-control-btu {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-confirm {
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+
+        .occupied-slot {
+            padding: 10px 12px;
+            font-size: 0.85rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+        }
+
+        h5 {
+            font-size: 1rem;
+        }
     }
 
     @media (max-width: 768px) {
-        .row.g-4 { gap: 1.5rem !important; }
-        .col-lg-5, .col-lg-7 { max-width: 100%; flex-basis: 100%; }
-        .schedule-card, .form-card { padding: 1.2rem !important; }
-        .badge { font-size: 0.75rem; }
-        input[type="date"], input[type="time"] { font-size: 16px; }
-        h2 { font-size: 1.2rem; }
+        .row.g-4 {
+            gap: 1.5rem !important;
+        }
+
+        .col-lg-5,
+        .col-lg-7 {
+            max-width: 100%;
+            flex-basis: 100%;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1.2rem !important;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            font-size: 16px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
     }
 
     @media (max-width: 576px) {
-        .booking-wrapper { padding: 0.5rem 0; }
-        .schedule-card, .form-card { padding: 1rem !important; border-radius: 12px; }
-        h2 { font-size: 1.1rem; }
-        h4, h5 { font-size: 0.95rem; }
-        .form-label { font-size: 0.8rem; }
-        .form-control-btu { padding: 8px; font-size: 0.85rem; }
-        .btn-confirm { padding: 10px; font-size: 0.85rem; letter-spacing: 0; }
-        .occupied-slot { padding: 8px 10px; font-size: 0.8rem; margin-bottom: 8px; }
-        .row { gap: 0.5rem !important; }
-        .col-md-6 { width: 100%; }
+        .booking-wrapper {
+            padding: 0.5rem 0;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1rem !important;
+            border-radius: 12px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+        }
+
+        h4,
+        h5 {
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+        }
+
+        .form-control-btu {
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+
+        .btn-confirm {
+            padding: 10px;
+            font-size: 0.85rem;
+            letter-spacing: 0;
+        }
+
+        .occupied-slot {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .row {
+            gap: 0.5rem !important;
+        }
+
+        .col-md-6 {
+            width: 100%;
+        }
     }
 </style>
 
@@ -114,21 +224,21 @@
                 <div class="bg-light rounded-4 p-3 mb-4">
                     <label class="form-label d-block mb-2 text-muted small">Farklı Bir Tarihe Bak:</label>
                     <form method="GET" class="d-flex gap-2">
-                        <input type="date" id="date_picker_left" name="tarih" value="{{ secilen_tarih }}" 
-                               min="{{ bugun_tarih }}"
-                               class="form-control form-control-sm border-0 shadow-sm" 
-                               onchange="this.form.submit()">
+                        <input type="date" id="date_picker_left" name="tarih" value="{{ secilen_tarih }}"
+                            min="{{ bugun_tarih }}" class="form-control form-control-sm border-0 shadow-sm"
+                            onchange="this.form.submit()">
                     </form>
                 </div>
 
                 <div class="schedule-list">
                     <h6 class="fw-bold mb-3 border-bottom pb-2 text-secondary">{{ secilen_tarih }} Programı</h6>
-                    
+
                     {% for randevu in mevcut_randevular %}
                     <div class="occupied-slot d-flex justify-content-between align-items-center">
                         <div>
                             <span class="d-block fw-bold text-danger small">
-                                <i class="bi bi-hourglass-split me-1"></i> {{ randevu.baslangic_saati|time:"H:i" }} - {{ randevu.bitis_saati|time:"H:i" }}
+                                <i class="bi bi-hourglass-split me-1"></i> {{ randevu.baslangic_saati|time:"H:i" }} - {{
+                                randevu.bitis_saati|time:"H:i" }}
                             </span>
                         </div>
                         <div class="text-end">
@@ -153,7 +263,8 @@
                 <div class="text-center mb-4 border-bottom pb-3">
                     <h4 class="fw-bold text-dark mb-1">Rezervasyon Bilgileri</h4>
                     <p class="text-muted small">Lütfen uygun bir saat aralığı belirleyerek onaylayın.</p>
-                    <p class="text-muted small">NOT: Aldığınız randevular en yakın tam yada yarım saat dilimlerine yuvarlanacaktır. Maksimum bir gün içerisinde 24  saate randevu alabilrsiniz .</p>
+                    <p class="text-muted small">NOT: Aldığınız randevular en yakın 10 dakikalık dilimlere
+                        yuvarlanacaktır. Maksimum bir gün içerisinde 24 saate randevu alabilrsiniz .</p>
                     </p>
                 </div>
 
@@ -163,18 +274,19 @@
                     <div class="mb-4">
                         <label class="form-label">Seçili Tarih</label>
                         <div class="input-group shadow-sm rounded-3">
-                            <span class="input-group-text bg-white border-0"><i class="bi bi-calendar-event text-primary"></i></span>
-                            <input type="date" id="date_picker_right" name="tarih" value="{{ secilen_tarih }}" 
-                                   min="{{ bugun_tarih }}"
-                                   class="form-control border-0 bg-light fw-bold text-primary"
-                                   onchange="syncAndSubmit(this.value)">
+                            <span class="input-group-text bg-white border-0"><i
+                                    class="bi bi-calendar-event text-primary"></i></span>
+                            <input type="date" id="date_picker_right" name="tarih" value="{{ secilen_tarih }}"
+                                min="{{ bugun_tarih }}" class="form-control border-0 bg-light fw-bold text-primary"
+                                onchange="syncAndSubmit(this.value)">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-4">
                             <label class="form-label">Başlangıç Saati</label>
-                            <input type="time" name="baslangic" required class="form-control form-control-btu shadow-sm">
+                            <input type="time" name="baslangic" required
+                                class="form-control form-control-btu shadow-sm">
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="form-label">Bitiş Saati</label>
@@ -191,7 +303,8 @@
                         <button type="submit" class="btn btn-confirm text-white shadow-lg">
                             RANDEVUYU ONAYLA <i class="bi bi-check2-circle ms-2"></i>
                         </button>
-                        <a href="{% url 'lab_detay' cihaz.lab.id %}" class="btn btn-link text-secondary text-decoration-none fw-bold small">
+                        <a href="{% url 'lab_detay' cihaz.lab.id %}"
+                            class="btn btn-link text-secondary text-decoration-none fw-bold small">
                             <i class="bi bi-arrow-left me-1"></i> İşlemi İptal Et
                         </a>
                     </div>

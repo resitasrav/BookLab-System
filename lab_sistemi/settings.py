@@ -221,20 +221,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ========================================================
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Laboratuvar Rezervasyon Sistemi",
-    "site_header": "BTU PMM", 
-    "site_brand": "Yönetim Paneli",
-    "welcome_sign": " Yönetim Merkezine Hoşgeldiniz",
+    "site_title": "BookLab Yönetim",
+    "site_header": "BookLab Yönetim Paneli",
+    "site_brand": "BookLab",
+    "welcome_sign": "Yönetim Merkezine Hoşgeldiniz",
     "copyright": f"BookLab Rezervasyon Sistemi {datetime.now().year}",
     "search_model": "auth.User",
     "custom_css": "fonts/css/custom_admin.css",
-    "user_avatar":None,
+    "user_avatar": None,
     "site_logo": "",
     "login_logo": "",
     "site_logo_dark": "",
     "login_logo_dark": "",
-    # Kırmızı Bildirim Scripti
     "custom_js": "fonts/js/admin_ozel.js",
+    "language_chooser": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+    },
+    "related_modal_active": True,
     "topmenu_links": [
         {"name": "Ana Sayfa", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "Rezervasyon Sayfası", "url": "/", "new_window": True},
@@ -250,7 +255,7 @@ JAZZMIN_SETTINGS = {
         "rezervasyon.Duyuru": "fas fa-bullhorn",
         "rezervasyon.Profil": "fas fa-id-card",
         "rezervasyon.OnayBekleyenler": "fas fa-user-clock",
-        "rezervasyon.AktifKullanicilar": "fas fa-user-graduate",
+        "rezervasyon.AktifKullanicilar": "fas fa-user-check",
     },
     "order_with_respect_to": [
         "rezervasyon.AktifKullanicilar",
@@ -260,7 +265,7 @@ JAZZMIN_SETTINGS = {
         "rezervasyon.Cihaz",
         "rezervasyon.Laboratuvar",
     ],
-    "show_ui_builder": True,
+    "show_ui_builder": False,
 }
 
 JAZZMIN_UI_TWEAKS = {

@@ -1,40 +1,27 @@
 import json
 import logging
 import random
-import string
 from datetime import datetime, timedelta
-from django.utils.dateparse import parse_datetime
-# --- DJANGO IMPORTS ---
-from django.utils import timezone
+
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.template.loader import render_to_string
-from django.contrib.admin.views.decorators import staff_member_required
-from django.core.mail import send_mail, EmailMultiAlternatives 
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
+from django.db.models import Count, Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Count
-from django.db import transaction
-from django.urls import reverse 
-from django.db.models import Q 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from .models import Cihaz
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.utils.http import url_has_allowed_host_and_scheme
-#from .decorators import staff_member_required 
-from .models import Cihaz
-# --- ŞİFRE SIFIRLAMA İÇİN GEREKLİLER ---
-from django.contrib.auth.tokens import default_token_generator 
-from django.utils.http import urlsafe_base64_encode
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.encoding import force_bytes
-from django.utils.html import strip_tags 
+from django.utils.html import strip_tags
+from django.utils.http import urlsafe_base64_encode, url_has_allowed_host_and_scheme
 
 # --- MODELS & FORMS ---
 from .models import Laboratuvar, Cihaz, Randevu, Profil, Duyuru, Ariza
@@ -47,7 +34,7 @@ from .forms import (
 )
 
 # --- UTILS ---
-from .utils import render_to_pdf # PDF çıktısı almak için eklendi
+from .utils import render_to_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -251,22 +238,24 @@ def randevu_al(request, cihaz_id):
 
             #  SAAT YUVARLAMA MANTIĞI ---
             def yuvarla(dt):
-                # Dakikayı al: 0-14 -> 00 | 15-44 -> 30 | 45-59 -> Sonraki Saat :00
                 dakika = dt.minute
-                if dakika < 15:
-                    return dt.replace(minute=0, second=0)
-                elif dakika < 45:
-                    return dt.replace(minute=30, second=0)
+                
+                # En yakın 10'a yuvarla
+                yuvarlanmis = round(dakika / 10) * 10
+
+                if yuvarlanmis == 60:
+                    # Bir sonraki saate geç
+                    return (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
                 else:
-                    return (dt + timedelta(hours=1)).replace(minute=0, second=0)
+                    return dt.replace(minute=yuvarlanmis, second=0, microsecond=0)
 
             b_saat_yuvarlak = yuvarla(b_saat_ham).time()
             bit_saat_yuvarlak = yuvarla(bit_saat_ham).time()
-            
+
             # Değişkenleri güncelle
             b_obj = b_saat_yuvarlak
             bit_obj = bit_saat_yuvarlak
-            secilen_tarih = t_obj 
+            secilen_tarih = t_obj
 
         except Exception:
             messages.error(request, "⚠️ Geçersiz tarih/saat formatı.")
@@ -292,8 +281,8 @@ def randevu_al(request, cihaz_id):
         fark = (bitis_dt - baslangic_dt).total_seconds() / 3600
 
         # Min 1 Saat Kontrolü
-        if fark < 1:
-            messages.error(request, "⚠️ En az 1 saatlik randevu almalısınız. (Saatler otomatik yuvarlanmıştır)")
+        if fark < 0.1:
+            messages.error(request, "⚠️ En az 10 dakikalık randevu almalısınız. (Saatler otomatik yuvarlanmıştır)")
             return redirect("randevu_al", cihaz_id=cihaz_id)
 
         # Max 3 Saat Kontrolü (settings.MAX_RANDEVU_SAATI kullanıldı)
@@ -419,10 +408,18 @@ def onay_bekleyen_sayisi(request):
 
 @staff_member_required
 def egitmen_paneli(request):
+    from django.db.models import Count as _Count
+    labs = Laboratuvar.objects.annotate(randevu_sayisi=_Count('cihaz__randevu'))
     context = {
         "toplam_randevu": Randevu.objects.count(),
         "bekleyen_onay": Randevu.objects.filter(durum=Randevu.ONAY_BEKLENIYOR).count(),
-        "bekleyen_randevular": Randevu.objects.filter(durum=Randevu.ONAY_BEKLENIYOR).order_by("tarih"),
+        "bekleyen_randevular": Randevu.objects.filter(
+            durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]
+        ).order_by("tarih"),
+        "arizali_cihazlar": Cihaz.objects.filter(aktif_mi=False).count(),
+        "toplam_kullanici": User.objects.filter(is_active=True).count(),
+        "lab_isimleri": list(labs.values_list('isim', flat=True)),
+        "randevu_sayilari": [lab.randevu_sayisi for lab in labs],
     }
     return render(request, "yonetim_paneli.html", context)
 
@@ -443,41 +440,41 @@ def ariza_bildir(request, cihaz_id):
             messages.warning(request, "⚠️ Arıza bildirimi alındı."); return redirect("lab_detay", lab_id=cihaz.lab.id)
     return render(request, "ariza_bildir.html", {"form": ArizaFormu(), "cihaz": cihaz})
 
-# Boş kalan fonksiyonlar (URL uyumu için)# rezervasyon/views.py
-import random
-from django.core.mail import send_mail
-
+# ============================================================
+# KAYIT & E-POSTA DOĞRULAMA
+# ============================================================
 def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
-          
+            # BUG-1 DÜZELTİLDİ: Tüm alanlar session'a yazılıyor
             user_data = {
-                'username': form.cleaned_data['username'],
-                'email': form.cleaned_data['email'],
-                'password': form.cleaned_data['password'], 
-
+                'username':   form.cleaned_data['username'],
+                'email':      form.cleaned_data['email'],
+                'password':   form.cleaned_data['password'],
+                'first_name': form.cleaned_data.get('first_name', ''),
+                'last_name':  form.cleaned_data.get('last_name', ''),
+                'telefon':    form.cleaned_data.get('telefon', ''),
             }
-            
+
             dogrulama_kodu = str(random.randint(100000, 999999))
-            
+
             request.session['temp_user_data'] = user_data
             request.session['dogrulama_kodu'] = dogrulama_kodu
             request.session['kod_olusturma_tarihi'] = timezone.now().isoformat()
 
-            #  Mail Gönderimi
             try:
                 send_mail(
                     "BookLab - Kayıt Doğrulama",
-                    f"Hoş geldiniz! Doğrulama kodunuz: {dogrulama_kodu}\nSüre: 1 Dakika",
+                    f"Hoş geldiniz {user_data['first_name']}! Doğrulama kodunuz: {dogrulama_kodu}\nKod 1 dakika geçerlidir.",
                     settings.DEFAULT_FROM_EMAIL,
                     [user_data['email']],
                     fail_silently=False
                 )
-                messages.success(request, "Doğrulama kodu gönderildi. Kod girilmeden kaydınız tamamlanmayacaktır.")
+                messages.success(request, "✅ Doğrulama kodu e-posta adresinize gönderildi.")
                 return redirect("email_dogrulama")
-            except Exception as e:
-                messages.error(request, "E-posta gönderiminde hata oluştu.")
+            except Exception:
+                messages.error(request, "❌ E-posta gönderiminde hata oluştu. Lütfen tekrar deneyin.")
     else:
         form = KayitFormu()
     return render(request, "kayit.html", {"form": form})
@@ -503,30 +500,33 @@ def email_dogrulama(request):
             messages.error(request, "⏳ Süre doldu. Kayıt işleminiz iptal edildi, lütfen tekrar başlayın.")
             return redirect("kayit")
 
-        # ✅ KOD DOĞRUYSA:  VERİTABANINA YAZIYORUZ
+        # ✅ KOD DOĞRUYSA: VERİTABANINA YAZIYORUZ
         if girilen_kod == dogrulama_kodu:
-            # 1. Kullanıcıyı Şimdi Oluştur
+            # 1. Kullanıcıyı tüm alanlarla oluştur (BUG-1 DÜZELTİLDİ)
             user = User.objects.create_user(
                 username=user_data['username'],
                 email=user_data['email'],
                 password=user_data['password'],
-                is_active=False # Admin onayı için hala pasif
+                first_name=user_data.get('first_name', ''),
+                last_name=user_data.get('last_name', ''),
+                is_active=False  # Admin onayı bekleniyor
             )
-            
-            # 2. Profil Ayarlarını Güncelle
-            profil = user.profil # post_save sinyali ile oluştuğunu varsayıyoruz
-            profil.status = 'pasif_ogrenci'
+
+            # 2. Profil Ayarlarını Güncelle (BUG-2 DÜZELTİLDİ: 'pasif_kullanici')
+            profil = user.profil
+            profil.status = 'pasif_kullanici'
+            profil.telefon = user_data.get('telefon', '')
             profil.email_dogrulandi = True
             profil.email_dogrulama_tarihi = timezone.now()
             profil.save()
 
-            # 3. Güvenlik için session'ı temizler
+            # 3. Session'ı temizle
             request.session.flush()
 
-            messages.success(request, "🎉 E-posta doğrulandı! Hesabınız BookLab yöneticisi tarafından onaylandıktan sonra aktif olacaktır.")
+            messages.success(request, "🎉 E-posta doğrulandı! Hesabınız yönetici onayından sonra aktif olacaktır.")
             return redirect("giris")
         else:
-            messages.error(request, "❌ Hatalı doğrulama kodu.")
+            messages.error(request, "❌ Hatalı doğrulama kodu. Lütfen tekrar deneyin.")
 
     return render(request, "email_dogrulama.html")
 @login_required
@@ -584,53 +584,85 @@ def arizali_cihaz_listesi(request):
 
 @staff_member_required
 def cihaz_durum_degistir(request, cihaz_id):
+    """Cihazı aktif/pasif yapar. Pasife alınca arıza kaydı düşer, aktife alınca arızalar çözülür."""
     cihaz = get_object_or_404(Cihaz, id=cihaz_id)
-    cihaz.aktif_mi = not cihaz.aktif_mi
-    
+
     if cihaz.aktif_mi:
-        cihaz.aciklama = "" 
-        messages.success(request, f"✅ {cihaz.isim} aktif edildi ve arıza notu temizlendi.")
+        cihaz.aktif_mi = False
+        Ariza.objects.create(
+            cihaz=cihaz,
+            kullanici=request.user,
+            aciklama="Cihaz yönetim paneli üzerinden manuel olarak pasife alındı.",
+            cozuldu_mu=False
+        )
+        messages.warning(request, f"⚠️ {cihaz.isim} pasife alındı ve arıza kaydı oluşturuldu.")
     else:
-        messages.warning(request, f"⚠️ {cihaz.isim} şu an pasif durumda.")
-    
+        cihaz.aktif_mi = True
+        cihaz.ariza_set.filter(cozuldu_mu=False).update(cozuldu_mu=True)
+        messages.success(request, f"✅ {cihaz.isim} aktif edildi, açık arızalar çözüldü olarak işaretlendi.")
+
     cihaz.save()
     return redirect('arizali_cihaz_listesi')
+@staff_member_required
 def tum_randevular(request):
-    # Varsayılan Sıralama: En yeni tarihli olan en üstte
     randevular = Randevu.objects.all().order_by('-tarih', '-baslangic_saati')
 
-    # URL'den gelen filtre parametrelerini yakala
-    q = request.GET.get('q', '').strip()          # Ad, Soyad veya Kullanıcı Adı
-    cihaz = request.GET.get('cihaz', '').strip()  # Cihaz İsmi
-    lab = request.GET.get('lab', '').strip()      # Laboratuvar İsmi
-    tarih = request.GET.get('tarih_ara', '')      # Belirli Bir Tarih
+    q     = request.GET.get('q', '').strip()
+    cihaz = request.GET.get('cihaz', '').strip()
+    lab   = request.GET.get('lab', '').strip()
+    tarih = request.GET.get('tarih_ara', '')
 
-    # --- FİLTRELEME MANTIĞI ---
     if q:
         randevular = randevular.filter(
-            Q(kullanici__first_name__icontains=q) | 
-            Q(kullanici__last_name__icontains=q) | 
+            Q(kullanici__first_name__icontains=q) |
+            Q(kullanici__last_name__icontains=q) |
             Q(kullanici__username__icontains=q)
         )
-    
     if cihaz:
         randevular = randevular.filter(cihaz__isim__icontains=cihaz)
-        
     if lab:
         randevular = randevular.filter(cihaz__lab__isim__icontains=lab)
-        
     if tarih:
         randevular = randevular.filter(tarih=tarih)
 
     context = {
         "randevular": randevular,
-        "search_q": q,
+        "search_q":     q,
         "search_cihaz": cihaz,
-        "search_lab": lab,
+        "search_lab":   lab,
         "search_tarih": tarih,
     }
-    
     return render(request, "tum_randevular.html", context)
+
+
+@staff_member_required
+def toplu_islem(request):
+    """Seçilen randevulara toplu durum uygular (onayla / reddet / geldi / gelmedi)."""
+    if request.method != 'POST':
+        return redirect('tum_randevular')
+
+    secilen_ids = request.POST.getlist('secilen_randevular')
+    islem = request.POST.get('islem', '')
+
+    gecerli_islemler = {
+        'onaylandi': 'onaylandi',
+        'reddedildi': 'reddedildi',
+        'geldi': 'geldi',
+        'gelmedi': 'gelmedi',
+    }
+
+    if islem not in gecerli_islemler or not secilen_ids:
+        messages.error(request, "❌ Geçersiz işlem veya seçim yapılmadı.")
+        return redirect('tum_randevular')
+
+    guncellenen = Randevu.objects.filter(id__in=secilen_ids).update(
+        durum=gecerli_islemler[islem],
+        onaylayan_admin=request.user
+    )
+    islem_adi = {'onaylandi': 'Onaylandı', 'reddedildi': 'Reddedildi',
+                 'geldi': 'Geldi olarak işaretlendi', 'gelmedi': 'Gelmedi olarak işaretlendi'}
+    messages.success(request, f"✅ {guncellenen} randevu → {islem_adi[islem]}.")
+    return redirect('tum_randevular')
 @login_required
 def randevu_iptal(request, randevu_id):
     # Randevuyu bul, eğer kullanıcıya ait değilse 404 döndür
@@ -778,27 +810,5 @@ def kod_tekrar_gonder(request):
     return redirect('email_dogrulama')
 
 
-def cihaz_durum_degistir(request, cihaz_id):
-    cihaz = get_object_or_404(Cihaz, id=cihaz_id)
-    
-    if cihaz.aktif_mi:
-        # 1. Cihazı pasife al
-        cihaz.aktif_mi = False
-        
-        # 2. ADMIN PANELE OTOMATİK KAYIT DÜŞÜR
-        Ariza.objects.create(
-            cihaz=cihaz,
-            kullanici=request.user, # Yönetici kapattı
-            aciklama="Cihaz yönetim paneli üzerinden manuel olarak pasife alındı.",
-            cozuldu_mu=False
-        )
-    else:
-        # 1. Cihazı tekrar aktif eder
-        cihaz.aktif_mi = True
-        
-        # 2. ADMIN PANELDEKİ AÇIK ARIZALARI "ÇÖZÜLDÜ" YAPAR
-        # Bu cihaza ait çözülmemiş ne kadar arıza varsa hepsini çözüldü olarak işaretler
-        cihaz.ariza_set.filter(cozuldu_mu=False).update(cozuldu_mu=True)
-        
-    cihaz.save()
-    return redirect('arizali_cihaz_listesi') 
+# NOT: cihaz_durum_degistir'in tek tanımı satır ~588'de bulunuyor.
+# BUG-5 DÜZELTİLDİ: Çift tanımlı eski fonksiyon kaldırıldı.

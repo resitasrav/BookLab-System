@@ -1,5 +1,5 @@
 """
-Uygulama URL Konfigürasyonu - Tam Entegre & Hatasız Versiyon
+Uygulama URL Konfigürasyonu
 """
 from django.contrib import admin
 from django.urls import path
@@ -105,6 +105,7 @@ urlpatterns = [
     path("yonetim/arizali-cihazlar/", views.arizali_cihaz_listesi, name="arizali_cihaz_listesi"),
     path("yonetim/tum-randevular/", views.tum_randevular, name="tum_randevular"),
     path("durum-degis/<int:randevu_id>/<str:yeni_durum>/", views.durum_guncelle, name="durum_guncelle"),
+    path("yonetim/toplu-islem/", views.toplu_islem, name="toplu_islem"),
 ]
 
 # --- MEDYA DOSYALARI ---
