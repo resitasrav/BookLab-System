@@ -56,7 +56,114 @@ class KayitFormu(forms.ModelForm):
         widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ornek@mail.com"})
     )
 
-    # ❌ okul_numarasi KALDIRILDI
+    # Okul numarası alanı sistemden kaldırıldı; sadece telefon kullanılıyor.
+
+    telefon = forms.CharField(
+        label="Telefon Numarası",
+        required=True,
+        validators=[sadece_rakam_validator],
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "05551112233",
+            "maxlength": "11"
+        }),
+        help_text="Başında 0 olacak şekilde 11 haneli yazınız."
+    )
+
+    password = forms.CharField(
+        label="Şifre",
+        required=True,
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
+    )
+    password_confirm = forms.CharField(
+        label="Şifre Tekrar",
+        required=True,
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "first_name", "last_name", "email", "password"]
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Bu kullanıcı adı zaten alınmış.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Bu e-posta adresi sistemde zaten kayıtlı.")
+        return email
+
+    def clean_telefon(self):
+        telefon = self.cleaned_data.get("telefon")
+        if telefon:
+            if not telefon.startswith('0'):
+                raise forms.ValidationError("Telefon numarası '0' ile başlamalıdır.")
+            if len(telefon) != 11:
+                raise forms.ValidationError("Telefon numarası tam 11 haneli olmalıdır.")
+        return telefon
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from django.core.validators import RegexValidator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from .models import Profil, Ariza
+
+# --- CUSTOM LOGIN FORMU ---
+class EmailOrUsernameAuthenticationForm(AuthenticationForm):
+    username = forms.CharField(
+        label="Kullanıcı Adı veya E-Posta",
+        max_length=254,
+        widget=forms.TextInput(attrs={
+            'autofocus': True,
+            'class': 'form-control',
+            'placeholder': 'Kullanıcı adı veya e-posta'
+        })
+    )
+    password = forms.CharField(
+        label="Şifre",
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'autocomplete': 'current-password',
+            'class': 'form-control',
+            'placeholder': '******'
+        }),
+    )
+
+# --- ÖZEL VALİDATÖR ---
+sadece_rakam_validator = RegexValidator(
+    regex=r"^\d+$",
+    message="Lütfen sadece rakam giriniz.",
+)
+
+# --- KAYIT FORMU ---
+class KayitFormu(forms.ModelForm):
+    username = forms.CharField(
+        label="Kullanıcı Adı",
+        required=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kullanıcı adınızı seçin"})
+    )
+    first_name = forms.CharField(
+        label="Adınız",
+        required=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Adınız"})
+    )
+    last_name = forms.CharField(
+        label="Soyadınız",
+        required=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Soyadınız"})
+    )
+    email = forms.EmailField(
+        label="E-Posta Adresi",
+        required=True,
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ornek@mail.com"})
+    )
+
+    # Okul numarası alanı sistemden kaldırıldı; sadece telefon kullanılıyor.
 
     telefon = forms.CharField(
         label="Telefon Numarası",
@@ -122,20 +229,17 @@ class KayitFormu(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
+        """Yeni kullanıcıyı şifreyle birlikte oluşturur ve profil kaydını hazırlar."""
         user = super().save(commit=False)
         user.set_password(self.cleaned_data.get("password"))
 
         if commit:
             user.save()
             profil, created = Profil.objects.get_or_create(user=user)
-
-            # ❌ okul_numarasi kaldırıldı
-            profil.telefon = self.cleaned_data.get("telefon")
-
+            profil.telefon = self.cleaned_data.get("telefon", "")
             profil.save()
 
         return user
-
 
 # --- DİĞER FORMLAR ---
 class KullaniciGuncellemeFormu(forms.ModelForm):
@@ -167,11 +271,11 @@ class AdminMassEmailForm(forms.Form):
     is_html = forms.BooleanField(required=False, initial=False, label="HTML olarak gönder")
 
 class ProfilGuncellemeFormu(forms.ModelForm):
+    """Kullanıcının telefon numarasını ve profil resmini güncellemesini sağlayan form."""
     class Meta:
         model = Profil
-        fields = ["okul_numarasi", "telefon", "resim"]
+        fields = ["telefon", "resim"]
         widgets = {
-            "okul_numarasi": forms.TextInput(attrs={"class": "form-control", "maxlength": "20"}),
             "telefon": forms.TextInput(attrs={"class": "form-control", "maxlength": "11"}),
             "resim": forms.FileInput(attrs={"class": "form-control"}),
         }

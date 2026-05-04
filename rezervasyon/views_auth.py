@@ -55,7 +55,7 @@ def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
-            # BUG-1 DÜZELTİLDİ: Tüm alanlar session'a yazılıyor
+            # Kullanıcı bilgilerini geçici olarak session'da saklıyoruz
             user_data = {
                 'username':   form.cleaned_data['username'],
                 'email':      form.cleaned_data['email'],
@@ -104,7 +104,7 @@ def email_dogrulama(request):
 
         # ✅ KOD DOĞRUYSA: VERİTABANINA YAZIYORUZ
         if girilen_kod == dogrulama_kodu:
-            # 1. Kullanıcıyı tüm alanlarla oluştur (BUG-1 DÜZELTİLDİ)
+            # 1. Kullanıcıyı tüm alanlarla oluştur
             user = User.objects.create_user(
                 username=user_data['username'],
                 email=user_data['email'],
@@ -114,7 +114,7 @@ def email_dogrulama(request):
                 is_active=False  # Admin onayı bekleniyor
             )
 
-            # 2. Profil Ayarlarını Güncelle (BUG-2 DÜZELTİLDİ: 'pasif_kullanici')
+            # 2. Profil Ayarlarını Güncelle (pasif durum ile başlat)
             profil = user.profil
             profil.status = 'pasif_kullanici'
             profil.telefon = user_data.get('telefon', '')
@@ -222,5 +222,3 @@ def kod_tekrar_gonder(request):
     return redirect("email_dogrulama")
 
 
-# NOT: cihaz_durum_degistir'in tek tanımı satır ~588'de bulunuyor.
-# BUG-5 DÜZELTİLDİ: Çift tanımlı eski fonksiyon kaldırıldı.

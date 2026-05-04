@@ -4,9 +4,11 @@ import secrets
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.html import strip_tags
 
 from .models import Randevu
 
@@ -29,19 +31,33 @@ def kod_suresi_doldu_mu(olusturma_str):
 
 
 def dogrulama_maili_gonder(email, kod, isim=""):
-    """TURKCE ARAMA: kayit ve email degisikligi dogrulama maili."""
-    ad = isim or "BookLab kullan?c?s?"
-    send_mail(
-        "BookLab - E-posta Do?rulama Kodu",
-        (
-            f"Merhaba {ad},\n\n"
-            f"Do?rulama kodunuz: {kod}\n"
-            f"Bu kod {EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA} dakika ge?erlidir."
-        ),
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False,
+    """TURKCE ARAMA: kayit ve email degisikligi dogrulama maili - HTML destekli."""
+    ad = isim or "BookLab kullanıcısı"
+    
+    # HTML şablonu render et
+    html_content = render_to_string(
+        "emails/email_dogrulama.html",
+        {
+            "ad": ad,
+            "kod": kod,
+            "sure_dakika": EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA,
+        }
     )
+    
+    # Düz metin versiyonu oluştur
+    text_content = strip_tags(html_content)
+    
+    # Email nesnesini oluştur
+    email_obj = EmailMultiAlternatives(
+        subject="BookLab - E-posta Doğrulama Kodu",
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[email],
+    )
+    
+    # HTML versiyonunu ekle
+    email_obj.attach_alternative(html_content, "text/html")
+    email_obj.send(fail_silently=False)
 
 
 def check_overlap(cihaz, tarih, baslangic, bitis, exclude_id=None):

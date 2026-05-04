@@ -86,8 +86,6 @@ def egitmen_paneli(request):
     return render(request, "yonetim_paneli.html", context)
 
 @staff_member_required
-
-@staff_member_required
 @require_POST
 def durum_guncelle(request, randevu_id, yeni_durum):
     gecerli_durumlar = {key for key, _label in Randevu.DURUM_SECENEKLERI}
@@ -130,8 +128,7 @@ def kullanici_listesi(request):
         kullanicilar = kullanicilar.filter(
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
-            Q(user__username__icontains=query) |
-            Q(okul_numarasi__icontains=query)
+            Q(user__username__icontains=query)
         ).distinct()
 
     return render(request, "yonetim_kullanicilar.html", {
@@ -150,8 +147,6 @@ def arizali_cihaz_listesi(request):
     return render(request, "yonetim_arizali_cihazlar.html", {
         "cihazlar": cihazlar
     })
-
-@staff_member_required
 
 @staff_member_required
 @require_POST
@@ -246,8 +241,6 @@ def toplu_islem(request):
                  'geldi': 'Geldi olarak işaretlendi', 'gelmedi': 'Gelmedi olarak işaretlendi'}
     messages.success(request, f"✅ {guncellenen} randevu → {islem_adi[islem]}.")
     return redirect('tum_randevular')
-@login_required
-
 @login_required
 def ariza_bildir_genel(request):
     if request.method == 'POST':

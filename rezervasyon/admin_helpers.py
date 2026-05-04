@@ -12,7 +12,9 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.validators import validate_email
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import path
+from django.utils.html import strip_tags
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import AdminMassEmailForm
@@ -108,13 +110,30 @@ def mail_gonder(modeladmin, request, queryset):
                 continue
             
             try:
-                send_mail(
-                    subject="BookLab Sistemi - Bilgilendirme",
-                    message="Hesabınızla ilgili önemli bir bildirimi size göndermekteyiz.",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
+                # HTML şablonu render et
+                html_content = render_to_string(
+                    "emails/bilgilendirme.html",
+                    {
+                        "ad": user.get_full_name() or user.username,
+                        "mesaj": "Hesabınızla ilgili önemli bir bildirimi size göndermekteyiz.",
+                    }
                 )
+                
+                # Düz metin versiyonu oluştur
+                text_content = strip_tags(html_content)
+                
+                # Email nesnesini oluştur
+                email_obj = EmailMultiAlternatives(
+                    subject="BookLab Sistemi - Bilgilendirme",
+                    body=text_content,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                
+                # HTML versiyonunu ekle
+                email_obj.attach_alternative(html_content, "text/html")
+                email_obj.send()
+                
                 sayac += 1
             except Exception:
                 hatali += 1
@@ -201,15 +220,35 @@ def super_kullanici_yap(modeladmin, request, queryset):
 
 @admin.action(description="🟢 Aktif Yap")
 def aktif_yap(modeladmin, request, queryset):
-    """Seçili kullanıcıları aktif hale getir"""
-    updated = queryset.update(is_active=True)
+    """Seçili kullanıcıları aktif hale getir ve profillerini senkronize et"""
+    updated = 0
+    for obj in queryset:
+        user = obj if isinstance(obj, User) else getattr(obj, 'user', getattr(obj, 'kullanici', None))
+        if user:
+            user.is_active = True
+            user.save()
+            if hasattr(user, 'profil'):
+                user.profil.status = 'aktif_kullanici'
+                user.profil.save()
+            updated += 1
+            
     modeladmin.message_user(request, f"✅ {updated} kullanıcı aktif yapıldı.", messages.SUCCESS)
     logger.info(f"Aktifleştirme: {request.user.username} - {updated} kayıt")
 
 @admin.action(description="🔴 Pasif Yap")
 def pasif_yap(modeladmin, request, queryset):
-    """Seçili kullanıcıları pasif hale getir"""
-    updated = queryset.update(is_active=False)
+    """Seçili kullanıcıları pasif hale getir ve profillerini senkronize et"""
+    updated = 0
+    for obj in queryset:
+        user = obj if isinstance(obj, User) else getattr(obj, 'user', getattr(obj, 'kullanici', None))
+        if user:
+            user.is_active = False
+            user.save()
+            if hasattr(user, 'profil'):
+                user.profil.status = 'pasif_kullanici'
+                user.profil.save()
+            updated += 1
+            
     modeladmin.message_user(request, f"🔴 {updated} kullanıcı pasif yapıldı.", messages.WARNING)
     logger.info(f"Pasifleştirme: {request.user.username} - {updated} kayıt")
 

@@ -106,6 +106,9 @@ class OnayBekleyenlerAdmin(AdminMassMailMixin, UserAdmin):
             u = get_object_or_404(User, pk=pk)
             u.is_active = True
             u.save()
+            if hasattr(u, 'profil'):
+                u.profil.status = 'aktif_kullanici'
+                u.profil.save()
             messages.success(request, f"✅ {u.username} AKTİF edildi!")
             logger.info(f"Kullanıcı Aktifleştirildi: {u.username}")
         except Exception as e:
@@ -149,6 +152,9 @@ class AktifKullanicilarAdmin(AdminMassMailMixin, UserAdmin):
             u = get_object_or_404(User, pk=pk)
             u.is_active = False
             u.save()
+            if hasattr(u, 'profil'):
+                u.profil.status = 'pasif_kullanici'
+                u.profil.save()
             messages.warning(request, f"🔴 {u.username} PASİF yapıldı.")
             logger.info(f"Kullanıcı Pasifleştirildi: {u.username}")
         except Exception as e:
@@ -164,15 +170,15 @@ class ProfilAdmin(AdminMassMailMixin, admin.ModelAdmin):
     """
     Profil Yönetimi: Email doğrulama ve öğrenci statüsü kontrolü
     """
-    list_display = ("user", "okul_numarasi", "telefon", "status_badge", "email_dogrulandi_display", "email_dogrulama_tarihi", "resim_preview")
+    list_display = ("user", "telefon", "status_badge", "email_dogrulandi_display", "email_dogrulama_tarihi", "resim_preview")
     list_filter = ("status", "email_dogrulandi", "email_dogrulama_tarihi")
-    search_fields = ("user__username", "user__email", "okul_numarasi", "telefon")
+    search_fields = ("user__username", "user__email", "telefon")
     readonly_fields = ("email_dogrulama_tarihi", "email_dogrulandi_display", "status_display")
     actions = ["studentleri_aktif_et", "studentleri_pasif_et", "studentleri_iptal_et", "ozel_mail_action"]
     
     fieldsets = (
         ("Kullanıcı Bilgileri", {
-            'fields': ('user', 'okul_numarasi', 'telefon')
+            'fields': ('user', 'telefon')
         }),
         ("Email Doğrulama", {
             'fields': ('email_dogrulandi_display', 'email_dogrulama_tarihi'),

@@ -140,7 +140,6 @@ class Profil(models.Model):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Kullanıcı")
-    okul_numarasi = models.CharField(max_length=20, blank=True, verbose_name="Okul Numarası")
     telefon = models.CharField(max_length=15, blank=True, verbose_name="Telefon Numarası")
     resim = models.ImageField(upload_to="profil_resimleri/", blank=True, null=True, verbose_name="Profil Resmi")
     dogrulama_kodu = models.CharField(max_length=6, blank=True, null=True, verbose_name="E-Posta Doğrulama Kodu")
