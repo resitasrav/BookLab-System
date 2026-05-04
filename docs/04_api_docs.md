@@ -1,71 +1,56 @@
-# ⚙️ API & Backend Dokümantasyonu
+# API ve Backend Notları
 
-Bu doküman, **BookLab** sisteminin veri iletişim katmanını, yetkilendirme mantığını ve backend iş süreçlerini (business logic) detaylandırır.
+BookLab şu anda klasik Django MVT yapısıyla çalışır. Projede REST framework tabanlı tam bir public API yoktur; ancak takvim ve yönetim ekranları için JSON endpointleri bulunur.
 
----
-
-## 🔐 Yetkilendirme (Authentication & Authorization)
-
-Sistem, güvenliği en üst düzeyde tutmak için katmanlı bir yetkilendirme yapısı kullanır.
-
-* **Session-Based (MVT):** Mevcut web arayüzünde Django'nun güvenli session yapısı kullanılmaktadır.
-* **JWT (JSON Web Token):** API entegrasyonları için (mobil uygulama vb.) JWT tabanlı yetkilendirme mimarisi planlanmıştır.
-* **Yetki Seviyeleri:**
-    * `Unauthenticated`: Sadece giriş ve kayıt sayfalarına erişim.
-    * `Passive Student`: Sadece profil doğrulama ve onay bekleme ekranı.
-    * `Active Student`: Rezervasyon yapma ve takvim görüntüleme.
-    * `Admin / Staff`: Tüm CRUD işlemlerine tam erişim.
-
----
-
-## 🌐 API Endpoint Listesi (Geliştirici Referansı)
-
-Sistemin veri akışını sağlayan temel API uç noktaları aşağıda listelenmiştir.
-
-### **1. Kullanıcı İşlemleri**
+## Mevcut Endpointler
 
 | Endpoint | Method | Açıklama | Yetki |
 | :--- | :--- | :--- | :--- |
-| `/api/users/` | **GET** | Tüm kayıtlı kullanıcıları listeler. | Admin |
-| `/api/users/{id}/` | **GET** | Belirli bir kullanıcının profil detaylarını getirir. | Admin / Sahibi |
-| `/api/users/me/` | **GET** | Giriş yapmış kullanıcının profil bilgilerini döner. | Aktif Kullanıcı |
+| `/api/onay-bekleyen-sayisi/` | GET | Pasif kullanıcı, bekleyen randevu ve açık arıza sayılarını döner | Staff |
+| `/api/tum-randevular/` | GET | Genel takvim için randevu event listesini döner | Giriş gerekli |
+| `/api/lab/<lab_id>/events/` | GET | Belirli laboratuvarın takvim eventlerini döner | Giriş gerekli |
 
-### **2. Rezervasyon ve Takvim İşlemleri**
+## Sayfa Bazlı Backend Akışları
 
-| Endpoint | Method | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `/api/reservations/` | **GET** | Mevcut tüm rezervasyonları (takvim verisi) döner. | Herkes |
-| `/api/reservations/` | **POST** | Yeni bir laboratuvar/cihaz randevusu oluşturur. | Aktif Öğrenci |
-| `/api/reservations/{id}/` | **DELETE** | Mevcut bir randevuyu iptal eder. | Sahibi / Admin |
+| URL | Method | Açıklama |
+| :--- | :--- | :--- |
+| `/kayit/` | GET/POST | Kullanıcı kayıt başlatma |
+| `/email-dogrulama/` | GET/POST | Kayıt e-posta kod doğrulaması |
+| `/kod-tekrar-gonder/` | GET | Kayıt veya e-posta değişikliği için yeni kod gönderme |
+| `/profil/email-dogrula/` | GET/POST | Profil e-posta değişikliği doğrulama |
+| `/cihaz/<cihaz_id>/` | GET/POST | Cihaz için randevu alma |
+| `/iptal/<randevu_id>/` | POST | Kullanıcının kendi randevusunu iptal etmesi |
+| `/durum-degis/<randevu_id>/<yeni_durum>/` | POST | Staff kullanıcının randevu durumunu değiştirmesi |
+| `/yonetim/toplu-islem/` | POST | Staff kullanıcının seçili randevulara toplu işlem uygulaması |
+| `/yonetim/cihaz-durum/<cihaz_id>/` | POST | Staff kullanıcının cihazı aktif/pasif yapması |
 
----
+## Randevu Çakışma Mantığı
 
-## 🧠 Backend Mantığı (Business Logic)
+Randevu çakışması cihaz ve tarih bazında kontrol edilir. Aktif sayılan durumlar:
 
-BookLab'in kalbinde yer alan iki kritik algoritma aşağıda açıklanmıştır:
+- `onay_bekleniyor`
+- `onaylandi`
+- `geldi`
 
-### **A. Akıllı Çakışma Kontrolü (Conflict Prevention)**
-Yeni bir randevu talebi (`POST`) geldiğinde sistem şu kontrolü yapar:
+Mantık:
+
 ```python
-# Yeni randevunun mevcut randevularla zaman kesişimi sorgusu
-is_conflict = Appointment.objects.filter(
-    lab=requested_lab,
-    start_time__lt=requested_end_time,
-    end_time__gt=requested_start_time
+Randevu.objects.filter(
+    cihaz=cihaz,
+    tarih=tarih,
+    durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI],
+    baslangic_saati__lt=bitis,
+    bitis_saati__gt=baslangic,
 ).exists()
-
-if is_conflict:
-    raise ValidationError("Bu saat dilimi zaten dolu!")
 ```
 
-<div align="center">
+## Güvenlik Notları
 
-| [⬅️ Önceki Sayfa (03. Yönetici Rehberi)](03_admin_guide.md) | [Sonraki Sayfa (05. Veritabanı Yapısı) ➡️](05_database.md) |
-|:---:|:---:|
-
-</div>
+- Durum değiştiren işlemler POST ile çalışır.
+- CSRF token template formlarında kullanılmalıdır.
+- API endpointleri Django session/auth korumasına dayanır.
+- Gelecekte mobil uygulama veya dış entegrasyon hedeflenirse ayrı bir DRF/JWT katmanı planlanmalıdır.
 
 ---
-<div align="center">
-  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
-</div>
+
+[Önceki: Yönetici Rehberi](03_admin_guide.md) | [Sonraki: Veritabanı](05_database.md)

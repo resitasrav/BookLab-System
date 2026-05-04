@@ -181,8 +181,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # BookLab Yeni Yapılandırma
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default=config("EMAIL_USER", default=""))
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default=config("EMAIL_PASS", default=""))
 
 # Gönderen kısmında "BookLab Sistemi" yazması için:
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
@@ -212,6 +212,7 @@ SESSION_COOKIE_SAMESITE = "Lax"
 
 MAX_RANDEVU_SAATI = 24
 IPTAL_MIN_SURE_SAAT = 0
+EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA = 10
 #OKUL_MAIL_UZANTISI = "@ogr.btu.edu.tr"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

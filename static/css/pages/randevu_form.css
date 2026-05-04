@@ -1,0 +1,203 @@
+/* TURKCE ARAMA: randevu_form sayfa stili bolum 1 */
+/* BTÜ Kurumsal Renk Paleti */
+    :root {
+        --btu-blue: #003366;
+        --btu-accent: #00a8cc;
+        --btu-danger: #c0392b;
+        --btu-success: #27ae60;
+    }
+
+    .booking-wrapper {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    /* Sol Panel: Doluluk Çizelgesi */
+    .schedule-card {
+        border: none;
+        border-radius: 20px;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.05);
+        border-top: 5px solid var(--btu-danger);
+    }
+
+    /* Sağ Panel: Randevu Formu */
+    .form-card {
+        border: none;
+        border-radius: 20px;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.05);
+        border-top: 5px solid var(--btu-success);
+    }
+
+    /* Dolu Slot Tasarımı */
+    .occupied-slot {
+        background: #fff5f5;
+        border-radius: 12px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border: 1px dashed #feb2b2;
+        transition: transform 0.2s;
+    }
+
+    .occupied-slot:hover {
+        transform: translateX(5px);
+    }
+
+    /* Form Elemanları */
+    .form-label {
+        font-weight: 700;
+        color: var(--btu-blue);
+        font-size: 0.9rem;
+    }
+
+    .form-control-btu {
+        border-radius: 10px;
+        border: 2px solid #edf2f7;
+        padding: 12px;
+    }
+
+    .form-control-btu:focus {
+        border-color: var(--btu-accent);
+        box-shadow: 0 0 0 3px rgba(0, 168, 204, 0.1);
+    }
+
+    .btn-confirm {
+        background: linear-gradient(135deg, var(--btu-success), #2ecc71);
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* MOBİL RESPONSIVE - TELEFON & TABLET */
+    @media (max-width: 992px) {
+        .booking-wrapper {
+            padding: 1rem 0.5rem;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1.5rem !important;
+            border-radius: 15px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-control-btu {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-confirm {
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+
+        .occupied-slot {
+            padding: 10px 12px;
+            font-size: 0.85rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+        }
+
+        h5 {
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .row.g-4 {
+            gap: 1.5rem !important;
+        }
+
+        .col-lg-5,
+        .col-lg-7 {
+            max-width: 100%;
+            flex-basis: 100%;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1.2rem !important;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            font-size: 16px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .booking-wrapper {
+            padding: 0.5rem 0;
+        }
+
+        .schedule-card,
+        .form-card {
+            padding: 1rem !important;
+            border-radius: 12px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+        }
+
+        h4,
+        h5 {
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+        }
+
+        .form-control-btu {
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+
+        .btn-confirm {
+            padding: 10px;
+            font-size: 0.85rem;
+            letter-spacing: 0;
+        }
+
+        .occupied-slot {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .row {
+            gap: 0.5rem !important;
+        }
+
+        .col-md-6 {
+            width: 100%;
+        }
+    }

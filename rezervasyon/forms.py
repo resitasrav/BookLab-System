@@ -139,6 +139,10 @@ class KayitFormu(forms.ModelForm):
 
 # --- DİĞER FORMLAR ---
 class KullaniciGuncellemeFormu(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.get("instance")
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email"]
@@ -148,6 +152,15 @@ class KullaniciGuncellemeFormu(forms.ModelForm):
             "email": forms.EmailInput(attrs={"class": "form-control"}),
         }
 
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").strip()
+        qs = User.objects.filter(email__iexact=email)
+        if self.user:
+            qs = qs.exclude(pk=self.user.pk)
+        if email and qs.exists():
+            raise forms.ValidationError("Bu e-posta adresi başka bir hesapta kullanılıyor.")
+        return email
+
 class AdminMassEmailForm(forms.Form):
     subject = forms.CharField(max_length=200, label="Konu", widget=forms.TextInput(attrs={'class': 'vTextField'}))
     message = forms.CharField(label="Mesaj", widget=forms.Textarea(attrs={'rows': 8, 'class': 'vLargeTextField'}))
@@ -156,11 +169,21 @@ class AdminMassEmailForm(forms.Form):
 class ProfilGuncellemeFormu(forms.ModelForm):
     class Meta:
         model = Profil
-        fields = ["telefon", "resim"]  # ❌ okul_numarasi kaldırıldı
+        fields = ["okul_numarasi", "telefon", "resim"]
         widgets = {
+            "okul_numarasi": forms.TextInput(attrs={"class": "form-control", "maxlength": "20"}),
             "telefon": forms.TextInput(attrs={"class": "form-control", "maxlength": "11"}),
             "resim": forms.FileInput(attrs={"class": "form-control"}),
         }
+
+    def clean_telefon(self):
+        telefon = self.cleaned_data.get("telefon", "")
+        if telefon:
+            if not telefon.isdigit():
+                raise forms.ValidationError("Telefon numarası sadece rakamlardan oluşmalıdır.")
+            if not telefon.startswith("0") or len(telefon) != 11:
+                raise forms.ValidationError("Telefon numarası başında 0 olacak şekilde 11 haneli olmalıdır.")
+        return telefon
 
 class ArizaFormu(forms.ModelForm):
     class Meta:

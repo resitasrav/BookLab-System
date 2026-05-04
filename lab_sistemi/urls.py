@@ -98,6 +98,7 @@ urlpatterns = [
     path("randevularim/pdf-indir/", views.randevu_pdf_indir, name="randevu_pdf_indir"),
     path("iptal/<int:randevu_id>/", views.randevu_iptal, name="randevu_iptal"),
     path("profil-duzenle/", views.profil_duzenle, name="profil_duzenle"),
+    path("profil/email-dogrula/", views.email_degisim_dogrulama, name="email_degisim_dogrulama"),
 
     # Eğitmen Paneli
     path("yonetim/", views.egitmen_paneli, name="egitmen_paneli"),

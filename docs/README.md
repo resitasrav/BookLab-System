@@ -1,49 +1,36 @@
-# 📚 BookLab Documentation Hub
+# BookLab Dokümantasyon Merkezi
 
-<div align="center">
-  <img src="../screenshots/BookLab_start.png" width="800" alt="BookLab Banner">
-  <br>
-  <p><i>Bursa Teknik Üniversitesi Laboratuvar Randevu Sistemi Teknik ve Kullanıcı Rehberi Merkezi</i></p>
-</div>
+Bu klasör BookLab projesinin kurulum, kullanım, yönetim, mimari ve geliştirme notlarını içerir.
 
-Merhaba! **BookLab** ekosistemine hoş geldiniz. Bu dokümantasyon merkezi, sistemin kurulumundan derin mimari detaylarına kadar ihtiyacınız olan tüm teknik ve pratik bilgileri barındırmaktadır. 
+## Rehber Haritası
 
----
+| Dosya | İçerik | Hedef Kitle |
+| :--- | :--- | :--- |
+| [01_getting_started.md](01_getting_started.md) | Python 3.13.13 ile yerel kurulum ve çalıştırma | Geliştirici |
+| [02_user_guide.md](02_user_guide.md) | Kullanıcı kayıt, giriş, profil ve randevu işlemleri | Öğrenci / Kullanıcı |
+| [03_admin_guide.md](03_admin_guide.md) | Yönetici paneli, onay, randevu ve cihaz yönetimi | Yönetici / Akademisyen |
+| [04_api_docs.md](04_api_docs.md) | Mevcut backend endpointleri ve iş mantığı | Geliştirici |
+| [05_database.md](05_database.md) | Model ve veritabanı ilişkileri | Geliştirici |
+| [06_architecture.md](06_architecture.md) | Güncel modüler mimari ve iş akışları | Geliştirici / Mimar |
+| [07_dev_guide.md](07_dev_guide.md) | Kod standartları, modül düzeni ve test komutları | Geliştirici |
+| [08_faq.md](08_faq.md) | Sık karşılaşılan sorunlar | Herkes |
+| [09_changelog.md](09_changelog.md) | Sürüm ve refactor notları | Herkes |
+| [10_local_setup.md](10_local_setup.md) | Bu makinedeki Python 3.13.13 ortam notları | Geliştirici |
+| [11_refactor_notes.md](11_refactor_notes.md) | View, admin ve CSS refactor raporu | Geliştirici |
 
-## 🗺️ Rehber Haritası
+## Güncel Durum
 
-Sistemin hangi kısmıyla ilgileniyorsanız ilgili bağlantıya tıklayarak detaylı dokümana ulaşabilirsiniz:
+- Python 3.13.13 ve Django 5.2.11 kullanılmaktadır.
+- Eski kırık `venv` kaldırılmış, proje `.venv` ile çalışacak hale getirilmiştir.
+- `cryptography` kurulumu Python 3.13.13 ortamında başarıyla tamamlanmıştır.
+- View, admin ve CSS yapısı modüler hale getirilmiştir.
+- `manage.py check`, `manage.py test` ve kısa `runserver` testi başarıyla geçmiştir.
 
-| # | Bölüm | İçerik Özeti | Hedef Kitle |
-| :-- | :--- | :--- | :--- |
-| 01 | 🚀 **[Başlangıç Kılavuzu](01_getting_started.md)** | Kurulum, `.env` yapılandırması ve çalıştırma. | **Geliştiriciler** |
-| 02 | 🎓 **[Kullanıcı Kılavuzu](02_user_guide.md)** | Randevu alma, profil doğrulama ve yönetim. | **Öğrenciler** |
-| 03 | 🔐 **[Yönetici Rehberi](03_admin_guide.md)** | Kullanıcı onayı, raporlar ve cihaz yönetimi. | **Akademisyenler** |
-| 04 | ⚙️ **[API & Backend](04_api_docs.md)** | Endpoint listesi, Logic yapısı ve fonksiyonlar. | **Geliştiriciler** |
-| 05 | 🗄️ **[Veritabanı Yapısı](05_database.md)** | Modeller, ER Diyagramı ve tablo ilişkileri. | **DB Mimarları** |
-| 06 | 🏗️ **[Mimari ve Akış](06_architecture.md)** | Component diagram ve sistem iş akışı şeması. | **Sistem Mimarları** |
-| 07 | 💻 **[Geliştirici Rehberi](07_dev_guide.md)** | Kod standartları ve yeni özellik ekleme kuralları. | **Katılımcılar** |
-| 08 | ❓ **[Sık Sorulan Sorular](08_faq.md)** | Bilinen sorunlar ve hızlı teknik çözümler. | **Herkes** |
-| 09 | 📜 **[Changelog](09_changelog.md)** | Sürüm notları ve yapılan son değişiklikler. | **Herkes** |
+## Hızlı Çalıştırma
 
----
+```powershell
+.\.venv\Scripts\activate
+python manage.py runserver
+```
 
-## 🛠️ Temel İş Akışı (Quick Workflow)
-
-BookLab, güvenliği ve hiyerarşiyi ön planda tutan bir yapıya sahiptir:
-
-1.  **Doğrulama:** Kullanıcı kurumsal e-posta ve OTP ile doğrulanır.
-2.  **Onay:** Profil **"Pasif"** olarak admin kuyruğuna düşer ve onay bekler.
-3.  **Erişim:** Admin onayından sonra laboratuvar ve cihaz randevuları açılır.
-4.  **Denetim:** Tüm süreçler AdminLTE tabanlı panel üzerinden izlenir.
-
----
-
-## 📢 Önemli Bilgiler
-> 💡 Bu dokümantasyon, projenin sürdürülebilirliği için sürekli güncellenmektedir.
-> 
-> 🔗 Ana proje sayfasına dönmek için: [Ana README.md](../README.md)
-
-<div align="center">
-  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
-</div>
+Ana README'ye dönmek için: [../README.md](../README.md)

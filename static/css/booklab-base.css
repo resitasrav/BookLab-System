@@ -1,0 +1,287 @@
+/* TURKCE ARAMA: temel layout, navbar, footer, mesajlar */
+/* SİTİLLER */
+        :root {
+            --btu-dark: #003366;
+            --btu-primary: #0056b3;
+            --btu-accent: #00a8cc;
+            --btu-light: #f8fbff;
+            --btu-logout: #ff4d4d;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--btu-light);
+            color: #333;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--btu-dark) 0%, var(--btu-primary) 100%);
+            border-bottom: 4px solid var(--btu-accent);
+            padding: 0.7rem 0;
+        }
+
+        .home-link {
+            font-size: 1.4rem;
+            color: white !important;
+            margin-right: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+        }
+
+        .home-link:hover {
+            color: var(--btu-accent) !important;
+            transform: scale(1.2) rotate(-5deg);
+        }
+
+        .nav-profile-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 18px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+        }
+
+        .nav-profile-container:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--btu-accent);
+            box-shadow: 0 0 15px rgba(0, 168, 204, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-profile-img {
+            border: 2px solid var(--btu-accent);
+            box-shadow: 0 0 8px rgba(0, 168, 204, 0.5);
+        }
+
+        .nav-profile-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white !important;
+        }
+
+        .logout-btn {
+            color: var(--btu-logout) !important;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            padding: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: rotate(90deg) scale(1.2);
+            color: #ff1a1a !important;
+            filter: drop-shadow(0 0 10px rgba(255, 77, 77, 0.9));
+        }
+
+        .developer-btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 168, 204, 0.3);
+            color: white !important;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .animate-rocket {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .developer-btn:hover .animate-rocket {
+            transform: translate(3px, -3px) scale(1.2);
+            color: #fff !important;
+        }
+
+        /* MOBİL İÇİN EK KONTROLLER - RESPONSIVE DESIGN */
+        @media (max-width: 991px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            .home-link {
+                font-size: 1.2rem;
+                margin-right: 0.8rem;
+            }
+
+            .navbar-nav {
+                padding-top: 15px;
+            }
+
+            .nav-item {
+                margin-bottom: 12px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-profile-container {
+                justify-content: center;
+                display: flex !important;
+                margin-right: 0 !important;
+            }
+
+            .logout-btn {
+                width: 100%;
+                font-size: 2rem;
+            }
+
+            main {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+        }
+
+        /* TABLET VE ÜZERİ (768px+) */
+        @media (min-width: 768px) {
+            main {
+                padding-left: 0;
+                padding-right: 0;
+            }
+        }
+
+        /* TELEFON (max-width: 576px) */
+        @media (max-width: 576px) {
+            body {
+                font-size: 14px;
+            }
+
+            .navbar {
+                padding: 0.4rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 0.85rem;
+            }
+
+            .home-link {
+                font-size: 1rem;
+                margin-right: 0.5rem;
+            }
+
+            .nav-profile-name {
+                font-size: 0.75rem;
+            }
+
+            main {
+                padding-left: 8px;
+                padding-right: 8px;
+                margin-top: 1rem !important;
+                margin-bottom: 2rem !important;
+            }
+
+            .container {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            .container-fluid {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            footer {
+                padding: 1.5rem 0;
+            }
+
+            .card {
+                border-radius: 12px;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 16px;
+                padding: 0.75rem;
+            }
+
+            h1,
+            h2,
+            h3 {
+                font-size: 1.3rem;
+            }
+
+            h4,
+            h5,
+            h6 {
+                font-size: 1rem;
+            }
+        }
+
+        /* EXTRA SMALL (max-width: 360px) */
+        @media (max-width: 360px) {
+            .navbar-brand span {
+                display: none;
+            }
+
+            .home-link {
+                font-size: 0.9rem;
+            }
+
+            main {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            .container,
+            .container-fluid {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+        }
+
+        main {
+            flex: 1;
+        }
+
+        footer {
+            background-color: var(--btu-dark);
+            border-top: 4px solid var(--btu-accent);
+            padding: 2rem 0;
+            color: white;
+        }
+
+        .footer-logo-text {
+            color: var(--btu-accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .report-issue-btn {
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        /* Alert border renklerini tag'e göre dinamik yap */
+        .alert-success {
+            border-left-color: #28a745 !important;
+        }
+
+        .alert-danger {
+            border-left-color: #dc3545 !important;
+        }
+
+        .alert-warning {
+            border-left-color: #ffc107 !important;
+        }
+
+        .alert-info {
+            border-left-color: #17a2b8 !important;
+        }
+
+        .alert-error {
+            border-left-color: #dc3545 !important;
+        }

@@ -1,31 +1,41 @@
-## 🔐 Güvenli Kayıt ve Çok Katmanlı Onay Sistemi
+# E-posta Doğrulama ve Kullanıcı Onay Akışı
 
-Laboratuvar güvenliğini sağlamak ve yetkisiz erişimleri engellemek amacıyla **BookLab**, çok katmanlı bir kayıt ve yetkilendirme akışı kullanır. Sisteme kayıt olan bir kullanıcının laboratuvar randevusu alabilmesi için iki aşamalı bir güvenlik duvarından geçmesi gerekir.
+BookLab'de kullanıcı erişimi iki aşamalıdır: önce e-posta doğrulanır, ardından yönetici hesabı aktif eder.
 
-### 🔄 Kullanıcı Yaşam Döngüsü (User Flow)
+## Kayıt Akışı
 
-1. 📝 **Kayıt Talebi:** Kullanıcı form doldurur. Sistem, hesabı varsayılan olarak `is_active=False` ve `Pasif Öğrenci` statüsünde oluşturur.
-2. 📧 **E-Posta (OTP) Doğrulaması:** Kullanıcının mail adresine 6 haneli bir kod gönderilir. Doğrulama yapılmadan sistemde hiçbir işlem yapılamaz.
-3. ⏳ **Onay Kuyruğu:** E-postasını doğrulayan kullanıcı, "Email Doğrulandı" statüsüne geçer ancak sisteme hala giriş yapamaz. Admin paneline **"Onay Bekleyen Pasif Öğrenci"** olarak düşer.
-4. ✅ **Akademik Onay (Tam Erişim):** Yetkili personel, Admin paneli üzerinden öğrencinin bilgilerini teyit edip statüsünü **"Aktif Öğrenci"** (`is_active=True`) konumuna getirir. Kullanıcı artık rezervasyon yapabilir.
+1. Kullanıcı kayıt formunu doldurur.
+2. Sistem 6 haneli doğrulama kodu üretir.
+3. Kod kullanıcının e-posta adresine gönderilir.
+4. Kullanıcı kodu doğrular.
+5. Hesap `is_active=False` olarak oluşturulur.
+6. Profil `pasif_kullanici` statüsünde admin onayına düşer.
+7. Admin onay verirse kullanıcı `aktif_kullanici` statüsüne geçer ve giriş yapabilir.
 
----
+## Profil E-posta Değişikliği
 
-### 📊 Yetki ve Statü Matrisi
+1. Kullanıcı profil ekranında yeni e-posta adresini girer.
+2. Sistem yeni adrese doğrulama kodu gönderir.
+3. Kod doğru girilmeden eski e-posta korunur.
+4. Kod doğruysa yeni e-posta hesaba uygulanır.
 
-Sistemin arka planında çalışan statü yönetim tablosu aşağıdaki gibidir:
+## Statü Matrisi
 
-| Kullanıcı Aşaması | Sistem Statüsü (`status`) | E-Posta Onayı | Hesap (`is_active`) | Giriş İzni (Login) |
+| Aşama | Profil `status` | `email_dogrulandi` | `is_active` | Giriş |
 | :--- | :--- | :---: | :---: | :---: |
-| **Kayıt Anı** | `pasif_kullanici` | ❌ *False* | ❌ *False* | 🚫 Giremez |
-| **E-Posta Onaylandı** | `pasif_okullanici` | ✅ *True* | ❌ *False* | ⏳ Admin Bekleniyor |
-| **Admin Onayladı** | `aktif_kullanici` | ✅ *True* | ✅ *True* | ✅ Başarılı |
-| **Admin İptal Etti** | `iptal` | ✅ *True* | ❌ *False* | 🚫 Giremez |
+| Kayıt formu tamamlandı, kod bekleniyor | Henüz kullanıcı oluşmaz | False | False | Hayır |
+| E-posta doğrulandı, admin bekleniyor | `pasif_kullanici` | True | False | Hayır |
+| Admin onayladı | `aktif_kullanici` | True | True | Evet |
+| Admin iptal etti | `iptal` | True | False | Hayır |
 
----
+## Kullanıcıya Verilen Mesajlar
 
-### 💡 Akıllı Kullanıcı Geri Bildirimleri
-Öğrenci giriş yapmaya çalıştığında sistem, veritabanı sorgusu ile hesabın neden pasif olduğunu anlar ve spesifik geri bildirimler verir:
-* *"Email adresiniz henüz doğrulanmamıştır."* (Adım 2 eksikse)
-* *"Email adresiniz doğrulandı! Ancak admin tarafından onaylanmayı beklemektedir."* (Adım 4 eksikse)
-* *"Hesabınız yönetici tarafından iptal edilmiştir."* (Reddedilmişse)
+- E-posta doğrulanmadıysa: kullanıcıya gelen kutusunu kontrol etmesi söylenir.
+- E-posta doğrulandı ama admin onayı yoksa: admin onayı beklendiği açıklanır.
+- Hesap iptal edildiyse: yöneticiyle iletişime geçmesi istenir.
+
+## Teknik Notlar
+
+- Doğrulama kodu üretimi `view_helpers.py` içinde merkezi tutulur.
+- Kod süresi `EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA` ayarıyla yönetilir.
+- Kodu tekrar gönderme akışı hem kayıt hem profil e-posta değişikliği için kullanılabilir.

@@ -1,0 +1,105 @@
+/* TURKCE ARAMA: kayit sayfa stili bolum 1 */
+/* BookLab Modern Teması */
+    body {
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%) !important;
+    }
+
+    .register-card {
+        border: none;
+        border-radius: 2rem;
+        background: #ffffff;
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.1) !important;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .register-header {
+        background: linear-gradient(135deg, #003366, #0056b3);
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .register-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: #00a8cc; /* BookLab Turkuaz Çizgisi */
+    }
+
+    /* Django Form Elemanlarını Özelleştirme */
+    .django-form-wrapper p {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #003366;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    input[type="text"], input[type="password"], 
+    input[type="email"], input[type="number"] {
+        width: 100%;
+        padding: 0.85rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+        background-color: #f8fafc;
+    }
+
+    input:focus {
+        border-color: #00a8cc;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 0.3rem rgba(0, 168, 204, 0.15);
+        outline: none;
+        transform: translateY(-2px);
+    }
+
+    .helptext {
+        font-size: 0.75rem;
+        color: #64748b;
+        display: block;
+        margin-top: 6px;
+        padding-left: 5px;
+    }
+
+    /* Profesyonel Buton */
+    .register-btn {
+        background: linear-gradient(135deg, #00a8cc, #0088a8);
+        border: none;
+        border-radius: 1rem;
+        padding: 1.1rem;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+    }
+
+    .register-btn:hover {
+        filter: brightness(1.1);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 168, 204, 0.3);
+    }
+
+    /* Animasyon */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* MOBİL DÜZENLEMELER */
+    @media (max-width: 576px) {
+        .register-header { padding: 2rem 1rem; }
+        .register-header h3 { font-size: 1.4rem; }
+        .card-body { padding: 1.5rem !important; }
+        input { font-size: 16px !important; } /* Mobil zoom engelleme */
+    }

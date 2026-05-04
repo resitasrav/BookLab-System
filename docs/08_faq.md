@@ -1,29 +1,58 @@
-# ❓ Sık Sorulan Sorular (SSS)
+# Sık Sorulan Sorular
 
-**BookLab** kullanımı sırasında karşılaşılabilecek yaygın sorular ve çözümleri.
+## E-posta doğrulama kodu gelmiyor, ne yapmalıyım?
 
-### Q1: E-posta doğrulama kodu (OTP) gelmiyor, ne yapmalıyım?
-- **Cevap:** Öncelikle Spam/Gereksiz klasörünü kontrol edin. Eğer hala gelmediyse, `.env` dosyasındaki SMTP ayarlarını ve "Uygulama Şifresi"nin doğruluğunu teyit edin.
+Önce spam/gereksiz klasörünü kontrol edin. Sonra `.env` içindeki SMTP bilgilerini doğrulayın:
 
-### Q2: Kayıt oldum ama randevu alamıyorum, neden?
-- **Cevap:** Hesabınız e-posta ile doğrulanmış olsa bile, bir yönetici tarafından "Aktif Öğrenci" statüsüne geçirilmeniz gerekir. Lütfen bölüm admini ile iletişime geçin.
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `DEFAULT_FROM_EMAIL`
 
-### Q3: Çakışan randevularda öncelik kimindir?
-- **Cevap:** Sistem, saniye farkıyla bile olsa işlemi ilk tamamlayan randevuyu kabul eder ve aynı saat dilimini diğer kullanıcılara kapatır.
+Gmail kullanılıyorsa normal hesap şifresi değil, Google uygulama şifresi kullanılmalıdır.
 
-### Q4: Admin paneline (AdminLTE) nasıl erişirim?
-- **Cevap:** Proje adresi sonuna `/admin` ekleyerek (örn: `127.0.0.1:8000/admin`) ve süper kullanıcı bilgilerinizle giriş yapabilirsiniz.
+## Kayıt oldum ama giriş yapamıyorum. Neden?
+
+E-posta doğrulandıktan sonra hesap yine de admin onayı bekler. Admin hesabı aktif etmeden kullanıcı giriş yapamaz.
+
+## E-posta adresimi değiştirdim ama hemen değişmedi. Neden?
+
+Güvenlik nedeniyle yeni e-posta adresine doğrulama kodu gönderilir. Kod doğrulanmadan eski e-posta korunur.
+
+## Randevu alamıyorum. Olası nedenler neler?
+
+- Cihaz pasif veya bakımda olabilir.
+- Seçilen saat geçmişte olabilir.
+- Bitiş saati başlangıçtan önce olabilir.
+- Aynı cihaz için seçilen saat aralığında aktif başka randevu olabilir.
+- Hesabınız admin tarafından aktif edilmemiş olabilir.
+
+## Admin paneline nasıl girerim?
+
+```text
+http://127.0.0.1:8000/admin/
+```
+
+Giriş için staff/superuser yetkisi gerekir.
+
+## `cryptography` kurulum hatası neden oldu?
+
+PATH üzerindeki `python`, MSYS Python 3.12'ye gidiyordu. Bu ortamda `cryptography` hazır wheel yerine derleme yoluna düştü. Python 3.13.13 python.org kurulumu ile sorun çözüldü.
+
+## Projeyi nasıl çalıştırırım?
+
+```powershell
+.\.venv\Scripts\activate
+python manage.py runserver
+```
+
+## Dokümantasyon dosyalarını nerede bulurum?
+
+Ana dokümantasyon indeksi:
+
+```text
+docs/README.md
+```
 
 ---
 
-<div align="center">
-
-| [⬅️ Önceki: Geliştirici Rehberi](07_dev_guide.md) | [Sonraki: Changelog ➡️](09_changelog.md) |
-|:---:|:---:|
-
-</div>
-
----
-<div align="center">
-  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
-</div>
+[Önceki: Geliştirici Rehberi](07_dev_guide.md) | [Sonraki: Changelog](09_changelog.md)

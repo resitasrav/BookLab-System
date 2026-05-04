@@ -1,102 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block extra_css %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/pages/sifre_basarili.css' %}">
+{% endblock %}
 
 {% block icerik %}
-<style>
-    /* BTÜ Temalı Başarı Sayfası Tasarımı */
-    :root { --btu-blue: #003366; --btu-accent: #00a8cc; --success-glow: rgba(40, 167, 69, 0.2); }
-
-    .success-container {
-        min-height: 70vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: slideUp 0.6s ease-out;
-    }
-
-    .success-card {
-        border: none;
-        border-radius: 30px;
-        background: #ffffff;
-        box-shadow: 0 20px 60px rgba(0, 51, 102, 0.08);
-        padding: 3.5rem;
-        max-width: 500px;
-        width: 100%;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Başarı İkonu ve Animasyonu */
-    .icon-circle {
-        width: 100px;
-        height: 100px;
-        background-color: #e8f5e9;
-        color: #28a745;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 2rem;
-        font-size: 3rem;
-        box-shadow: 0 0 0 10px var(--success-glow);
-        animation: pulseCheck 2s infinite;
-    }
-
-    .btn-btu-primary {
-        background: linear-gradient(135deg, var(--btu-blue) 0%, #0056b3 100%);
-        border: none;
-        border-radius: 15px;
-        padding: 12px 30px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        transition: all 0.3s;
-    }
-
-    .btn-btu-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 51, 102, 0.2);
-        color: white;
-    }
-
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes pulseCheck {
-        0% { box-shadow: 0 0 0 0px var(--success-glow); }
-        70% { box-shadow: 0 0 0 20px rgba(40, 167, 69, 0); }
-        100% { box-shadow: 0 0 0 0px rgba(40, 167, 69, 0); }
-    }
-
-    /* MOBİL RESPONSIVE */
-    @media (max-width: 768px) {
-        .success-container { min-height: 60vh; }
-        .success-card { padding: 2.5rem 1.5rem; border-radius: 20px; }
-        h2 { font-size: 1.4rem; }
-        p { font-size: 0.9rem; }
-        .icon-circle { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; }
-        .btn-btu-primary { padding: 10px 25px; font-size: 0.9rem; }
-    }
-
-    @media (max-width: 576px) {
-        .success-container { min-height: auto; padding: 1rem 0; }
-        .success-card { padding: 1.5rem 1rem; border-radius: 15px; margin: 1rem 0.5rem; }
-        h2 { font-size: 1.2rem; margin-bottom: 1.5rem; }
-        p { font-size: 0.85rem; }
-        .icon-circle { width: 70px; height: 70px; font-size: 2rem; margin-bottom: 1.2rem; }
-        .btn-btu-primary { padding: 8px 20px; font-size: 0.85rem; }
-        .btn-link { font-size: 0.75rem !important; }
-        .border-top { margin-top: 1.5rem; padding-top: 1rem; }
-        small { font-size: 0.7rem !important; }
-    }
-
-    @media (max-width: 360px) {
-        .success-card { padding: 1.2rem 0.8rem; }
-        h2 { font-size: 1.05rem; }
-        .btn-btu-primary { padding: 7px 15px; font-size: 0.8rem; }
-    }
-</style>
 
 <div class="container success-container">
     <div class="success-card text-center">

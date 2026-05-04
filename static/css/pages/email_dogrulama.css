@@ -1,0 +1,109 @@
+/* TURKCE ARAMA: email_dogrulama sayfa stili bolum 1 */
+/* BookLab Temalı Arka Plan ve Yumuşak Geçiş */
+    body {
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%) !important;
+    }
+
+    /* Kart Tasarımı */
+    .verify-card {
+        border: none;
+        border-radius: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    .verify-header {
+        background: linear-gradient(135deg, #003366, #0056b3);
+        color: white;
+        padding: 2.5rem 1rem;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    /* Büyük Kod Giriş Alanı */
+    .code-input {
+        font-size: 2.5rem !important;
+        letter-spacing: 0.8rem;
+        font-weight: 700;
+        border: 3px solid #e2e8f0;
+        border-radius: 1rem;
+        color: #003366;
+        transition: all 0.3s ease;
+        background-color: #f8fafc;
+    }
+
+    .code-input:focus {
+        border-color: #00a8cc; /* BTÜ Turkuaz */
+        background-color: white;
+        box-shadow: 0 0 0 0.3rem rgba(0, 168, 204, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* Doğrula Butonu */
+    .btn-verify {
+        background: linear-gradient(135deg, #00a8cc, #0088a8);
+        border: none;
+        border-radius: 1rem;
+        padding: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-verify:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 8px 20px rgba(0, 168, 204, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Animasyon */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* MOBİL RESPONSIVE */
+    @media (max-width: 768px) {
+        .verify-card { border-radius: 1.2rem; }
+        .verify-header { padding: 1.8rem 1rem; }
+        h3 { font-size: 1.3rem; }
+        .display-6 { font-size: 2.5rem; }
+        p { font-size: 0.9rem; }
+        .code-input { font-size: 2rem !important; letter-spacing: 0.6rem; }
+        .btn-verify { padding: 0.8rem; font-size: 0.9rem; }
+        .card-body { padding: 1.5rem 1rem !important; }
+        .badge { font-size: 0.8rem !important; }
+    }
+
+    @media (max-width: 576px) {
+        .container { padding-left: 8px; padding-right: 8px; }
+        .verify-card { border-radius: 1rem; }
+        .verify-header { padding: 1.5rem 0.8rem; }
+        h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .display-6 { font-size: 2rem; }
+        p { font-size: 0.85rem; }
+        .code-input {
+            font-size: 1.8rem !important; letter-spacing: 0.5rem; padding: 0.75rem !important;
+        }
+        .btn-verify { padding: 0.7rem; font-size: 0.85rem; text-transform: capitalize; letter-spacing: 0; }
+        .card-body { padding: 1rem !important; }
+        .badge { font-size: 0.7rem !important; padding: 0.4rem 0.8rem; }
+        .mb-4 { margin-bottom: 1rem !important; }
+        .mt-4 { margin-top: 1rem !important; }
+        .pt-3 { padding-top: 0.75rem !important; }
+        .border-top { border-top: 1px solid #eee !important; }
+        .small { font-size: 0.75rem !important; }
+    }
+
+    @media (max-width: 360px) {
+        .verify-header { padding: 1.2rem 0.6rem; }
+        .code-input { font-size: 1.5rem !important; letter-spacing: 0.3rem; }
+        .btn-verify { padding: 0.6rem; font-size: 0.8rem; }
+    }
+    /*SAYAC*/
+    #timer-container {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: all 0.5s ease;
+    }

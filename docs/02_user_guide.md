@@ -1,59 +1,61 @@
-# 🎓 Kullanıcı Kılavuzu (Öğrenci Rehberi)
+# Kullanıcı Kılavuzu
 
-Bu kılavuz, öğrencilerin **BookLab** sistemine kayıt olma, hesaplarını doğrulama ve laboratuvar randevusu alma süreçlerini adım adım açıklar.
+Bu rehber öğrenciler ve standart kullanıcılar için BookLab kullanım adımlarını açıklar.
+
+## Kayıt ve Hesap Onayı
+
+1. Kayıt sayfasında kullanıcı adı, ad, soyad, e-posta, telefon ve şifre bilgilerini girin.
+2. Sistem e-posta adresinize 6 haneli doğrulama kodu gönderir.
+3. Doğrulama ekranında kodu girin.
+4. E-posta doğrulandıktan sonra hesabınız admin onayına düşer.
+5. Admin hesabınızı aktif ettikten sonra sisteme giriş yapabilirsiniz.
+
+Not: E-posta doğrulaması yapılmış olsa bile admin onayı gelmeden randevu alınamaz.
+
+## Giriş
+
+Giriş ekranında kullanıcı adı veya e-posta adresi kullanılabilir.
+
+Hesap pasifse sistem neden giriş yapılamadığını açıklar:
+
+- E-posta doğrulanmamış
+- Admin onayı bekleniyor
+- Hesap iptal edilmiş
+
+## Randevu Alma
+
+1. Ana sayfadan laboratuvar seçin.
+2. Laboratuvar içindeki cihazlardan birini seçin.
+3. Tarih ve saat aralığını belirleyin.
+4. Sistem cihazın aktif olup olmadığını ve saat çakışması bulunup bulunmadığını kontrol eder.
+5. Uygun randevu `onay_bekleniyor` durumunda oluşturulur.
+
+## Randevularım
+
+`Randevularım` ekranında:
+
+- Yaklaşan randevular
+- Geçmiş randevular
+- Randevu durumları
+- PDF raporu
+- Uygun durumdaki randevular için iptal işlemi
+
+görüntülenebilir.
+
+## Profil
+
+Profil ekranında ad, soyad, telefon, okul numarası ve profil fotoğrafı gibi bilgiler düzenlenebilir.
+
+E-posta değiştirilirse:
+
+1. Yeni e-posta adresine kod gönderilir.
+2. Kod doğrulanana kadar eski e-posta korunur.
+3. Kod doğruysa yeni e-posta hesaba uygulanır.
+
+## Arıza veya Sistem Sorunu Bildirme
+
+Cihaz detay ekranından cihaz arızası bildirilebilir. Ayrıca sayfa altındaki sistemsel sorun bildirimi ile genel sorunlar yönetime iletilebilir.
 
 ---
 
-## 🔐 1. Kayıt ve Hesap Doğrulama
-
-Sistemi kullanabilmek için öncelikle kurumsal kimliğinizle bir hesap oluşturmanız gerekmektedir.
-
-### **Adım 1: Kayıt Formu**
-- Kayıt sayfasında ad, soyad, öğrenci numarası ve **kurumsal e-posta** adresinizi girin.
-- Şifrenizin güvenli standartlara uygun olduğundan emin olun.
-
-### **Adım 2: E-Posta Doğrulama (OTP)**
-- Kayıt sonrası sistem, e-posta adresinize 6 haneli bir **doğrulama kodu** gönderir.
-- Gelen kodu sistemdeki doğrulama ekranına girerek hesabınızı onaylayın.
-
-### **Adım 3: Admin Onayı (Pasif Statü)**
-- E-postanızı doğruladığınızda hesabınız **"Pasif Öğrenci"** statüsünde kalacaktır. 
-- Laboratuvar sorumlusu (Admin) bilgilerinizi kontrol edip onaylayana kadar randevu ekranlarına erişiminiz kısıtlıdır.
-
----
-
-## 📅 2. Randevu Oluşturma Süreci
-
-Hesabınız **"Aktif"** statüsüne geçtikten sonra rezervasyon yapmaya başlayabilirsiniz.
-
-### **Randevu Adımları:**
-1. **Laboratuvar Seçimi:** Ana panelden randevu almak istediğiniz laboratuvarı seçin.
-2. **Cihaz ve Saat Filtreleme:** Eğer spesifik bir cihaz (örn: 3D Yazıcı) kullanacaksanız, cihaz listesinden seçim yapın.
-3. **Zaman Dilimi:** Takvim üzerinden uygun olan boş (mavi/yeşil) saat dilimlerine tıklayın.
-4. **Onay:** Randevu detaylarını kontrol edin ve "Rezervasyonu Tamamla" butonuna basın.
-
-> 💡 **Not:** Sistem akıllı çakışma kontrolü yaparak, aynı saatte başka bir öğrencinin olduğu slotları seçmenize izin vermez.
-
----
-
-## 👤 3. Profil ve Randevu Yönetimi
-
-Kişisel paneliniz üzerinden tüm işlemlerinizi takip edebilirsiniz.
-
-* **Randevularım:** Geçmiş ve gelecek tüm randevularınızı listeleyebilir, randevu detaylarına ulaşabilirsiniz.
-* **Randevu İptali:** Gelecek bir randevunuza katılamayacaksanız, sistem üzerinden en az 1 saat öncesine kadar iptal işlemi gerçekleştirebilirsiniz.
-* **Profil Güncelleme:** Şifre değişikliği ve iletişim bilgilerini bu sekmeden düzenleyebilirsiniz.
-
----
-
-## ⚠️ Önemli Kurallar
-- Laboratuvar kullanım kurallarına uymak zorunludur.
-- Randevu saatinizden 15 dakika önce laboratuvarda hazır bulunmanız önerilir.
-- İptal edilmeyen ve gelinmeyen randevular, sistem üzerindeki güven puanınızı etkileyebilir.
-
----
-
-<div align="center">
-  <a href="01_getting_started.md">⬅️ Önceki: Başlangıç Kılavuzu</a> | 
-  <a href="03_admin_guide.md">Sonraki: Yönetici Rehberi ➡️</a>
-</div>
+[Önceki: Başlangıç](01_getting_started.md) | [Sonraki: Yönetici Rehberi](03_admin_guide.md)

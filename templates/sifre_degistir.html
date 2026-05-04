@@ -1,91 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load widget_tweaks %} {% block icerik %}
-<style>
-    /* BTÜ Temalı Güvenlik Sayfası */
-    :root { --btu-blue: #003366; --btu-accent: #00a8cc; }
-
-    .security-card {
-        border: none;
-        border-radius: 25px;
-        background: #ffffff;
-        box-shadow: 0 15px 40px rgba(0, 51, 102, 0.08);
-        overflow: hidden;
-    }
-
-    .security-header {
-        background: linear-gradient(135deg, var(--btu-blue) 0%, #0056b3 100%);
-        padding: 2.5rem 1rem;
-    }
-
-    /* Form Elemanları Özelleştirmesi */
-    .form-group label {
-        font-weight: 700;
-        color: var(--btu-blue);
-        margin-bottom: 0.5rem;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-    }
-
-    .form-control-btu {
-        border-radius: 12px;
-        border: 2px solid #edf2f7;
-        padding: 0.8rem 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-control-btu:focus {
-        border-color: var(--btu-accent);
-        box-shadow: 0 0 0 4px rgba(0, 168, 204, 0.1);
-        outline: none;
-    }
-
-    .helptext {
-        font-size: 0.75rem;
-        color: #718096;
-        display: block;
-        margin-top: 5px;
-        line-height: 1.4;
-    }
-
-    .errorlist {
-        list-style: none;
-        padding: 0;
-        color: #e53e3e;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-top: 5px;
-    }
-
-    /* MOBİL RESPONSIVE */
-    @media (max-width: 768px) {
-        .security-card { border-radius: 1.2rem; }
-        .security-header { padding: 1.8rem 1rem; }
-        h3 { font-size: 1.3rem; }
-        p { font-size: 0.85rem; }
-        .form-group label { font-size: 0.8rem; }
-        .form-control-btu { padding: 0.7rem 0.9rem; }
-        .helptext { font-size: 0.7rem; }
-        .btn { font-size: 0.9rem; }
-    }
-
-    @media (max-width: 576px) {
-        .container { padding-left: 8px; padding-right: 8px; }
-        .security-card { border-radius: 1rem; }
-        .security-header { padding: 1.5rem 0.8rem; }
-        h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
-        p { font-size: 0.8rem; }
-        .card-body { padding: 1rem !important; }
-        .form-group { margin-bottom: 1rem !important; }
-        .form-group label { font-size: 0.75rem; }
-        .form-control-btu { padding: 0.6rem 0.7rem; font-size: 0.85rem; }
-        .helptext { font-size: 0.65rem; }
-        .errorlist { font-size: 0.75rem; }
-        .btn-lg { padding: 0.7rem !important; font-size: 0.85rem; }
-        .btn-link { font-size: 0.75rem !important; }
-        .card-footer { padding: 0.7rem !important; }
-        .card-footer small { font-size: 0.65rem; }
-    }
-</style>
+{% block extra_css %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/pages/sifre_degistir.css' %}">
+{% endblock %}
 
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">

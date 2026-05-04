@@ -1,70 +1,91 @@
-# 🏗️ Sistem Mimari ve Akış (Architecture & Workflow)
+# Mimari ve İş Akışı
 
-Bu doküman, **BookLab** sisteminin teknik bileşenlerini, veri akış diyagramlarını ve temel iş mantığı süreçlerini detaylandırır.
+BookLab, Django MVT yapısı üzerine kurulu özel bir laboratuvar randevu sistemidir. Son düzenlemelerle view, admin ve CSS katmanları daha okunabilir modüllere ayrılmıştır.
+
+## Katmanlar
+
+### Sunum Katmanı
+
+- Django Template Language
+- Bootstrap 5
+- Bootstrap Icons
+- FullCalendar
+- Chart.js
+- Merkezi CSS yapısı:
+  - `static/css/booklab-base.css`
+  - `static/css/booklab-corporate.css`
+  - `static/css/pages/*.css`
+
+### Backend Katmanı
+
+- Django 5.2.11
+- Session tabanlı kimlik doğrulama
+- Form ve model validasyonları
+- E-posta doğrulama ve şifre sıfırlama akışları
+- PDF üretimi için xhtml2pdf / ReportLab
+
+### Veri Katmanı
+
+- Geliştirme ortamında SQLite
+- Kullanıcı, profil, laboratuvar, cihaz, randevu, arıza ve duyuru modelleri
+- Kullanıcı kaydı sonrası otomatik profil oluşturma için Django signal
+
+## Güncel Modül Yapısı
+
+### View Modülleri
+
+`rezervasyon/views.py` artık yalnızca geriye dönük uyumluluk kapısıdır. Asıl view kodları konu bazlı ayrılmıştır:
+
+- `views_auth.py`: giriş, kayıt, e-posta doğrulama, şifre sıfırlama
+- `views_public.py`: ana sayfa ve laboratuvar detay
+- `views_calendar.py`: genel/lab takvimleri ve event API'leri
+- `views_randevu.py`: randevu alma, iptal, randevularım ve PDF
+- `views_profile.py`: profil düzenleme ve e-posta değişikliği doğrulaması
+- `views_management.py`: yönetim paneli, arıza, kullanıcı listesi ve toplu işlemler
+- `view_helpers.py`: doğrulama kodu, kod süresi ve randevu çakışma yardımcıları
+
+### Admin Modülleri
+
+`rezervasyon/admin.py` yalnızca admin modüllerini yükler.
+
+- `admin_helpers.py`: global admin aksiyonları, mail mixin'i ve güvenli redirect
+- `admin_laboratuvar.py`: laboratuvar ve cihaz admin ekranları
+- `admin_randevu.py`: randevu admin ekranı ve durum işlemleri
+- `admin_kullanici.py`: kullanıcı, profil ve proxy kullanıcı adminleri
+- `admin_ariza_duyuru.py`: arıza ve duyuru admin ekranları
+
+## Temel İş Akışları
+
+### Kullanıcı Kayıt Akışı
+
+1. Kullanıcı kayıt formunu doldurur.
+2. Sistem doğrulama kodu üretir ve e-posta gönderir.
+3. Kod doğrulanırsa kullanıcı `is_active=False` olarak oluşturulur.
+4. Profil `pasif_kullanici` statüsünde admin onayına düşer.
+5. Admin onayı sonrası kullanıcı aktif olur ve sisteme giriş yapabilir.
+
+### E-posta Değişikliği
+
+1. Kullanıcı profil ekranında yeni e-posta adresini girer.
+2. Sistem yeni adrese doğrulama kodu gönderir.
+3. Kod doğrulanmadan eski e-posta korunur.
+4. Kod doğruysa yeni e-posta hesaba uygulanır.
+
+### Randevu Akışı
+
+1. Kullanıcı laboratuvar ve cihaz seçer.
+2. Tarih ve saat aralığı girer.
+3. Sistem geçmiş tarih, süre ve cihaz çakışması kontrollerini yapar.
+4. Uygun randevu `onay_bekleniyor` durumunda kaydedilir.
+5. Yönetici randevuyu onaylar, reddeder veya yoklama durumuna çeker.
+
+## Güvenlik Kararları
+
+- Kritik durum değişiklikleri GET ile değil POST + CSRF ile yapılır.
+- E-posta değişikliği doğrulama kodu olmadan uygulanmaz.
+- Doğrulama kodları merkezi helper fonksiyonundan üretilir.
+- Admin redirect işlemlerinde güvenli host kontrolü yapılır.
 
 ---
 
-## 🧩 1. Bileşen Mimarisi (Component Diagram)
-
-BookLab, modüler bir **MVT (Model-View-Template)** mimarisi üzerine inşa edilmiştir. Sistemin ana bileşenleri şunlardır:
-
-1.  **Sunum Katmanı (Frontend):** - AdminLTE 3 ve Bootstrap 5 tabanlı responsive arayüz.
-    - Dinamik veri gösterimi için Django Template Language (DTL).
-2.  **Mantık Katmanı (Backend):** - Django 5.1 çekirdeği.
-    - **Signals:** Kullanıcı kayıt anında profil oluşturma tetikleyicileri.
-    - **Validators:** Form ve model seviyesinde çakışma denetleyicileri.
-3.  **Veri Katmanı (Database):** - SQLite (Geliştirme) / PostgreSQL (Canlı ortam).
-    - Medya ve Statik dosyalar için dosya sistemi yönetimi.
-
----
-
-## 🔄 2. Temel İş Akışları
-
-### **A. Kullanıcı Kayıt ve Onay Döngüsü**
-Sistem, güvenliği ve kurumsallığı korumak için şu yolu izler:
-
-1.  **Kayıt:** Kullanıcı bilgilerini girer (`is_active=False`).
-2.  **OTP Doğrulama:** E-posta adresine gelen 6 haneli kod ile mail mülkiyeti kanıtlanır.
-3.  **Onay Kuyruğu:** Profil **"Pasif Öğrenci"** statüsünde yönetici paneline düşer.
-4.  **Admin Onayı:** Akademisyen/Yönetici bilgileri doğrular ve statüyü **"Aktif"** yapar.
-5.  **Erişim:** Kullanıcı artık rezervasyon yapabilir hale gelir.
-
-### **B. Rezervasyon ve Çakışma Denetimi (Conflict Logic)**
-Bir randevu talebi oluşturulduğunda sistem şu algoritmayı çalıştırır:
-- **Zaman Kontrolü:** Başlangıç zamanı, şu andan ve bitiş zamanından önce mi?
-- **Kapasite Kontrolü:** Laboratuvarın fiziksel kapasitesi doldu mu?
-- **Çakışma Sorgusu:** `Appointment.objects.filter(lab=lab, start__lt=end, end__gt=start).exists()`
-- **Sonuç:** Eğer çakışma yoksa randevu onaylanır ve DB'ye yazılır.
-
----
-
-## ⚙️ 3. Teknik Mekanizmalar
-
-### **Asenkron Bildirimler**
-Sistem, e-posta gönderim süreçlerini (OTP ve Şifre Sıfırlama) Django'nun e-posta motoru üzerinden yönetir. Bu sayede kullanıcıya anlık geri bildirim sağlanır.
-
-### **Güvenlik Katmanları**
-* **Middleware:** Yetkisiz kullanıcıların rezervasyon sayfalarına erişimi engellenir.
-* **CSRF & XSS:** Django'nun yerleşik koruma mekanizmaları tüm formlarda aktiftir.
-* **Environment Security:** Hassas veriler (API anahtarları, DB şifreleri) `.env` dosyasında izole edilmiştir.
-
----
-
-## 🛠️ Mimari Avantajlar
-- **Genişletilebilirlik:** Gelecekte eklenecek mobil uygulama için API katmanı (DRF) kolayca entegre edilebilir.
-- **Hiyerarşik Yapı:** "Pasif-Aktif" statüsü sayesinde laboratuvar güvenliği manuel denetim altında tutulur.
-
----
-
-<div align="center">
-
-| [⬅️ Önceki Sayfa (Veritabanı Yapısı)](05_database.md) | [Sonraki Sayfa (Geliştirici Rehberi) ➡️](07_dev_guide.md) |
-|:---:|:---:|
-
-</div>
-
----
-
-<div align="center">
-  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
-</div>
+[Önceki: Veritabanı](05_database.md) | [Sonraki: Geliştirici Rehberi](07_dev_guide.md)

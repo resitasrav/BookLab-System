@@ -1,35 +1,88 @@
-# 💻 Geliştirici Rehberi
+# Geliştirici Rehberi
 
-Bu rehber, **BookLab** projesine katkıda bulunmak isteyen veya kodu geliştirmek isteyen geliştiriciler için standartları belirler.
+Bu rehber BookLab kod tabanında yeni geliştirme yaparken izlenecek düzeni açıklar.
 
-## 🛠️ Kod Standartları
-- **PEP 8:** Python kodları PEP 8 standartlarına uygun olmalıdır.
-- **Docstrings:** Yeni eklenen her fonksiyon ve class için açıklayıcı docstring eklenmelidir.
-- **Type Hinting:** Mümkünse fonksiyon parametreleri için tip belirtimi (`name: str`) kullanılmalıdır.
+## Çalışma Ortamı
 
-## 🌿 Git Workflow (Branch Yönetimi)
-Projede aşağıdaki branch yapısı izlenmelidir:
-- `main`: Sadece stabil ve canlıya çıkmaya hazır kodlar.
-- `develop`: Geliştirme aşamasındaki özelliklerin birleştiği ana dal.
-- `feature/özellik-adı`: Yeni bir özellik eklerken açılacak dal.
-- `bugfix/hata-adı`: Hata düzeltmeleri için açılacak dal.
+```powershell
+.\.venv\Scripts\activate
+python manage.py check
+python manage.py test
+python manage.py runserver
+```
 
-## 🚀 Yeni Özellik Ekleme Adımları
-1. Yeni bir feature branch açın.
-2. Model değişikliği varsa `makemigrations` yapın.
-3. Testlerinizi yerel ortamda (runserver) gerçekleştirin.
-4. Kodunuzu `develop` branch'ine PR (Pull Request) olarak gönderin.
+Bu projede Windows için Python 3.13.13 önerilir.
+
+## Kod Organizasyonu
+
+### View Katmanı
+
+Yeni view eklerken doğrudan `views.py` içine yazmayın. Konuya göre ilgili dosyayı kullanın:
+
+- Kimlik ve kayıt: `views_auth.py`
+- Randevu: `views_randevu.py`
+- Profil: `views_profile.py`
+- Takvim/API: `views_calendar.py`
+- Yönetim: `views_management.py`
+- Ortak yardımcılar: `view_helpers.py`
+
+Yeni view dışarıdan `rezervasyon.views` üzerinden kullanılacaksa `views.py` uyumluluk kapısına import ekleyin.
+
+### Admin Katmanı
+
+Yeni admin sınıfını konuya göre ilgili dosyaya ekleyin:
+
+- Laboratuvar/cihaz: `admin_laboratuvar.py`
+- Randevu: `admin_randevu.py`
+- Kullanıcı/profil: `admin_kullanici.py`
+- Arıza/duyuru: `admin_ariza_duyuru.py`
+- Ortak aksiyon/mixin: `admin_helpers.py`
+
+`admin.py` sadece modülleri yüklemek için kalmalıdır.
+
+### CSS Katmanı
+
+- Genel layout: `static/css/booklab-base.css`
+- Kurumsal tema: `static/css/booklab-corporate.css`
+- Sayfa bazlı stil: `static/css/pages/<sayfa>.css`
+
+Template içine yeni `<style>` bloğu eklemeyin. Sayfaya özel CSS gerekiyorsa `extra_css` bloğu üzerinden yeni CSS dosyasını bağlayın.
+
+## Türkçe Arama Başlıkları
+
+Kodda hızlı arama için `TURKCE ARAMA` yorumları kullanılmıştır. Örnek:
+
+```text
+TURKCE ARAMA: randevu alma
+TURKCE ARAMA: admin aksiyonlari
+TURKCE ARAMA: profil duzenle
+```
+
+Yeni büyük bölüm eklerken benzer bir başlık bırakın.
+
+## Güvenlik Kuralları
+
+- Durum değiştiren işlemler GET ile yapılmamalıdır.
+- Kritik işlemlerde POST + CSRF kullanılmalıdır.
+- E-posta değişikliği doğrulama kodu olmadan uygulanmamalıdır.
+- Randevu çakışma kontrolü model/view mantığı ile uyumlu kalmalıdır.
+
+## Test
+
+En azından şu alanlar test edilmelidir:
+
+- Randevu çakışması
+- Randevu iptali
+- Admin durum güncellemesi
+- Kayıt ve e-posta doğrulama
+- Cihaz pasif/aktif akışı
+
+Mevcut hızlı kontrol:
+
+```powershell
+python manage.py test
+```
 
 ---
 
-<div align="center">
-
-| [⬅️ Önceki: Mimari](06_architecture.md) | [Sonraki: SSS ➡️](08_faq.md) |
-|:---:|:---:|
-
-</div>
-
----
-<div align="center">
-  <sub>BookLab bir <b>Reşit ASRAV</b> projesidir. &copy; 2026</sub>
-</div>
+[Önceki: Mimari](06_architecture.md) | [Sonraki: SSS](08_faq.md)
