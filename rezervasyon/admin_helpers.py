@@ -323,18 +323,26 @@ class AdminMassMailMixin:
                     message = form.cleaned_data['message']
                     is_html = form.cleaned_data['is_html']
 
+                    # Yeni HTML şablonu kullanılarak içeriği oluşturuyoruz
+                    html_content = render_to_string(
+                        "emails/admin_ozel_mail.html",
+                        {
+                            "subject": subject,
+                            "message": message,
+                            "is_html": is_html
+                        }
+                    )
+                    text_content = strip_tags(html_content)
+
                     sent = 0
                     failed = 0
                     errors = []
 
                     for _obj, email in recipients:
                         try:
-                            if is_html:
-                                msg = EmailMultiAlternatives(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
-                                msg.attach_alternative(message, "text/html")
-                                msg.send()
-                            else:
-                                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+                            msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [email])
+                            msg.attach_alternative(html_content, "text/html")
+                            msg.send(fail_silently=False)
                             sent += 1
                         except Exception as e:
                             failed += 1
