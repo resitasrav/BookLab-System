@@ -1,4 +1,4 @@
-# Bu dosya views.py dosyasindan ayrildi.
+# Bu dosya views.py 
 # TURKCE ARAMA ANAHTARLARI: view, sayfa, islem, BookLab
 
 import json
@@ -55,7 +55,7 @@ def kayit(request):
     if request.method == "POST":
         form = KayitFormu(request.POST)
         if form.is_valid():
-            # Kullanıcı bilgilerini geçici olarak session'da saklıyoruz
+            # BUG-1 DÜZELTİLDİ: Tüm alanlar session'a yazılıyor
             user_data = {
                 'username':   form.cleaned_data['username'],
                 'email':      form.cleaned_data['email'],
@@ -104,7 +104,7 @@ def email_dogrulama(request):
 
         # ✅ KOD DOĞRUYSA: VERİTABANINA YAZIYORUZ
         if girilen_kod == dogrulama_kodu:
-            # 1. Kullanıcıyı tüm alanlarla oluştur
+            # 1. Kullanıcıyı tüm alanlarla oluştur (BUG-1 DÜZELTİLDİ)
             user = User.objects.create_user(
                 username=user_data['username'],
                 email=user_data['email'],
@@ -114,7 +114,7 @@ def email_dogrulama(request):
                 is_active=False  # Admin onayı bekleniyor
             )
 
-            # 2. Profil Ayarlarını Güncelle (pasif durum ile başlat)
+            # 2. Profil Ayarlarını Güncelle (BUG-2 DÜZELTİLDİ: 'pasif_kullanici')
             profil = user.profil
             profil.status = 'pasif_kullanici'
             profil.telefon = user_data.get('telefon', '')
@@ -222,3 +222,5 @@ def kod_tekrar_gonder(request):
     return redirect("email_dogrulama")
 
 
+# NOT: cihaz_durum_degistir'in tek tanımı satır ~588'de bulunuyor.
+# BUG-5 DÜZELTİLDİ: Çift tanımlı eski fonksiyon kaldırıldı.

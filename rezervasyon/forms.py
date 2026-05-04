@@ -183,6 +183,16 @@ class ProfilGuncellemeFormu(forms.ModelForm):
                 raise forms.ValidationError("Telefon numarası başında 0 olacak şekilde 11 haneli olmalıdır.")
         return telefon
 
+    def clean_resim(self):
+        resim = self.cleaned_data.get("resim", False)
+        if resim:
+            # Sadece yeni yüklenen dosyaların size attribute'u olur
+            if hasattr(resim, 'size'):
+                # 500 KB sınırı (500 * 1024 bytes)
+                if resim.size > 500 * 1024:
+                    raise forms.ValidationError("Yüklediğiniz fotoğraf 500 KB'den büyük olamaz. Lütfen daha küçük boyutlu bir görsel seçin.")
+        return resim
+
 class ArizaFormu(forms.ModelForm):
     class Meta:
         model = Ariza
