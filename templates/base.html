@@ -120,7 +120,7 @@
 
         {% block icerik %}{% endblock %}
     </main>
-    <footer class="mt-auto py-4 border-top border-secondary border-opacity-25" style="background-color: rgba(0,0,0,0.15);">
+    <footer class="mt-auto py-4 border-top border-secondary border-opacity-25" style="background-color: rgba(0,0,0,0.25);">
         <div class="container">
             <div class="row align-items-center justify-content-between flex-column-reverse flex-md-row gap-3 gap-md-0 text-center text-md-start">
                 
@@ -128,25 +128,25 @@
                 <div class="col-md-5">
                     <div class="d-flex flex-column flex-md-row align-items-center gap-2 gap-md-4">
                         <div>
-                            <p class="mb-0 fw-semibold text-white opacity-75" style="font-size: 0.95rem;">BookLab Rezervasyon</p>
-                            <small class="text-white opacity-50">&copy; {% now "Y" %} Tüm hakları saklıdır.</small>
+                            <p class="mb-0 fw-semibold text-white opacity-100" style="font-size: 0.95rem;">BookLab Rezervasyon</p>
+                            <small class="text-white opacity-75">&copy; {% now "Y" %} Tüm hakları saklıdır.</small>
                         </div>
                         <div class="border-start border-secondary d-none d-md-block" style="height: 30px;"></div>
-                        <button type="button" class="btn btn-link text-white-50 text-decoration-none p-0 small hover-opacity-100 transition-all"
+                        <button type="button" class="btn btn-link text-white text-decoration-none p-0 small hover-opacity-100 transition-all opacity-75"
                             data-bs-toggle="modal" data-bs-target="#sorunBildirModal" style="font-size: 0.85rem;">
-                            <i class="bi bi-bug me-1"></i>Sorun Bildir
+                            <i class="bi bi-bug me-1 text-warning"></i>Sorun Bildir
                         </button>
                     </div>
                 </div>
 
                 <!-- Sağ Taraf: Geliştirici İmzası -->
                 <div class="col-md-7 text-md-end">
-                    <div class="d-inline-flex flex-column flex-md-row align-items-center justify-content-end bg-dark bg-opacity-25 rounded-pill px-4 py-2" style="backdrop-filter: blur(4px);">
+                    <div class="d-inline-flex flex-column flex-md-row align-items-center justify-content-end bg-dark bg-opacity-50 rounded-pill px-4 py-2 border border-secondary border-opacity-25" style="backdrop-filter: blur(4px);">
                         <span class="text-white-50 small me-md-2 mb-1 mb-md-0" style="font-size: 0.8rem; letter-spacing: 0.5px;">Developed & Designed by</span>
                         <a href="https://linkedin.com/in/resitasrav" target="_blank" 
-                           class="text-decoration-none text-white d-flex align-items-center gap-2" style="transition: all 0.3s ease;">
+                           class="text-decoration-none text-white d-flex align-items-center gap-2 hover-opacity-100" style="transition: all 0.3s ease;">
                             <span class="fw-bold" style="font-size: 0.9rem; letter-spacing: 0.5px;">Reşit ASRAV</span>
-                            <i class="bi bi-linkedin text-info" style="font-size: 0.95rem;"></i>
+                            <i class="bi bi-linkedin text-primary" style="font-size: 0.95rem;"></i>
                         </a>
                     </div>
                 </div>

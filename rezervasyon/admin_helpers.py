@@ -332,7 +332,11 @@ class AdminMassMailMixin:
                             "is_html": is_html
                         }
                     )
-                    text_content = strip_tags(html_content)
+                    # Düz metin (plain text) versiyonu için, eğer HTML seçildiyse etiketleri temizle
+                    if is_html:
+                        text_content = strip_tags(message)
+                    else:
+                        text_content = message
 
                     sent = 0
                     failed = 0
@@ -371,5 +375,5 @@ class AdminMassMailMixin:
         
         except Exception as e:
             logger.error(f"Özel Mail Hatası: {str(e)}")
-            messages.error(request, "❌ Mail işlemi hatası!")
+            messages.error(request, f"❌ Mail işlemi hatası! Detay: {str(e)}")
             return redirect('..')

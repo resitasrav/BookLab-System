@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #17a2b8 0%, #0056b3 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .message-body {
+            font-size: 16px;
+            color: #495057;
+            margin-bottom: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #eee;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ subject }}</h1>
+        </div>
+        
+        <div class="content">
+            <div class="message-body">
+                {% if is_html %}
+                    {{ message|safe }}
+                {% else %}
+                    {{ message|linebreaksbr }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© {% now "Y" %} BookLab Laboratuvar Rezervasyon Sistemi</p>
+            <p>Bu e-posta sistem yöneticisi tarafından gönderilmiştir.</p>
+        </div>
+    </div>
+</body>
+</html>
