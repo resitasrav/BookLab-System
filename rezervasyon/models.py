@@ -195,6 +195,8 @@ class Ariza(models.Model):
 class Duyuru(models.Model):
     baslik = models.CharField(max_length=200, verbose_name="Duyuru Başlığı")
     icerik = models.TextField(blank=True, verbose_name="Duyuru İçeriği")
+    gorsel = models.ImageField(upload_to="duyurular/", blank=True, null=True, verbose_name="Görsel / Reklam Afişi")
+    kapatilabilir_mi = models.BooleanField(default=True, verbose_name="Kapatılabilir mi?", help_text="İşaretliyse kullanıcılar çarpıya basıp bir daha görmeyebilir.")
     aktif_mi = models.BooleanField(default=True, verbose_name="Yayında mı?")
     tarih = models.DateTimeField(auto_now_add=True)
 

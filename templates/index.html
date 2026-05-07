@@ -14,61 +14,143 @@
             <i class="bi bi-clock-history me-1"></i> Son Duyurular
         </div>
     </div>
+    <div id="announcementContainer" class="mb-4">
+        <div id="announcementCarousel" class="carousel slide shadow-sm rounded-4 overflow-hidden bg-white border" data-bs-ride="false">
+            <div class="carousel-inner">
+                {% for duyuru in duyurular %}
+                {% if duyuru.aktif_mi %}
+                <div id="duyuru-{{ duyuru.id }}"
+                     class="carousel-item{% if forloop.first %} active{% endif %}"
+                     data-closable="{{ duyuru.kapatilabilir_mi|yesno:'true,false' }}">
+                    {% if duyuru.gorsel %}
+                    <img src="{{ duyuru.gorsel.url }}" class="d-block w-100"
+                         style="max-height:320px; object-fit:cover;" alt="{{ duyuru.baslik }}">
+                    {% endif %}
+                    <div class="p-4 {% if duyuru.gorsel %}border-top{% else %}border-start border-5 border-info{% endif %} position-relative">
+                        {% if duyuru.kapatilabilir_mi %}
+                        <button type="button" class="btn-close position-absolute top-0 end-0 mt-3" style="margin-right: 60px; z-index: 10;"
+                                onclick="duyuruyuKapat('{{ duyuru.id }}')" aria-label="Kapat"></button>
+                        {% endif %}
+                        <div class="d-flex align-items-center mb-2 pe-5">
+                            <span class="badge bg-primary me-2">
+                                <i class="bi bi-megaphone-fill me-1"></i>Duyuru
+                            </span>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar-event me-1"></i>{{ duyuru.tarih|date:"d F Y, H:i" }}
+                            </small>
+                        </div>
+                        <h5 class="fw-bold mb-2 pe-5" style="margin-right: 30px;">{{ duyuru.baslik }}</h5>
+                        <p class="mb-0 text-secondary pe-5" style="font-size:0.95rem;">{{ duyuru.icerik|linebreaksbr }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
 
-    <div class="announcement-timeline">
-        {% for duyuru in duyurular %}
-        {% if duyuru.aktif_mi %}
-        <div id="duyuru-{{ duyuru.id }}"
-            class="announcement-item shadow-sm border-start border-4 border-info mb-3 p-3 bg-white rounded-3"
-            style="display: none;">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-                <span class="announcement-date text-primary fw-bold small">
-                    <i class="bi bi-calendar-event me-1"></i>{{ duyuru.tarih|date:"d F Y, H:i" }}
-                </span>
-                <button type="button" class="btn-close btn-sm" onclick="duyuruyuKapat('{{ duyuru.id }}')"
-                    aria-label="Kapat"></button>
-            </div>
-            <h6 class="announcement-title fw-bold mb-1">{{ duyuru.baslik }}</h6>
-            <p class="announcement-content small mb-2 text-secondary">{{ duyuru.icerik }}</p>
-            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
-                <small class="text-muted" style="font-size: 0.7rem;">
-                    <i class="bi bi-clock-history me-1"></i> {{ duyuru.tarih|date:"d F Y, H:i" }}
-                </small>
-            </div>
+            <button class="carousel-control-prev" type="button"
+                    data-bs-target="#announcementCarousel" data-bs-slide="prev"
+                    style="width:50px; background:rgba(0,0,0,0.15);">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Önceki</span>
+            </button>
+            <button class="carousel-control-next" type="button"
+                    data-bs-target="#announcementCarousel" data-bs-slide="next"
+                    style="width:50px; background:rgba(0,0,0,0.15);">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Sonraki</span>
+            </button>
         </div>
-        {% endif %}
-        {% endfor %}
     </div>
 </div>
 
 <script>
-    // Sayfa yüklenir yüklenmez (DOMContentLoaded beklenmeden) kontrol başlasın
-    (function () {
-        // Django döngüsü yerine genel bir class seçici kullanarak çakışmaları önleyelim
-        const announcements = document.querySelectorAll('.announcement-item');
+document.addEventListener("DOMContentLoaded", function () {
+    const container   = document.getElementById('announcementContainer');
+    const prevBtn     = document.querySelector('#announcementCarousel .carousel-control-prev');
+    const nextBtn     = document.querySelector('#announcementCarousel .carousel-control-next');
+    const carouselEl  = document.getElementById('announcementCarousel');
 
-        announcements.forEach(item => {
-            const id = item.id.replace('duyuru-', '');
-            // LocalStorage kontrolü
-            if (!localStorage.getItem("duyuru_kapali_" + id)) {
-                item.style.display = "block";
+    /* --- 1. Kapatılmış (closable) duyuruları localStorage'a göre DOM'dan temizle --- */
+    const allItems = Array.from(document.querySelectorAll('#announcementCarousel .carousel-item'));
+    allItems.forEach(item => {
+        const id = item.id.replace('duyuru-', '');
+        const isClosable = item.getAttribute('data-closable') === 'true';
+        if (isClosable && localStorage.getItem('duyuru_kapali_' + id)) {
+            /* Eğer silinen aktif slaytsa, bir sonrakine aktiflik ver */
+            if (item.classList.contains('active')) {
+                const next = item.nextElementSibling || item.previousElementSibling;
+                if (next) next.classList.add('active');
             }
-        });
-    })();
+            item.remove();
+        }
+    });
 
-    function duyuruyuKapat(id) {
-        // Kullanıcı kapattığında kaydet
-        localStorage.setItem("duyuru_kapali_" + id, "true");
-        const element = document.getElementById("duyuru-" + id);
-        if (element) {
-            // Hafif bir kapanış animasyonu
-            element.style.transition = "opacity 0.3s ease";
-            element.style.opacity = "0";
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 300);
+    /* --- 2. Kalan slayt sayısına göre UI ayarla --- */
+    const remaining = document.querySelectorAll('#announcementCarousel .carousel-item');
+
+    if (remaining.length === 0) {
+        /* Hiç duyuru kalmadı — container'ı gizle */
+        container.style.display = 'none';
+        return;
+    }
+
+    /* Aktif slayt yoksa ilki aktif yap (edge-case) */
+    if (!document.querySelector('#announcementCarousel .carousel-item.active')) {
+        remaining[0].classList.add('active');
+    }
+
+    if (remaining.length === 1) {
+        /* Tek duyuru varsa okları gizle */
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+    } else {
+        /* Bootstrap Carousel'i manuel başlat */
+        if (typeof bootstrap !== 'undefined') {
+            new bootstrap.Carousel(carouselEl, { interval: false, wrap: true });
         }
     }
+});
+
+/* --- Çarpı butonuna basıldığında --- */
+function duyuruyuKapat(id) {
+    localStorage.setItem('duyuru_kapali_' + id, 'true');
+
+    const carouselEl = document.getElementById('announcementCarousel');
+    const element    = document.getElementById('duyuru-' + id);
+    const remaining  = document.querySelectorAll('#announcementCarousel .carousel-item');
+
+    if (!element) return;
+
+    if (remaining.length <= 1) {
+        /* Son duyuru — container'ı animasyonla gizle */
+        const container = document.getElementById('announcementContainer');
+        container.style.transition = 'opacity 0.4s ease';
+        container.style.opacity   = '0';
+        setTimeout(() => { container.style.display = 'none'; }, 400);
+    } else {
+        /* Birden fazla duyuru var — önce kaydır, sonra sil */
+        const isActive = element.classList.contains('active');
+        if (isActive && typeof bootstrap !== 'undefined') {
+            const bs = bootstrap.Carousel.getInstance(carouselEl) || new bootstrap.Carousel(carouselEl, { wrap: true });
+            carouselEl.addEventListener('slid.bs.carousel', function handler() {
+                carouselEl.removeEventListener('slid.bs.carousel', handler);
+                element.remove();
+                /* Geriye tek öğe kaldıysa okları gizle */
+                const left = document.querySelectorAll('#announcementCarousel .carousel-item');
+                if (left.length === 1) {
+                    const prev = document.querySelector('#announcementCarousel .carousel-control-prev');
+                    const next = document.querySelector('#announcementCarousel .carousel-control-next');
+                    if (prev) prev.style.display = 'none';
+                    if (next) next.style.display = 'none';
+                }
+            });
+            bs.next();
+        } else {
+            /* Aktif değilse direkt sil */
+            element.remove();
+        }
+    }
+}
 </script>
 {% endif %}
 

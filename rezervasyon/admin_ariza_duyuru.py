@@ -124,8 +124,8 @@ admin.site.unregister(User)
 
 @admin.register(Duyuru)
 class DuyuruAdmin(admin.ModelAdmin):
-    list_display = ("baslik", "tarih", "aktif_mi_badge", "hizli_islem")
-    list_filter = ("aktif_mi", "tarih")
+    list_display = ("baslik", "tarih", "kapatilabilir_mi", "aktif_mi_badge", "hizli_islem")
+    list_filter = ("aktif_mi", "kapatilabilir_mi", "tarih")
     search_fields = ("baslik", "icerik")
     date_hierarchy = "tarih"
     readonly_fields = ("tarih",)
@@ -133,7 +133,10 @@ class DuyuruAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ("Duyuru İçeriği", {
-            'fields': ('baslik', 'icerik', 'aktif_mi')
+            'fields': ('baslik', 'icerik', 'gorsel')
+        }),
+        ("Ayarlar", {
+            'fields': ('kapatilabilir_mi', 'aktif_mi')
         }),
         ("Bilgiler", {
             'fields': ('tarih',),

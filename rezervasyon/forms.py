@@ -73,13 +73,15 @@ class KayitFormu(forms.ModelForm):
     password = forms.CharField(
         label="Şifre",
         required=True,
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
+        widget=forms.PasswordInput(render_value=True, attrs={"class": "form-control", "placeholder": "********"})
     )
     password_confirm = forms.CharField(
         label="Şifre Tekrar",
         required=True,
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "********"})
+        widget=forms.PasswordInput(render_value=True, attrs={"class": "form-control", "placeholder": "********"})
     )
+
+    field_order = ["username", "first_name", "last_name", "email", "telefon", "password", "password_confirm"]
 
     class Meta:
         model = User
