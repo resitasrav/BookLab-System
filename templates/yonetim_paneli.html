@@ -8,7 +8,7 @@
 
 <div class="container-fluid mt-2 mb-5 px-lg-5">
     
-    <div class="row mb-5 align-items-center">
+    <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <h2 class="fw-extrabold text-primary mb-1">
                 <i class="bi bi-speedometer2 me-2"></i>Yönetim Merkezi
@@ -18,6 +18,24 @@
         <div class="col-md-4 text-md-end text-muted small">
             <i class="bi bi-clock me-1"></i> Son Güncelleme: {% now "H:i" %}
         </div>
+    </div>
+
+    <!-- AY SEÇİCİ FİLTRE -->
+    <div class="card filter-card mb-4 p-3 shadow-sm">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3 col-12">
+                <label class="form-label mb-2 small fw-bold">Ay Seçimi</label>
+                <input type="month" name="ay_ara" value="{{ search_ay }}" class="form-control rounded-pill">
+            </div>
+            <div class="col-md-9 col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill fw-bold">
+                    <i class="bi bi-search me-2"></i>Filtrele
+                </button>
+                <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-secondary rounded-pill fw-bold">
+                    <i class="bi bi-x-lg me-1"></i>Sıfırla
+                </a>
+            </div>
+        </form>
     </div>
 
     <div class="row g-4 mb-5">
@@ -86,46 +104,53 @@
         <div class="col-lg-5">
             <div class="card panel-card h-100 shadow-sm">
                 <div class="card-header bg-transparent py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold text-danger mb-0"><i class="bi bi-bell-fill me-2"></i>Hızlı İşlem Listesi</h5>
+                    <h5 class="fw-bold text-warning mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Onay Bekleyen Randevular
+                        <span class="badge bg-warning text-dark ms-2" style="font-size: 0.85rem;">{{ bekleyen_onay }}</span>
+                    </h5>
                     <a href="{% url 'tum_randevular' %}" class="small text-decoration-none">Hepsini Gör</a>
                 </div>
                 <div class="card-body px-4">
                     {% if bekleyen_randevular %}
                     <div class="list-group list-group-flush">
                             {% for randevu in bekleyen_randevular %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm border border-light">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary-subtle text-primary rounded-circle p-2 me-3">
+                        <div class="list-group-item d-flex justify-content-between align-items-start p-3 shadow-sm border border-light rounded">
+                            <div class="d-flex align-items-start flex-grow-1">
+                                <div class="bg-primary-subtle text-primary rounded-circle p-2 me-3" style="flex-shrink: 0;">
                                     <i class="bi bi-person-fill fs-5"></i>
                                 </div>
-                                <div>
+                                <div class="flex-grow-1">
                                     <h6 class="fw-bold mb-0 text-dark">{{ randevu.kullanici.get_full_name|default:randevu.kullanici.username }}</h6>
                                     <small class="text-muted">{{ randevu.cihaz.isim }} | {{ randevu.tarih|date:"d M" }} {{ randevu.baslangic_saati|time:"H:i" }}</small>
                                 </div>
                             </div>
-                            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                            <div class="d-grid gap-1" style="width: 200px; flex-shrink: 0; margin-left: 10px;">
                                 {% if randevu.durum == 'onay_bekleniyor' %}
-                                <form method="post" action="{% url 'durum_guncelle' randevu.id 'onaylandi' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="action-btn btn-success shadow-sm border-0" title="Onayla">Onayla</button>
-                                </form>
-                                <form method="post" action="{% url 'durum_guncelle' randevu.id 'reddedildi' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="action-btn btn-outline-danger border-0" title="Reddet">Reddet</button>
-                                </form>
+                                <div class="d-flex gap-1">
+                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'onaylandi' %}" class="flex-grow-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn btn-success btn-sm w-100 py-1" title="Onayla" style="font-size: 0.75rem;">✅ Onayla</button>
+                                    </form>
+                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'reddedildi' %}" class="flex-grow-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn btn-danger btn-sm w-100 py-1" title="Reddet" style="font-size: 0.75rem;">❌ Reddet</button>
+                                    </form>
+                                </div>
                                 {% elif randevu.durum == 'onaylandi' %}
-                                <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="action-btn btn-info shadow-sm border-0" title="Geldi" style="font-size:0.7rem;background:#17a2b8;color:white;">GELDİ</button>
-                                </form>
-                                <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button type="submit" class="action-btn btn-secondary shadow-sm border-0" title="Gelmedi" style="font-size:0.7rem;">GELMEDİ</button>
-                                </form>
+                                <div class="d-flex gap-1">
+                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}" class="flex-grow-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn btn-info btn-sm w-100 py-1" title="Geldi" style="font-size: 0.75rem;">✔ Geldi</button>
+                                    </form>
+                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}" class="flex-grow-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn btn-secondary btn-sm w-100 py-1" title="Gelmedi" style="font-size: 0.75rem;">⊗ Gelmedi</button>
+                                    </form>
+                                </div>
                                 {% endif %}
                             </div>
                         </div>

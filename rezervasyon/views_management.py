@@ -71,17 +71,38 @@ def onay_bekleyen_sayisi(request):
 @staff_member_required
 def egitmen_paneli(request):
     from django.db.models import Count as _Count
+    
+    # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
+    ay_ara = request.GET.get('ay_ara')
+    if ay_ara is None:
+        ay_ara = timezone.now().strftime('%Y-%m')
+    
     labs = Laboratuvar.objects.annotate(randevu_sayisi=_Count('cihaz__randevu'))
+    
+    # Tüm randevuları ve bekleyen randevuları hazırla
+    tum_randevular = Randevu.objects.all()
+    bekleyen_randevular_tum = Randevu.objects.filter(
+        durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]
+    ).order_by("tarih")
+    
+    # Ay filtrelemesi uygula
+    if ay_ara:
+        try:
+            yil, ay = ay_ara.split('-')
+            tum_randevular = tum_randevular.filter(tarih__year=yil, tarih__month=ay)
+            bekleyen_randevular_tum = bekleyen_randevular_tum.filter(tarih__year=yil, tarih__month=ay)
+        except ValueError:
+            pass
+    
     context = {
-        "toplam_randevu": Randevu.objects.count(),
-        "bekleyen_onay": Randevu.objects.filter(durum=Randevu.ONAY_BEKLENIYOR).count(),
-        "bekleyen_randevular": Randevu.objects.filter(
-            durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]
-        ).order_by("tarih"),
+        "toplam_randevu": tum_randevular.count(),
+        "bekleyen_onay": bekleyen_randevular_tum.filter(durum=Randevu.ONAY_BEKLENIYOR).count(),
+        "bekleyen_randevular": bekleyen_randevular_tum[:5],  # İlk 5'ini göster
         "arizali_cihazlar": Cihaz.objects.filter(aktif_mi=False).count(),
         "toplam_kullanici": User.objects.filter(is_active=True).count(),
         "lab_isimleri": list(labs.values_list('isim', flat=True)),
         "randevu_sayilari": [lab.randevu_sayisi for lab in labs],
+        "search_ay": ay_ara,
     }
     return render(request, "yonetim_paneli.html", context)
 

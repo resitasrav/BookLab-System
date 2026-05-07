@@ -50,6 +50,47 @@ class CustomUserAdmin(AdminMassMailMixin, UserAdmin):
     list_filter = ("is_active", "is_staff", "date_joined")
     search_fields = ("username", "email", "first_name", "last_name")
 
+    def save_model(self, request, obj, form, change):
+        """Form üzerinden yapılan düzenlemelerde superuser koruması.
+        Kural 1: Superuser kendi hesabını pasif yapamaz.
+        Kural 2: Superuser kendi yetkisini düşüremez.
+        Kural 3: Son aktif superuser'ın yetkisi/aktifliği kaldırılamaz.
+        """
+        if change:
+            try:
+                original = User.objects.get(pk=obj.pk)
+            except User.DoesNotExist:
+                original = None
+
+            if original:
+                # Kural 1: Kendi hesabını pasif yapamaz
+                if obj.pk == request.user.pk and not obj.is_active:
+                    self.message_user(request, "❌ Kendinizi pasif yapamazsınız! Değişiklik geri alındı.", messages.ERROR)
+                    obj.is_active = True
+
+                # Kural 2: Kendi superuser yetkisini düşüremez
+                if obj.pk == request.user.pk and original.is_superuser and not obj.is_superuser:
+                    self.message_user(request, "❌ Kendi yönetici yetkinizi düşüremezsiniz! Değişiklik geri alındı.", messages.ERROR)
+                    obj.is_superuser = True
+                    obj.is_staff = True
+
+                # Kural 3: Son aktif superuser' ın yetkisi/aktifliği kaldırılamaz
+                if original.is_superuser and (not obj.is_superuser or not obj.is_active):
+                    aktif_superuser_sayisi = User.objects.filter(
+                        is_superuser=True, is_active=True
+                    ).exclude(pk=obj.pk).count()
+                    if aktif_superuser_sayisi == 0:
+                        self.message_user(
+                            request,
+                            f"❌ {obj.username} son aktif yöneticidir; yetkisi veya aktifliği kaldırılamaz! Değişiklik geri alındı.",
+                            messages.ERROR
+                        )
+                        obj.is_superuser = original.is_superuser
+                        obj.is_staff = original.is_staff
+                        obj.is_active = original.is_active
+
+        super().save_model(request, obj, form, change)
+
     def get_full_name(self, obj):
         """Kullanıcının tam adını göster"""
         return obj.get_full_name() or "-"
@@ -147,9 +188,27 @@ class AktifKullanicilarAdmin(AdminMassMailMixin, UserAdmin):
         return [path("pasif-et/<int:pk>/", self.admin_site.admin_view(self.pasif_et))] + urls
 
     def pasif_et(self, request, pk):
-        """Kullanıcıyı pasif et"""
+        """Kullanıcıyı pasif et.
+        Kural 1: Superuser kendisini pasif yapamaz.
+        Kural 2: Superuser pasif yapılamaz (son aktif superuser kesinlikle yapılamaz).
+        """
         try:
             u = get_object_or_404(User, pk=pk)
+
+            # Kural 1: Kendini pasif yapamaz
+            if u == request.user:
+                messages.error(request, "❌ Kendinizi pasif yapamazsınız!")
+                return safe_redirect(request)
+
+            # Kural 2: Superuser pasif yapılamaz
+            if u.is_superuser:
+                aktif_superuser_sayisi = User.objects.filter(is_superuser=True, is_active=True).count()
+                if aktif_superuser_sayisi <= 1:
+                    messages.error(request, f"❌ {u.username} son aktif yöneticidir, pasif yapılamaz!")
+                else:
+                    messages.error(request, f"❌ {u.username} bir yöneticidir (superuser), pasif yapılamaz!")
+                return safe_redirect(request)
+
             u.is_active = False
             u.save()
             if hasattr(u, 'profil'):
@@ -271,43 +330,74 @@ class ProfilAdmin(AdminMassMailMixin, admin.ModelAdmin):
 
     @admin.action(description="⏳ Seçilenleri PASİF Öğrenci Yap")
     def studentleri_pasif_et(self, request, queryset):
-        """Seçili öğrencileri pasif et"""
+        """Seçili öğrencileri pasif et (superuser profilleri korunur)"""
         try:
             updated = 0
+            atlanan = 0
             for profil in queryset:
+                # Superuser profilleri pasif yapılamaz
+                if profil.user.is_superuser:
+                    atlanan += 1
+                    continue
+                # Kendi profilini pasif yapamaz
+                if profil.user == request.user:
+                    atlanan += 1
+                    continue
                 profil.status = 'pasif_kullanici'
                 profil.user.is_active = False
                 profil.save()
                 profil.user.save()
                 updated += 1
-            
-            messages.warning(
-                request, 
-                f"⏳ {updated} öğrenci PASİF yapıldı. Login yapamayacaklar."
-            )
+
+            if updated > 0:
+                messages.warning(
+                    request,
+                    f"⏳ {updated} öğrenci PASİF yapıldı. Login yapamayacaklar."
+                )
+            if atlanan > 0:
+                messages.error(
+                    request,
+                    f"⚠️ {atlanan} kullanıcı atlandı (yönetici profilleri değiştirilemez)."
+                )
             logger.info(f"Öğrenciler Pasifleştirildi: {updated} - {request.user.username}")
         except Exception as e:
             messages.error(request, f"❌ Hata: {str(e)}")
 
     @admin.action(description="❌ Seçilenleri İPTAL Et")
     def studentleri_iptal_et(self, request, queryset):
-        """Seçili öğrencileri iptal et"""
+        """Seçili öğrencileri iptal et (superuser profilleri korunur)"""
         try:
             updated = 0
+            atlanan = 0
             for profil in queryset:
+                # Superuser profilleri iptal edilemez
+                if profil.user.is_superuser:
+                    atlanan += 1
+                    continue
+                # Kendi profilini iptal edemez
+                if profil.user == request.user:
+                    atlanan += 1
+                    continue
                 profil.status = 'iptal'
                 profil.user.is_active = False
                 profil.save()
                 profil.user.save()
                 updated += 1
-            
-            messages.error(
-                request, 
-                f"❌ {updated} öğrenci İPTAL edildi."
-            )
+
+            if updated > 0:
+                messages.error(
+                    request,
+                    f"❌ {updated} öğrenci İPTAL edildi."
+                )
+            if atlanan > 0:
+                messages.warning(
+                    request,
+                    f"⚠️ {atlanan} kullanıcı atlandı (yönetici profilleri değiştirilemez)."
+                )
             logger.info(f"Öğrenciler İptal Edildi: {updated} - {request.user.username}")
         except Exception as e:
             messages.error(request, f"❌ Hata: {str(e)}")
+
 
 # ============================================================
 # DUYURU YÖNETIMI (GELİŞTİRİLMİŞ & MOBIL UYUMLU)

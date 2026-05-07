@@ -193,10 +193,16 @@
                         <span class="badge badge-success">✓ ONAYLANDI</span>
                     {% elif randevu.durum == 'onay_bekleniyor' %}
                         <span class="badge badge-warning">⏳ ONAY BEKLIYOR</span>
+                    {% elif randevu.durum == 'reddedildi' %}
+                        <span class="badge badge-danger">✗ REDDEDILDI</span>
                     {% elif randevu.durum == 'iptal_edildi' %}
                         <span class="badge badge-danger">✗ IPTAL EDILDI</span>
+                    {% elif randevu.durum == 'geldi' %}
+                        <span class="badge badge-success">✓ GELDI</span>
+                    {% elif randevu.durum == 'gelmedi' %}
+                        <span class="badge badge-danger">✗ GELMEDI</span>
                     {% else %}
-                        <span class="badge badge-danger">✗ REDDEDILDI</span>
+                        <span class="badge badge-info">? BILINMEYEN DURUM</span>
                     {% endif %}
                 </td>
             </tr>
@@ -219,7 +225,7 @@
 
     <div id="footerContent">
         Bu dokuman BookLab Rezervasyon Sistemi tarafindan dijital olarak olusturulmustur. <br/>
-        Sistem DoGrulama Kodu: BL-{{ user.id }}{% now "U" %} | Sayfa <pdf:pagenumber>
+        Sistem Dogrulama Kodu: BL-{{ user.id }}{% now "U" %} | Sayfa <pdf:pagenumber>
     </div>
 
 </body>

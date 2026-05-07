@@ -162,12 +162,16 @@ def ozel_mail_action(modeladmin, request, queryset):
 
 @admin.action(description="🔻 Yönetici Yetkisini Geri Al")
 def yetkiyi_al(modeladmin, request, queryset):
-    """Seçili kullanıcıların yönetici yetkisini geri al (sadece superuser yapabilir)"""
+    """Seçili kullanıcıların yönetici yetkisini geri al (sadece superuser yapabilir).
+    Kural 1: Superuser kendi yetkisini düşüremez.
+    Kural 2: Son aktif superuser'ın yetkisi alınamaz.
+    """
     if not request.user.is_superuser:
         modeladmin.message_user(request, "❌ Bu işlem için yeterli izniniz yok.", messages.ERROR)
         return
 
     guncellenen = 0
+    atlanan = 0
     for obj in queryset:
         user = None
         if isinstance(obj, User):
@@ -177,17 +181,37 @@ def yetkiyi_al(modeladmin, request, queryset):
         elif hasattr(obj, 'kullanici'):
             user = obj.kullanici
 
-        if user and user != request.user:
-            if user.is_staff or user.is_superuser:
-                user.is_staff = False
-                user.is_superuser = False
-                user.save()
-                guncellenen += 1
+        if not user:
+            continue
+
+        # Kural 1: Superuser kendi yetkisini düşüremesin
+        if user == request.user:
+            atlanan += 1
+            continue
+
+        # Kural 2: Hedef kullanıcı superuser ve sistemdeki son aktif superuser ise engelle
+        if user.is_superuser:
+            aktif_superuser_sayisi = User.objects.filter(is_superuser=True, is_active=True).count()
+            if aktif_superuser_sayisi <= 1:
+                atlanan += 1
+                continue
+
+        if user.is_staff or user.is_superuser:
+            user.is_staff = False
+            user.is_superuser = False
+            user.save()
+            guncellenen += 1
 
     if guncellenen > 0:
         modeladmin.message_user(request, f"✅ {guncellenen} kullanıcının yönetici yetkisi geri alındı.", messages.SUCCESS)
-    else:
-        modeladmin.message_user(request, "⚠️ Hiçbir kullanıcı güncellenemedi (kendini indirgeyemezsiniz).", messages.WARNING)
+    if atlanan > 0:
+        modeladmin.message_user(
+            request,
+            f"⚠️ {atlanan} kullanıcı atlandı: kendi yetkinizi düşüremez veya son yöneticinin yetkisi alınamaz.",
+            messages.WARNING
+        )
+    if guncellenen == 0 and atlanan == 0:
+        modeladmin.message_user(request, "⚠️ Seçilen kullanıcıların hiçbiri güncellenmedi.", messages.WARNING)
 
 
 @admin.action(description="🌟 Seçilenleri Yönetici Yap")
@@ -239,18 +263,34 @@ def aktif_yap(modeladmin, request, queryset):
 def pasif_yap(modeladmin, request, queryset):
     """Seçili kullanıcıları pasif hale getir ve profillerini senkronize et"""
     updated = 0
+    hatali = 0
     for obj in queryset:
         user = obj if isinstance(obj, User) else getattr(obj, 'user', getattr(obj, 'kullanici', None))
         if user:
+            # Superuser'ı pasif yapmasını engelle
+            if user.is_superuser:
+                # Eğer kendisini pasif yapmaya çalışıyorsa
+                if user.id == request.user.id:
+                    hatali += 1
+                    continue
+                # Eğer son superuser ise (başka aktif superuser yoksa)
+                if User.objects.filter(is_superuser=True, is_active=True).count() == 1:
+                    hatali += 1
+                    continue
+            
             user.is_active = False
             user.save()
             if hasattr(user, 'profil'):
                 user.profil.status = 'pasif_kullanici'
                 user.profil.save()
             updated += 1
-            
-    modeladmin.message_user(request, f"🔴 {updated} kullanıcı pasif yapıldı.", messages.WARNING)
-    logger.info(f"Pasifleştirme: {request.user.username} - {updated} kayıt")
+    
+    if updated > 0:
+        modeladmin.message_user(request, f"🔴 {updated} kullanıcı pasif yapıldı.", messages.WARNING)
+    if hatali > 0:
+        modeladmin.message_user(request, f"⚠️ {hatali} yönetici/superuser pasif yapılamadı (kendisini veya son yöneticiyi pasif yapamaz).", messages.ERROR)
+    
+    logger.info(f"Pasifleştirme: {request.user.username} - {updated} kayıt, {hatali} hata")
 
 # ============================================================
 # ADMIN MASS MAIL MIXIN (Mail Gönderme Fonksiyonu)

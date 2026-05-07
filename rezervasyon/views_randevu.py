@@ -188,6 +188,19 @@ def randevularim(request):
     tum = Randevu.objects.filter(kullanici=request.user).order_by("tarih", "baslangic_saati")
     simdi = datetime.now()
 
+    # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
+    ay_ara = request.GET.get('ay_ara')
+    if ay_ara is None:
+        ay_ara = timezone.now().strftime('%Y-%m')
+
+    # Tüm randevuları ay'a göre filtrele
+    if ay_ara:
+        try:
+            yil, ay = ay_ara.split('-')
+            tum = [r for r in tum if r.tarih.year == int(yil) and r.tarih.month == int(ay)]
+        except (ValueError, AttributeError):
+            pass
+
     # AKTİF RANDEVULAR:
     # 1. Zamanı henüz geçmemiş olmalı
     # 2. Durumu 'Onay Bekliyor' veya 'Onaylandı' olmalı (Reddedilenler veya iptaller burada görünmemeli)
@@ -198,17 +211,18 @@ def randevularim(request):
     ]
 
     # GEÇMİŞ / PASİF RANDEVULAR:
-    # 1. Zamanı geçmiş olanlar VEYA 
-    # 2. Reddedilmiş/İptal edilmiş olanlar (Zamanı gelecek olsa bile pasif sayılırlar)
+    # Tamamlanan, reddetme, iptal, katılmayan randevular DAIMA geçmiş'tedir
+    # VEYA zamanı geçmiş olup onay bekleyen/onaylanan randevular
     gecmis = [
         r for r in tum 
-        if datetime.combine(r.tarih, r.baslangic_saati) < simdi 
-        or r.durum in ['reddedildi', 'iptal_edildi']
+        if r.durum in ['reddedildi', 'iptal_edildi', 'geldi', 'gelmedi']
+        or (datetime.combine(r.tarih, r.baslangic_saati) < simdi and r.durum in ['onay_bekleniyor', 'onaylandi'])
     ]
 
     return render(request, "randevularim.html", {
         "aktif_randevular": aktif, 
-        "gecmis_randevular": reversed(gecmis)
+        "gecmis_randevular": reversed(gecmis),
+        "search_ay": ay_ara
     })
 
 @login_required

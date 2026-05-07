@@ -27,8 +27,26 @@
         </div>
     </div>
 
+    <!-- AY SEÇİCİ FİLTRE -->
+    <div class="card filter-card mb-4 p-3 shadow-sm">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4 col-12">
+                <label class="form-label mb-2 small fw-bold">Ay Seçimi</label>
+                <input type="month" name="ay_ara" value="{{ search_ay }}" class="form-control rounded-pill">
+            </div>
+            <div class="col-md-8 col-12 d-flex gap-2" style="margin-top: 1.6rem;">
+                <button type="submit" class="btn btn-primary rounded-pill fw-bold flex-grow-1">
+                    <i class="bi bi-search me-2"></i>Filtrele
+                </button>
+                <a href="{% url 'randevularim' %}" class="btn btn-outline-secondary rounded-pill fw-bold">
+                    <i class="bi bi-x-lg me-1"></i>Sıfırla
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="row g-4">
-        <div class="col-lg-4">
+        <div class="col-lg-4" style="position: sticky; top: 20px; height: fit-content;">
             <div class="card profile-card h-100 p-4">
                 <div class="text-center">
                     <div class="position-relative d-inline-block mb-4">
@@ -71,8 +89,15 @@
         </div>
 
         <div class="col-lg-8">
-            <div class="section-header">
-                <h5 class="fw-bold text-primary mb-0">🚀 Yaklaşan Randevular</h5>
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-rocket-fill me-2"></i>Yaklaşan Randevular
+                </h5>
+                {% if search_ay %}
+                <small class="text-muted">
+                    <i class="bi bi-calendar-event me-1"></i>{{ search_ay }}
+                </small>
+                {% endif %}
             </div>
             
             <div class="card profile-card mb-5">
@@ -101,9 +126,9 @@
                                     </td>
                                     <td>
                                         {% if randevu.durum == 'onay_bekleniyor' or randevu.durum == 'Bekliyor' %}
-                                            <span class="badge bg-warning-subtle text-warning-emphasis badge-pill-custom border border-warning">Bekliyor</span>
+                                            <span class="badge bg-warning-subtle text-warning-emphasis badge-pill-custom border border-warning">⏳ Bekliyor</span>
                                         {% else %}
-                                            <span class="badge bg-success-subtle text-success badge-pill-custom border border-success">Onaylandı</span>
+                                            <span class="badge bg-success-subtle text-success badge-pill-custom border border-success">✅ Onaylandı</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end pe-4">
@@ -119,34 +144,55 @@
                     {% else %}
                     <div class="text-center py-5">
                         <i class="bi bi-calendar-x display-4 text-muted opacity-25"></i>
-                        <p class="text-muted mt-3 mb-0">Aktif bir randevunuz bulunmuyor.</p>
+                        <p class="text-muted mt-3 mb-0">Seçili ay için aktif randevunuz bulunmuyor.</p>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="section-header">
-                <h6 class="fw-bold text-secondary mb-0">📂 Geçmiş Kayıtlar</h6>
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-secondary mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Geçmiş Randevular
+                </h6>
+                {% if search_ay %}
+                <small class="text-muted">
+                    <i class="bi bi-calendar-event me-1"></i>{{ search_ay }}
+                </small>
+                {% endif %}
             </div>
             <div class="card profile-card border-0">
                 <div class="card-body p-0">
                     {% if gecmis_randevular %}
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle mb-0" style="font-size: 0.85rem;">
+                            <thead class="bg-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="ps-4 py-3">Cihaz / Lab</th>
+                                    <th>Tarih</th>
+                                    <th>Saat</th>
+                                    <th class="text-end pe-4">Durum</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for randevu in gecmis_randevular %}
                                 <tr>
                                     <td class="ps-4 py-3">
                                         <span class="text-dark fw-bold">{{ randevu.cihaz.isim }}</span>
+                                        <small class="text-muted d-block">{{ randevu.cihaz.lab.isim }}</small>
                                     </td>
-                                    <td class="text-muted">{{ randevu.tarih|date:"d.m.y" }}</td>
+                                    <td class="text-muted">{{ randevu.tarih|date:"d.m.Y" }}</td>
+                                    <td class="text-muted small">{{ randevu.baslangic_saati|time:"H:i" }} - {{ randevu.bitis_saati|time:"H:i" }}</td>
                                     <td class="text-end pe-4">
                                         {% if randevu.durum == 'geldi' %}
                                             <span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>Tamamlandı</span>
                                         {% elif randevu.durum == 'iptal_edildi' %}
-                                            <span class="text-muted small">İptal Edildi</span>
+                                            <span class="text-secondary"><i class="bi bi-x-circle me-1"></i>İptal Edildi</span>
+                                        {% elif randevu.durum == 'reddedildi' %}
+                                            <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Reddedildi</span>
+                                        {% elif randevu.durum == 'gelmedi' %}
+                                            <span class="text-danger small"><i class="bi bi-dash-circle me-1"></i>Katılmadı</span>
                                         {% else %}
-                                            <span class="text-danger small">Katılmadı</span>
+                                            <span class="text-muted small">{{ randevu.get_durum_display }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -155,7 +201,7 @@
                         </table>
                     </div>
                     {% else %}
-                    <div class="p-4 text-center text-muted small">Geçmiş kayıt bulunamadı.</div>
+                    <div class="p-4 text-center text-muted small">Seçili ay için geçmiş kayıt bulunamadı.</div>
                     {% endif %}
                 </div>
             </div>
