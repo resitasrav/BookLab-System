@@ -10,7 +10,7 @@
     <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
         <div class="col-md-5 col-lg-4">
             <div class="card shadow-lg login-card">
-                
+
                 <div class="login-header text-center text-white">
                     <div class="mb-2 display-6"><i class="bi bi-shield-lock-fill"></i></div>
                     <h3 class="h4 fw-bold mb-0">Laboratuvar Girişi</h3>
@@ -35,14 +35,13 @@
 
                         <div class="mb-3">
                             <label><i class="bi bi-person-fill me-1"></i> Kullanıcı Adı veya E-posta</label>
-                            <input type="text" name="username" class="form-control" 
-                                   placeholder="örn:asrav veya asrav@mailuzantisi.com" required autofocus>
+                            <input type="text" name="username" class="form-control"
+                                placeholder="örn:kullaniciadi veya mailadi@mailuzantisi.com" required autofocus>
                         </div>
 
                         <div class="mb-4">
                             <label><i class="bi bi-key-fill me-1"></i> Şifre</label>
-                            <input type="password" name="password" class="form-control" 
-                                   placeholder="••••••••" required>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-login w-100 text-white shadow-sm">
@@ -55,11 +54,13 @@
                     <p class="mb-2 text-muted small">Hesabınız yok mu?</p>
                     <a href="{% url 'kayit' %}" class="btn btn-sm btn-outline-primary px-4 rounded-pill fw-bold">
                         Ücretsiz Kayıt Ol
-                                    </a><div class="mt-3 text-center">
-                    <a href="{% url 'password_reset' %}" class="text-decoration-none fw-bold small transition-all" style="color: #002d5a;">
-                        <i class="bi bi-shield-lock me-1"></i>Şifremi Unuttum?
                     </a>
-                </div>
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'password_reset' %}" class="text-decoration-none fw-bold small transition-all"
+                            style="color: #002d5a;">
+                            <i class="bi bi-shield-lock me-1"></i>Şifremi Unuttum?
+                        </a>
+                    </div>
                 </div>
 
             </div>
