@@ -167,6 +167,12 @@
                 <td class="label" style="text-align:right;">Belge Numarasi</td>
                 <td class="value" style="text-align:right;">: #{{ user.id }}-{% now "Ymd" %}-{{ user.username|upper }}</td>
             </tr>
+            {% if ay_etiketi %}
+            <tr>
+                <td class="label">RAPOR DONEMI</td>
+                <td class="value" colspan="3">: {{ ay_etiketi }}</td>
+            </tr>
+            {% endif %}
         </table>
     </div>
 
@@ -209,7 +215,7 @@
             {% empty %}
             <tr>
                 <td colspan="4" style="text-align: center; padding: 30px; color: #6c757d; font-style: italic;">
-                    Sistemde adiniza kayitli herhangi bir rezervasyon kaydi bulunamadi.
+                    {% if ay_etiketi %}{{ ay_etiketi }} donemi icin{% else %}Sistemde{% endif %} adiniza kayitli herhangi bir rezervasyon kaydi bulunamadi.
                 </td>
             </tr>
             {% endfor %}

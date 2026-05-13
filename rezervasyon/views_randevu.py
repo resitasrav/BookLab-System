@@ -1,47 +1,20 @@
 # Bu dosya views.py dosyasindan ayrildi.
 # TURKCE ARAMA ANAHTARLARI: view, sayfa, islem, BookLab
 
-import json
 import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import EmailMultiAlternatives
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
-from django.db.models import Count, Q
-from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.encoding import force_bytes
-from django.utils.html import strip_tags
-from django.utils.http import urlsafe_base64_encode, url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import (
-    KullaniciGuncellemeFormu,
-    ProfilGuncellemeFormu,
-    ArizaFormu,
-    KayitFormu,
-    EmailOrUsernameAuthenticationForm,
-)
-from .models import Laboratuvar, Cihaz, Randevu, Profil, Duyuru, Ariza
+from .models import Cihaz, Randevu
 from .utils import render_to_pdf
-from .view_helpers import (
-    EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA,
-    IPTAL_MIN_SURE_SAAT,
-    dogrulama_kodu_uret,
-    kod_suresi_doldu_mu,
-    dogrulama_maili_gonder,
-    check_overlap,
-)
+from .view_helpers import check_overlap
 
 logger = logging.getLogger(__name__)
 
@@ -51,20 +24,11 @@ def randevu_al(request, cihaz_id):
     secilen_cihaz = get_object_or_404(Cihaz, id=cihaz_id)
     simdi = timezone.now()
 
-    secilen_tarih_str = request.GET.get("tarih")
-    try:
-        if secilen_tarih_str:
-            secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date()
-        else:
-            secilen_tarih = simdi.date()
-    except ValueError:
-        secilen_tarih = simdi.date()
-    
     if not secilen_cihaz.aktif_mi:
         messages.error(request, f"⛔ '{secilen_cihaz.isim}' bakımda.")
         return redirect("lab_detay", lab_id=secilen_cihaz.lab.id)
 
-    # Tarih belirleme 
+    # Tarih belirleme
     secilen_tarih_str = request.GET.get("tarih")
     try:
         secilen_tarih = datetime.strptime(secilen_tarih_str, "%Y-%m-%d").date() if secilen_tarih_str else timezone.now().date()
@@ -186,7 +150,7 @@ def randevu_al(request, cihaz_id):
 def randevularim(request):
     # Tüm randevuları çekiyoruz
     tum = Randevu.objects.filter(kullanici=request.user).order_by("tarih", "baslangic_saati")
-    simdi = datetime.now()
+    simdi = timezone.now()  # timezone-aware, USE_TZ ile uyumlu
 
     # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
     ay_ara = request.GET.get('ay_ara')
@@ -206,7 +170,7 @@ def randevularim(request):
     # 2. Durumu 'Onay Bekliyor' veya 'Onaylandı' olmalı (Reddedilenler veya iptaller burada görünmemeli)
     aktif = [
         r for r in tum 
-        if datetime.combine(r.tarih, r.baslangic_saati) >= simdi 
+        if timezone.make_aware(datetime.combine(r.tarih, r.baslangic_saati)) >= simdi 
         and r.durum in ['onay_bekleniyor', 'onaylandi']
     ]
 
@@ -216,7 +180,7 @@ def randevularim(request):
     gecmis = [
         r for r in tum 
         if r.durum in ['reddedildi', 'iptal_edildi', 'geldi', 'gelmedi']
-        or (datetime.combine(r.tarih, r.baslangic_saati) < simdi and r.durum in ['onay_bekleniyor', 'onaylandi'])
+        or (timezone.make_aware(datetime.combine(r.tarih, r.baslangic_saati)) < simdi and r.durum in ['onay_bekleniyor', 'onaylandi'])
     ]
 
     return render(request, "randevularim.html", {
@@ -227,18 +191,40 @@ def randevularim(request):
 
 @login_required
 def randevu_pdf_indir(request):
-    randevular = (
+    # Sayfadaki ay filtresini PDF'e de yansıt
+    ay_ara = request.GET.get('ay_ara')
+    if ay_ara is None:
+        ay_ara = timezone.now().strftime('%Y-%m')
+
+    randevular_qs = (
         Randevu.objects
         .filter(kullanici=request.user)
-        .order_by("tarih", "baslangic_saati")
+        .order_by("-tarih", "-baslangic_saati")  # En güncel başta
     )
+
+    # Ay filtresi uygula
+    randevular = list(randevular_qs)
+    if ay_ara:
+        try:
+            yil, ay = ay_ara.split('-')
+            randevular = [r for r in randevular if r.tarih.year == int(yil) and r.tarih.month == int(ay)]
+        except (ValueError, AttributeError):
+            pass
+
+    ay_etiketi = ""
+    if ay_ara:
+        try:
+            ay_etiketi = datetime.strptime(ay_ara, "%Y-%m").strftime("%B %Y")
+        except ValueError:
+            ay_etiketi = ay_ara
 
     context = {
         "user": request.user,
         "randevular": randevular,
+        "ay_etiketi": ay_etiketi,
     }
 
-    filename = f"randevular_{request.user.username}.pdf"
+    filename = f"randevular_{request.user.username}_{ay_ara}.pdf"
 
     return render_to_pdf(
         "randevu_pdf.html", 

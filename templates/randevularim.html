@@ -18,8 +18,8 @@
                 <i class="bi bi-gear-fill me-2"></i>Sistem Yönetimi (Admin)
             </a>
             {% endif %}
-            <a href="{% url 'randevu_pdf_indir' %}" class="btn btn-danger btn-custom shadow-sm px-4">
-                <i class="bi bi-file-earmark-pdf-fill me-2"></i>PDF Raporu
+            <a href="{% url 'randevu_pdf_indir' %}?ay_ara={{ search_ay }}" class="btn btn-danger btn-custom shadow-sm px-4">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>PDF Raporu ({{ search_ay }})
             </a>
             <a href="{% url 'genel_takvim' %}" class="btn btn-warning btn-custom shadow-sm px-4 text-dark">
                 <i class="bi bi-calendar-event-fill me-2"></i>Genel Takvim
