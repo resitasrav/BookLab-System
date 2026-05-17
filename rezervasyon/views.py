@@ -21,5 +21,6 @@ from .views_management import (
     cihaz_durum_degistir,
     tum_randevular,
     toplu_islem,
+    toplu_onay_ajax,
     ariza_bildir_genel,
 )

@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <title>Rezervasyon Raporu</title>
     <style>
-        /* Font registerFont ile arka planda yüklendiği için font-face kullanmıyoruz */
+        /*
+         * Font, utils.py > register_fonts() ile pdfmetrics'e onceden kaydediliyor.
+         * xhtml2pdf onceden kayitli fontlari CSS font-family adiyla dogrudan bulur;
+         * @font-face + URL kullanmak Windows yol sorunu yaratiyor (reportlab C:\ yi
+         * URL semasi olarak yorumluyor), bu yuzden @font-face kullanilmiyor.
+         */
 
        @page {
             size: A4 portrait;

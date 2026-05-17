@@ -24,6 +24,7 @@ from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_encode, url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from django.db.models import Count as _Count
 
 from .forms import (
     KullaniciGuncellemeFormu,
@@ -70,30 +71,89 @@ def onay_bekleyen_sayisi(request):
 
 @staff_member_required
 def egitmen_paneli(request):
-    from django.db.models import Count as _Count
     
     # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
     ay_ara = request.GET.get('ay_ara')
     if ay_ara is None:
         ay_ara = timezone.now().strftime('%Y-%m')
     
-    labs = Laboratuvar.objects.annotate(randevu_sayisi=_Count('cihaz__randevu'))
-    
+    # Ay filtresini önce çöz— lab grafiği de aynı filtreyi kullanabilsin
+    yil = ay = None
+    if ay_ara:
+        try:
+            yil, ay = ay_ara.split('-')
+        except ValueError:
+            pass
+
+    # Lab grafiği: seçili aya göre filtreli randevu sayısı
+    if yil and ay:
+        labs = Laboratuvar.objects.annotate(
+            randevu_sayisi=_Count(
+                'cihaz__randevu',
+                filter=Q(cihaz__randevu__tarih__year=yil, cihaz__randevu__tarih__month=ay)
+            )
+        )
+    else:
+        labs = Laboratuvar.objects.annotate(randevu_sayisi=_Count('cihaz__randevu'))
+
     # Tüm randevuları ve bekleyen randevuları hazırla
     tum_randevular = Randevu.objects.all()
     bekleyen_randevular_tum = Randevu.objects.filter(
         durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]
     ).order_by("tarih")
-    
-    # Ay filtrelemesi uygula
-    if ay_ara:
-        try:
-            yil, ay = ay_ara.split('-')
-            tum_randevular = tum_randevular.filter(tarih__year=yil, tarih__month=ay)
-            bekleyen_randevular_tum = bekleyen_randevular_tum.filter(tarih__year=yil, tarih__month=ay)
-        except ValueError:
-            pass
-    
+
+    # Ay filtrelemesini uygula
+    if yil and ay:
+        tum_randevular = tum_randevular.filter(tarih__year=yil, tarih__month=ay)
+        bekleyen_randevular_tum = bekleyen_randevular_tum.filter(tarih__year=yil, tarih__month=ay)
+
+    # --- EN AKTİF KULLANICILAR (En Çok Kullanılan Lab Bazında — Top 10) ---
+    top_users_of_top_lab = []
+    top_lab_name = None
+    try:
+        ay_randevular = Randevu.objects.all()
+        if yil and ay:
+            ay_randevular = ay_randevular.filter(tarih__year=yil, tarih__month=ay)
+
+        # 1. En çok kullanılan labı bul (cihaz üzerinden lab'a ulaş)
+        top_lab_entry = (
+            ay_randevular
+            .values('cihaz__lab_id')
+            .annotate(lab_count=_Count('id'))
+            .order_by('-lab_count')
+            .first()
+        )
+
+        if top_lab_entry:
+            top_lab_id = top_lab_entry['cihaz__lab_id']
+            lab_obj = Laboratuvar.objects.get(pk=top_lab_id)
+            top_lab_name = lab_obj.isim
+
+            # 2. O labdaki tüm kullanıcıları randevu sayısına göre sırala (Top 10)
+            user_entries = (
+                ay_randevular
+                .filter(cihaz__lab_id=top_lab_id)
+                .values('kullanici_id')
+                .annotate(booking_count=_Count('id'))
+                .order_by('-booking_count')[:10]
+            )
+
+            # User nesnelerini tek sorguda çek
+            user_ids = [e['kullanici_id'] for e in user_entries]
+            users_map = {u.pk: u for u in User.objects.filter(pk__in=user_ids)}
+
+            for entry in user_entries:
+                u = users_map.get(entry['kullanici_id'])
+                if u:
+                    top_users_of_top_lab.append({
+                        'id': u.pk,
+                        'name': u.get_full_name() or u.username,
+                        'email': u.email,
+                        'booking_count': entry['booking_count'],
+                    })
+    except Exception:
+        pass
+
     context = {
         "toplam_randevu": tum_randevular.count(),
         "bekleyen_onay": bekleyen_randevular_tum.filter(durum=Randevu.ONAY_BEKLENIYOR).count(),
@@ -103,6 +163,8 @@ def egitmen_paneli(request):
         "lab_isimleri": list(labs.values_list('isim', flat=True)),
         "randevu_sayilari": [lab.randevu_sayisi for lab in labs],
         "search_ay": ay_ara,
+        "top_users_of_top_lab": top_users_of_top_lab,
+        "top_lab_name": top_lab_name,
     }
     return render(request, "yonetim_paneli.html", context)
 
@@ -251,7 +313,7 @@ def toplu_islem(request):
     }
 
     if islem not in gecerli_islemler or not secilen_ids:
-        messages.error(request, "❌ Geçersiz işlem veya seçim yapılmadı.")
+        messages.error(request, "\u274c Geçersiz işlem veya seçim yapılmadı.")
         return redirect('tum_randevular')
 
     guncellenen = Randevu.objects.filter(id__in=secilen_ids).update(
@@ -260,8 +322,35 @@ def toplu_islem(request):
     )
     islem_adi = {'onaylandi': 'Onaylandı', 'reddedildi': 'Reddedildi',
                  'geldi': 'Geldi olarak işaretlendi', 'gelmedi': 'Gelmedi olarak işaretlendi'}
-    messages.success(request, f"✅ {guncellenen} randevu → {islem_adi[islem]}.")
+    messages.success(request, f"\u2705 {guncellenen} randevu \u2192 {islem_adi[islem]}.")
     return redirect('tum_randevular')
+
+
+@staff_member_required
+def toplu_onay_ajax(request):
+    """Dashboard için AJAX toplu onay/red endpoint'i. JSON döner."""
+    import json as _json
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Yalnızca POST kabul edilir.'}, status=405)
+    try:
+        data = _json.loads(request.body)
+        ids   = [int(i) for i in data.get('ids', [])]
+        islem = data.get('islem', '')
+    except (ValueError, KeyError):
+        return JsonResponse({'error': 'Geçersiz veri.'}, status=400)
+
+    gecerli = {'onaylandi', 'reddedildi'}
+    if islem not in gecerli or not ids:
+        return JsonResponse({'error': 'Geçersiz islem veya boş seçim.'}, status=400)
+
+    with transaction.atomic():
+        guncellenen = Randevu.objects.filter(id__in=ids).update(
+            durum=islem,
+            onaylayan_admin=request.user
+        )
+
+    yeni_bekleyen = Randevu.objects.filter(durum=Randevu.ONAY_BEKLENIYOR).count()
+    return JsonResponse({'updated': guncellenen, 'yeni_bekleyen': yeni_bekleyen})
 @login_required
 def ariza_bildir_genel(request):
     if request.method == 'POST':

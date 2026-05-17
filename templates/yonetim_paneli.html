@@ -2,12 +2,93 @@
 {% load static %}
 {% block extra_css %}{{ block.super }}
 <link rel="stylesheet" href="{% static 'css/pages/yonetim_paneli.css' %}">
+<style>
+/* ── Toast ─────────────────────────────────────────── */
+#toast-container {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    display: flex; flex-direction: column; gap: .5rem;
+}
+.dash-toast {
+    min-width: 260px; max-width: 360px;
+    padding: .75rem 1.1rem;
+    border-radius: 12px;
+    font-size: .875rem; font-weight: 600;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    display: flex; align-items: center; gap: .6rem;
+    animation: toastIn .25s ease;
+}
+@keyframes toastIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+.dash-toast.success { background: linear-gradient(135deg,#11998e,#38ef7d); }
+.dash-toast.error   { background: linear-gradient(135deg,#c0392b,#e74c3c); }
+.dash-toast.info    { background: linear-gradient(135deg,#667eea,#764ba2); }
+
+/* ── Pending panel (slide-down) ─────────────────────── */
+#pendingPanel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .45s cubic-bezier(0.4,0,0.2,1), opacity .3s;
+    opacity: 0;
+}
+#pendingPanel.open { max-height: 800px; opacity: 1; }
+
+/* ── Yellow stat card trigger ───────────────────────── */
+#bekleyenKart {
+    cursor: pointer;
+    transition: transform .25s, box-shadow .25s;
+    user-select: none;
+}
+#bekleyenKart:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(255,193,7,.25) !important; }
+#bekleyenKart .chevron-icon {
+    transition: transform .35s cubic-bezier(0.4,0,0.2,1);
+    font-size: 1.1rem;
+}
+#bekleyenKart.expanded .chevron-icon { transform: rotate(180deg); }
+
+/* ── Pending list items ─────────────────────────────── */
+.pending-item {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    margin-bottom: .5rem;
+    display: flex; align-items: center; gap: .75rem;
+    transition: background .15s;
+}
+.pending-item:hover { background: #f3f4ff; }
+.pending-item.removing {
+    animation: itemOut .3s ease forwards;
+}
+@keyframes itemOut { to { opacity:0; transform: translateX(30px); max-height:0; padding:0; margin:0; } }
+
+/* ── Chart card fix ─────────────────────────────────── */
+.chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ── Bulk bar ───────────────────────────────────────── */
+#bulkBar {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 10px;
+    padding: .5rem .8rem;
+    margin-bottom: .6rem;
+    display: none;
+    align-items: center; gap: .5rem; flex-wrap: wrap;
+}
+#bulkBar.active { display: flex; }
+</style>
 {% endblock %}
 
 {% block icerik %}
 
+<!-- Toast container -->
+<div id="toast-container"></div>
+
 <div class="container-fluid mt-2 mb-5 px-lg-5">
-    
+
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <h2 class="fw-extrabold text-primary mb-1">
@@ -38,6 +119,7 @@
         </form>
     </div>
 
+    <!-- STAT CARDS ROW -->
     <div class="row g-4 mb-5">
         <div class="col-md-3">
             <a href="{% url 'tum_randevular' %}" class="text-decoration-none">
@@ -51,11 +133,17 @@
             </a>
         </div>
 
+        <!-- YELLOW CARD — clickable trigger -->
         <div class="col-md-3">
-            <div class="card stat-card bg-warning text-dark shadow-sm p-3 h-100">
+            <div id="bekleyenKart" class="card stat-card bg-warning text-dark shadow-sm p-3 h-100" onclick="togglePendingPanel(this)" role="button" aria-expanded="false" aria-controls="pendingPanel">
                 <div class="card-body">
-                    <h6 class="text-uppercase small opacity-75 fw-bold">Onay Bekleyen</h6>
-                    <h2 class="fw-bold mb-0 display-5">{{ bekleyen_onay }}</h2>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-uppercase small opacity-75 fw-bold">Onay Bekleyen</h6>
+                            <h2 class="fw-bold mb-0 display-5" id="bekleyenSayisi">{{ bekleyen_onay }}</h2>
+                        </div>
+                        <i class="bi bi-chevron-down chevron-icon mt-1"></i>
+                    </div>
                     <i class="bi bi-hourglass-split stat-icon"></i>
                 </div>
             </div>
@@ -86,133 +174,363 @@
         </div>
     </div>
 
+    <!-- PENDING PANEL (slide-down under stat row) -->
+    <div id="pendingPanel">
+        <div class="card shadow-sm mb-4" style="border-radius:20px; border:2px solid #ffc107;">
+            <div class="card-header bg-warning bg-opacity-10 py-3 border-0 d-flex justify-content-between align-items-center" style="border-radius:18px 18px 0 0;">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-clock-history me-2 text-warning"></i>Onay Bekleyen Randevular
+                    <span class="badge bg-warning text-dark ms-2" id="panelBekleyenBadge">{{ bekleyen_onay }}</span>
+                </h5>
+                <a href="{% url 'tum_randevular' %}" class="btn btn-outline-warning btn-sm rounded-pill fw-bold">
+                    <i class="bi bi-arrow-right me-1"></i>Hepsini Gör
+                </a>
+            </div>
+            <div class="card-body px-4 pb-4">
+
+                {% if bekleyen_randevular %}
+
+                <!-- Bulk action bar -->
+                <div id="bulkBar">
+                    <span class="text-dark fw-bold small me-2"><span id="seciliSayisi">0</span> seçili</span>
+                    <button class="btn btn-success btn-sm rounded-pill fw-bold" id="btnBulkOnayla" onclick="bulkAction('onaylandi')">
+                        <i class="bi bi-check-lg me-1"></i>Toplu Onayla
+                    </button>
+                    <button class="btn btn-danger btn-sm rounded-pill fw-bold" id="btnBulkReddet" onclick="bulkAction('reddedildi')">
+                        <i class="bi bi-x-lg me-1"></i>Toplu Reddet
+                    </button>
+                </div>
+
+                <!-- Select all row -->
+                <div class="d-flex align-items-center mb-2 ps-1">
+                    <input type="checkbox" id="selectAll" class="form-check-input me-2" style="width:1.1rem;height:1.1rem;cursor:pointer;" onchange="toggleSelectAll(this)">
+                    <label for="selectAll" class="form-check-label small fw-bold text-muted" style="cursor:pointer;">Tümünü Seç</label>
+                </div>
+
+                <!-- List -->
+                <div id="pendingList">
+                {% for randevu in bekleyen_randevular %}
+                <div class="pending-item" id="item-{{ randevu.id }}" data-id="{{ randevu.id }}">
+                    <!-- Checkbox -->
+                    <input type="checkbox" class="form-check-input item-cb flex-shrink-0"
+                           style="width:1.1rem;height:1.1rem;cursor:pointer;"
+                           value="{{ randevu.id }}"
+                           onchange="onCheckboxChange()">
+
+                    <!-- Avatar -->
+                    <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:38px;height:38px;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size:.875rem;">{{ randevu.kullanici.get_full_name|default:randevu.kullanici.username }}</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ randevu.cihaz.isim }} &bull; {{ randevu.tarih|date:"d M" }} {{ randevu.baslangic_saati|time:"H:i" }}</div>
+                    </div>
+
+                    <!-- Per-item actions -->
+                    {% if randevu.durum == 'onay_bekleniyor' %}
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <button class="btn btn-success btn-sm rounded-pill px-2 py-1" title="Onayla"
+                                onclick="singleAction({{ randevu.id }}, 'onaylandi')">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm rounded-pill px-2 py-1" title="Reddet"
+                                onclick="singleAction({{ randevu.id }}, 'reddedildi')">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    {% elif randevu.durum == 'onaylandi' %}
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-info btn-sm rounded-pill px-2 py-1" title="Geldi"><i class="bi bi-check-all"></i></button></form>
+                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-secondary btn-sm rounded-pill px-2 py-1" title="Gelmedi"><i class="bi bi-x-circle"></i></button></form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                </div><!-- #pendingList -->
+
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-check-all fs-1"></i>
+                    </div>
+                    <h6 class="fw-bold">Bekleyen Talebiniz Yok</h6>
+                    <p class="text-muted small">Tüm randevular güncel.</p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div><!-- #pendingPanel -->
+
+    <!-- CHARTS ROW -->
     <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card panel-card h-100 shadow-sm">
+
+        <!-- LAB KULLANIM GRAFİĞİ -->
+        <div class="col-lg-6">
+            <div class="card panel-card h-100 shadow-sm" style="overflow:hidden;">
                 <div class="card-header bg-transparent py-3 border-0 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Kullanım Analizi</h5>
                     <span class="badge bg-primary-subtle text-primary">Laboratuvar Bazlı</span>
                 </div>
-                <div class="card-body">
-                    <div style="height: 350px;">
+                <div class="card-body p-3">
+                    <div class="chart-canvas-wrap" style="height:340px;">
                         <canvas id="labGrafigi"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card panel-card h-100 shadow-sm">
-                <div class="card-header bg-transparent py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold text-warning mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Onay Bekleyen Randevular
-                        <span class="badge bg-warning text-dark ms-2" style="font-size: 0.85rem;">{{ bekleyen_onay }}</span>
-                    </h5>
-                    <a href="{% url 'tum_randevular' %}" class="small text-decoration-none">Hepsini Gör</a>
-                </div>
-                <div class="card-body px-4">
-                    {% if bekleyen_randevular %}
-                    <div class="list-group list-group-flush">
-                            {% for randevu in bekleyen_randevular %}
-                        <div class="list-group-item d-flex justify-content-between align-items-start p-3 shadow-sm border border-light rounded">
-                            <div class="d-flex align-items-start flex-grow-1">
-                                <div class="bg-primary-subtle text-primary rounded-circle p-2 me-3" style="flex-shrink: 0;">
-                                    <i class="bi bi-person-fill fs-5"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 text-dark">{{ randevu.kullanici.get_full_name|default:randevu.kullanici.username }}</h6>
-                                    <small class="text-muted">{{ randevu.cihaz.isim }} | {{ randevu.tarih|date:"d M" }} {{ randevu.baslangic_saati|time:"H:i" }}</small>
-                                </div>
-                            </div>
-                            <div class="d-grid gap-1" style="width: 200px; flex-shrink: 0; margin-left: 10px;">
-                                {% if randevu.durum == 'onay_bekleniyor' %}
-                                <div class="d-flex gap-1">
-                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'onaylandi' %}" class="flex-grow-1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                        <button type="submit" class="btn btn-success btn-sm w-100 py-1" title="Onayla" style="font-size: 0.75rem;">✅ Onayla</button>
-                                    </form>
-                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'reddedildi' %}" class="flex-grow-1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                        <button type="submit" class="btn btn-danger btn-sm w-100 py-1" title="Reddet" style="font-size: 0.75rem;">❌ Reddet</button>
-                                    </form>
-                                </div>
-                                {% elif randevu.durum == 'onaylandi' %}
-                                <div class="d-flex gap-1">
-                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}" class="flex-grow-1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                        <button type="submit" class="btn btn-info btn-sm w-100 py-1" title="Geldi" style="font-size: 0.75rem;">✔ Geldi</button>
-                                    </form>
-                                    <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}" class="flex-grow-1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                        <button type="submit" class="btn btn-secondary btn-sm w-100 py-1" title="Gelmedi" style="font-size: 0.75rem;">⊗ Gelmedi</button>
-                                    </form>
-                                </div>
-                                {% endif %}
-                            </div>
+        <!-- EN AKTİF KULLANICILAR GRAFİĞİ -->
+        <div class="col-lg-6">
+            <div class="card panel-card h-100 shadow-sm" style="border-radius:24px; overflow:hidden;">
+                <div class="card-header bg-transparent py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color:#4a3f8f;">
+                                <i class="bi bi-people-fill me-2" style="color:#667eea;"></i>En Aktif Kullanıcılar
+                            </h5>
+                            {% if top_lab_name %}
+                            <small class="text-muted">{{ top_lab_name }} &bull; Bu Ay</small>
+                            {% endif %}
                         </div>
-                        {% endfor %}
+                        <span class="badge" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;">Top 10</span>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-0">
+                    {% if top_users_of_top_lab %}
+                    <div class="chart-canvas-wrap" style="height:340px;">
+                        <canvas id="topKullaniciGrafigi"></canvas>
                     </div>
                     {% else %}
                     <div class="text-center py-5">
-                        <div class="bg-success-subtle text-success rounded-circle d-inline-flex p-4 mb-3">
-                            <i class="bi bi-check-all fs-1"></i>
-                        </div>
-                        <h6 class="fw-bold">Bekleyen Talebiniz Yok</h6>
-                        <p class="text-muted small">Tüm randevular güncel.</p>
+                        <div style="font-size:3.5rem; opacity:0.25; color:#667eea;"><i class="bi bi-bar-chart-line"></i></div>
+                        <p class="text-muted mt-2 mb-0 small">Bu ay için veri bulunamadı.</p>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+    </div><!-- /.row charts -->
+</div><!-- /.container-fluid -->
 
 {{ lab_isimleri|json_script:"labIsimleriData" }}
 {{ randevu_sayilari|json_script:"randevuSayilariData" }}
+{{ top_users_of_top_lab|json_script:"topKullaniciData" }}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const labIsimleri = JSON.parse(document.getElementById('labIsimleriData').textContent);
-        const randevuSayilari = JSON.parse(document.getElementById('randevuSayilariData').textContent);
+const CSRF = '{{ csrf_token }}';
+const AJAX_URL = '{% url "toplu_onay_ajax" %}';
 
-        const ctx = document.getElementById('labGrafigi').getContext('2d');
-        new Chart(ctx, {
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+function showToast(msg, type = 'success') {
+    const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+    const el = document.createElement('div');
+    el.className = `dash-toast ${type}`;
+    el.innerHTML = `<i class="bi ${icons[type] || icons.info}"></i><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+/* ═══════════════════════════════════════════════════
+   PENDING PANEL TOGGLE
+═══════════════════════════════════════════════════ */
+function togglePendingPanel(card) {
+    const panel = document.getElementById('pendingPanel');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    card.classList.toggle('expanded', !isOpen);
+    card.setAttribute('aria-expanded', String(!isOpen));
+}
+
+/* ═══════════════════════════════════════════════════
+   CHECKBOX LOGIC
+═══════════════════════════════════════════════════ */
+function getCheckedIds() {
+    return [...document.querySelectorAll('.item-cb:checked')].map(cb => parseInt(cb.value));
+}
+
+function onCheckboxChange() {
+    const ids = getCheckedIds();
+    const total = document.querySelectorAll('.item-cb').length;
+    document.getElementById('selectAll').checked = ids.length === total && total > 0;
+    document.getElementById('seciliSayisi').textContent = ids.length;
+    document.getElementById('bulkBar').classList.toggle('active', ids.length > 0);
+}
+
+function toggleSelectAll(master) {
+    document.querySelectorAll('.item-cb').forEach(cb => cb.checked = master.checked);
+    onCheckboxChange();
+}
+
+/* ═══════════════════════════════════════════════════
+   SINGLE ITEM AJAX ACTION
+═══════════════════════════════════════════════════ */
+async function singleAction(id, islem) {
+    const item = document.getElementById('item-' + id);
+    if (!item) return;
+    item.style.opacity = '0.5';
+    item.style.pointerEvents = 'none';
+
+    try {
+        const res = await fetch(AJAX_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ ids: [id], islem })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Hata');
+
+        item.classList.add('removing');
+        setTimeout(() => { item.remove(); onCheckboxChange(); }, 300);
+        updateCount(data.yeni_bekleyen);
+        showToast(islem === 'onaylandi' ? '✅ Randevu onaylandı.' : '❌ Randevu reddedildi.', 'success');
+    } catch (e) {
+        item.style.opacity = '';
+        item.style.pointerEvents = '';
+        showToast('İşlem başarısız: ' + e.message, 'error');
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   BULK ACTION
+═══════════════════════════════════════════════════ */
+async function bulkAction(islem) {
+    const ids = getCheckedIds();
+    if (!ids.length) { showToast('Lütfen en az bir randevu seçin.', 'info'); return; }
+
+    const bar = document.getElementById('bulkBar');
+    bar.querySelectorAll('button').forEach(b => { b.disabled = true; b.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; });
+
+    try {
+        const res = await fetch(AJAX_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ ids, islem })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Hata');
+
+        ids.forEach(id => {
+            const item = document.getElementById('item-' + id);
+            if (item) { item.classList.add('removing'); setTimeout(() => item.remove(), 300); }
+        });
+        setTimeout(onCheckboxChange, 350);
+        updateCount(data.yeni_bekleyen);
+        showToast(`✅ ${data.updated} randevu ${islem === 'onaylandi' ? 'onaylandı' : 'reddedildi'}.`, 'success');
+    } catch (e) {
+        showToast('İşlem başarısız: ' + e.message, 'error');
+    } finally {
+        bar.querySelectorAll('button').forEach(b => { b.disabled = false; });
+        document.getElementById('btnBulkOnayla').innerHTML = '<i class="bi bi-check-lg me-1"></i>Toplu Onayla';
+        document.getElementById('btnBulkReddet').innerHTML = '<i class="bi bi-x-lg me-1"></i>Toplu Reddet';
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   COUNT SYNC
+═══════════════════════════════════════════════════ */
+function updateCount(n) {
+    document.getElementById('bekleyenSayisi').textContent = n;
+    document.getElementById('panelBekleyenBadge').textContent = n;
+}
+
+/* ═══════════════════════════════════════════════════
+   CHART.JS
+═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* 1. Lab kullanım grafiği */
+    const labIsimleri     = JSON.parse(document.getElementById('labIsimleriData').textContent);
+    const randevuSayilari = JSON.parse(document.getElementById('randevuSayilariData').textContent);
+
+    new Chart(document.getElementById('labGrafigi').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labIsimleri,
+            datasets: [{
+                label: 'Toplam Rezervasyon',
+                data: randevuSayilari,
+                backgroundColor: 'rgba(0,168,204,.75)',
+                borderColor: '#003366',
+                borderWidth: 2,
+                borderRadius: 10,
+                hoverBackgroundColor: '#00a8cc'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { stepSize: 1, font: { weight: 'bold' } } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* 2. En aktif kullanıcılar grafiği */
+    const topEl     = document.getElementById('topKullaniciData');
+    const topCanvas = document.getElementById('topKullaniciGrafigi');
+    if (topEl && topCanvas) {
+        const raw    = JSON.parse(topEl.textContent);
+        const sorted = [...raw].reverse();
+        const names  = sorted.map(u => u.name);
+        const counts = sorted.map(u => u.booking_count);
+        const n      = counts.length;
+
+        const colors = names.map((_, i) => {
+            const t = n > 1 ? i / (n - 1) : 0.5;
+            return `rgba(${Math.round(102+t*16)},${Math.round(126+t*-51)},${Math.round(234+t*-72)},.85)`;
+        });
+
+        new Chart(topCanvas.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: labIsimleri,
+                labels: names,
                 datasets: [{
-                    label: 'Toplam Rezervasyon Sayısı',
-                    data: randevuSayilari,
-                    backgroundColor: 'rgba(0, 168, 204, 0.7)',
-                    borderColor: '#003366',
-                    borderWidth: 2,
-                    borderRadius: 10,
-                    hoverBackgroundColor: '#00a8cc'
+                    label: 'Randevu Sayısı',
+                    data: counts,
+                    backgroundColor: colors,
+                    borderRadius: 8,
+                    borderSkipped: false,
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { right: 8 } },
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: c => ` ${c.parsed.x} randevu` } }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { drawBorder: false, color: '#f0f0f0' },
-                        ticks: { stepSize: 1, font: { weight: 'bold' } }
-                    },
                     x: {
-                        grid: { display: false }
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        ticks: { stepSize: 1, font: { size: 11, weight: '600' } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { size: 11, weight: '600' },
+                            color: '#444',
+                            callback(val) {
+                                const lbl = this.getLabelForValue(val);
+                                return lbl.length > 16 ? lbl.slice(0, 15) + '…' : lbl;
+                            }
+                        }
                     }
                 }
             }
         });
-    });
+    }
+});
 </script>
 {% endblock %}

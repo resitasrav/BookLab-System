@@ -44,3 +44,8 @@ staticfiles/
 # =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Claude Analiz Notları (yerel, push edilmez)
+# =========================
+CLAUDE_NOTES.md

@@ -21,6 +21,7 @@ urlpatterns = [
     path("api/onay-bekleyen-sayisi/", views.onay_bekleyen_sayisi, name="onay_bekleyen_sayisi"),
     path("api/tum-randevular/", views.tum_events_api, name="tum_events_api"),
     path('api/lab/<int:lab_id>/events/', views.lab_events_api, name='lab_events_api'),
+    path('api/toplu-onay/', views.toplu_onay_ajax, name='toplu_onay_ajax'),
 
     # ========================================================
     # 2. ANA SAYFA VE GENEL

@@ -37,8 +37,7 @@
                     <div class="occupied-slot d-flex justify-content-between align-items-center">
                         <div>
                             <span class="d-block fw-bold text-danger small">
-                                <i class="bi bi-hourglass-split me-1"></i> {{ randevu.baslangic_saati|time:"H:i" }} - {{
-                                randevu.bitis_saati|time:"H:i" }}
+                                <i class="bi bi-hourglass-split me-1"></i> {{ randevu.baslangic_saati|time:"H:i" }} - {{ randevu.bitis_saati|time:"H:i" }}
                             </span>
                         </div>
                         <div class="text-end">
@@ -65,7 +64,6 @@
                     <p class="text-muted small">Lütfen uygun bir saat aralığı belirleyerek onaylayın.</p>
                     <p class="text-muted small">NOT: Aldığınız randevular en yakın 10 dakikalık dilimlere
                         yuvarlanacaktır. Maksimum bir gün içerisinde 24 saate randevu alabilrsiniz .</p>
-                    </p>
                 </div>
 
                 <form method="POST">
