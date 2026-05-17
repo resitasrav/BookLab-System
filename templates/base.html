@@ -39,6 +39,17 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
 
+                    <!-- İSTATİSTİKLER BUTONU (SADECE GİRİŞ YAPMIŞ KULLANICILAR) -->
+                    {% if user.is_authenticated %}
+                    <li class="nav-item me-lg-2">
+                        <a href="{% url 'istatistikler' %}"
+                            class="btn btn-sm btn-outline-light text-white fw-bold rounded-pill px-3 w-100 mb-2 mb-lg-0"
+                            title="Sistem İstatistikleri">
+                            <i class="bi bi-graph-up me-1"></i> <span class="d-none d-lg-inline">İstatistikler</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
                     {% if user.is_authenticated %}
                     <li class="nav-item me-lg-4">
                         <a href="{% url 'randevularim' %}" class="nav-profile-container d-flex align-items-center">

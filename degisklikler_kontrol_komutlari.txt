@@ -1,0 +1,11 @@
+# 1. Model değişikliklerini kontrol et
+python manage.py makemigrations
+
+# 2. Veritabanını güncelle
+python manage.py migrate
+
+# 3. Sistem kontrolü yap
+python manage.py check
+
+# 4. Testleri çalıştır
+python manage.py test

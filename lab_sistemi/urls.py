@@ -27,6 +27,7 @@ urlpatterns = [
     # 2. ANA SAYFA VE GENEL
     # ========================================================
     path("", views.anasayfa, name="anasayfa"),
+    path("istatistikler/", views.istatistikler, name="istatistikler"),
 
     # ========================================================
     # 3. KİMLİK DOĞRULAMA VE DOĞRULAMA (AUTH)
