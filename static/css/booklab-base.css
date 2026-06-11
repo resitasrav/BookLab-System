@@ -39,7 +39,7 @@
 
         .nav-profile-container {
             background: rgba(255, 255, 255, 0.1);
-            padding: 6px 18px;
+            padding: 4px 14px;
             border-radius: 50px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
