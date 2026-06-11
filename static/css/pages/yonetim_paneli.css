@@ -87,3 +87,61 @@
         .action-btn { width: 28px; height: 28px; font-size: 0.8rem; }
         .badge { font-size: 0.6rem; }
     }
+
+/* TURKCE ARAMA: dashboard toast, yaklasan randevu paneli, toplu islem cubugu */
+/* (Daha once template icinde inline <style> idi; dev_guide geregi buraya tasindi.) */
+
+/* ── Toast ─────────────────────────────────────────── */
+#toast-container {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    display: flex; flex-direction: column; gap: .5rem;
+}
+.dash-toast {
+    min-width: 260px; max-width: 360px;
+    padding: .75rem 1.1rem;
+    border-radius: 12px;
+    font-size: .875rem; font-weight: 600;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    display: flex; align-items: center; gap: .6rem;
+    animation: toastIn .25s ease;
+}
+@keyframes toastIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+.dash-toast.success { background: linear-gradient(135deg,#11998e,#38ef7d); }
+.dash-toast.error   { background: linear-gradient(135deg,#c0392b,#e74c3c); }
+.dash-toast.info    { background: linear-gradient(135deg,#667eea,#764ba2); }
+
+/* ── Liste ogeleri ──────────────────────────────────── */
+.pending-item {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    margin-bottom: .5rem;
+    display: flex; align-items: center; gap: .75rem;
+    transition: background .15s;
+}
+.pending-item:hover { background: #f3f4ff; }
+.pending-item.removing {
+    animation: itemOut .3s ease forwards;
+}
+@keyframes itemOut { to { opacity:0; transform: translateX(30px); max-height:0; padding:0; margin:0; } }
+
+/* ── Grafik karti ───────────────────────────────────── */
+.chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ── Toplu islem cubugu ─────────────────────────────── */
+#bulkBar {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 10px;
+    padding: .5rem .8rem;
+    margin-bottom: .6rem;
+    display: none;
+    align-items: center; gap: .5rem; flex-wrap: wrap;
+}
+#bulkBar.active { display: flex; }

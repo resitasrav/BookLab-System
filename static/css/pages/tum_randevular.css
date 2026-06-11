@@ -57,6 +57,18 @@
     .cb-row { cursor: pointer; }
     .cb-row:hover { background: rgba(0,168,204,0.04); }
 
+    /* Satir ici hizli islem butonlari (geldi/gelmedi/iptal) - kompakt */
+    .satir-islem .btn {
+        width: 34px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        line-height: 1;
+    }
+    .satir-islem form { margin: 0; }
+
     @media (max-width: 992px) {
         .admin-card { border-radius: 12px; }
         .container-fluid { padding-left: 8px; padding-right: 8px; }
