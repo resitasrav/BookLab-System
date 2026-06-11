@@ -91,36 +91,43 @@ class RandevuAdmin(AdminMassMailMixin, admin.ModelAdmin):
     durum_renkli.short_description = "Durum"
 
     def butonlar(self, obj):
-        """Randevunun durumuna göre uygun işlem butonları - MOBIL UYUMLU"""
+        """Randevunun durumuna göre uygun işlem butonları - MOBIL UYUMLU.
+
+        İŞ KURALI: Yönetici, ne kadar süre geçerse geçsin bir randevuyu
+        "gelmedi" (veya tekrar "geldi") olarak işaretleyebilir. Bu yüzden
+        geldi/gelmedi geçişleri her durumda gösterilir.
+        """
         btn = []
-        
+        gelmedi_btn = format_html(
+            '<a class="button" href="gelmedi/{}/" style="{}background:#6c757d;">⊗ GELMEDİ</a>',
+            obj.id, BUTTON_STYLE_PRIMARY
+        )
+        geldi_btn = format_html(
+            '<a class="button" href="geldi/{}/" style="{}background:#17a2b8;">✔ GELDİ</a>',
+            obj.id, BUTTON_STYLE_PRIMARY
+        )
+        iptal_btn = format_html(
+            '<a class="button" href="iptal/{}/" style="{}background:#dc3545;">❌ İPTAL</a>',
+            obj.id, BUTTON_STYLE_PRIMARY
+        )
+
         if obj.durum == "onay_bekleniyor":
             btn.append(format_html(
-                '<a class="button" href="onayla/{}/" style="{}background:#28a745;">'
-                '✅ ONAYLA'
-                '</a>',
+                '<a class="button" href="onayla/{}/" style="{}background:#28a745;">✅ ONAYLA</a>',
                 obj.id, BUTTON_STYLE_PRIMARY
             ))
-            btn.append(format_html(
-                '<a class="button" href="iptal/{}/" style="{}background:#dc3545;">'
-                '❌ REDDET'
-                '</a>',
-                obj.id, BUTTON_STYLE_PRIMARY
-            ))
+            btn.append(iptal_btn)
         elif obj.durum == "onaylandi":
-            btn.append(format_html(
-                '<a class="button" href="geldi/{}/" style="{}background:#17a2b8;">'
-                '✔ GELDİ'
-                '</a>',
-                obj.id, BUTTON_STYLE_PRIMARY
-            ))
-            btn.append(format_html(
-                '<a class="button" href="gelmedi/{}/" style="{}background:#6c757d;">'
-                '⊗ GELMEDİ'
-                '</a>',
-                obj.id, BUTTON_STYLE_PRIMARY
-            ))
-        
+            btn.append(geldi_btn)
+            btn.append(gelmedi_btn)
+            btn.append(iptal_btn)
+        elif obj.durum == "geldi":
+            # Süre fark etmeksizin gelmedi'ye çevirebilme hakkı
+            btn.append(gelmedi_btn)
+        elif obj.durum == "gelmedi":
+            # Yanlışlıkla gelmedi işaretlendiyse geldi'ye geri al
+            btn.append(geldi_btn)
+
         return format_html(
             '<div style="{}">{}</div>',
             BUTTON_WRAPPER, mark_safe(" ".join(btn))
