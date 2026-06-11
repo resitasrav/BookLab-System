@@ -37,10 +37,13 @@ from .utils import render_to_pdf
 from .view_helpers import (
     EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA,
     IPTAL_MIN_SURE_SAAT,
+    SLOT_DAKIKA,
     dogrulama_kodu_uret,
     kod_suresi_doldu_mu,
     dogrulama_maili_gonder,
     check_overlap,
+    saat_yuvarla,
+    otomatik_geldi_isaretle,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,21 +80,10 @@ def randevu_al(request, cihaz_id):
             b_saat_ham = datetime.strptime(request.POST.get("baslangic"), "%H:%M")
             bit_saat_ham = datetime.strptime(request.POST.get("bitis"), "%H:%M")
 
-            #  SAAT YUVARLAMA MANTIĞI ---
-            def yuvarla(dt):
-                dakika = dt.minute
-                
-                # En yakın 10'a yuvarla
-                yuvarlanmis = round(dakika / 10) * 10
-
-                if yuvarlanmis == 60:
-                    # Bir sonraki saate geç
-                    return (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-                else:
-                    return dt.replace(minute=yuvarlanmis, second=0, microsecond=0)
-
-            b_saat_yuvarlak = yuvarla(b_saat_ham).time()
-            bit_saat_yuvarlak = yuvarla(bit_saat_ham).time()
+            #  SAAT YUVARLAMA MANTIĞI: elle girilen saatler en yakın 10 dk dilime
+            #  yuvarlanır (merkezi helper). Ör: 09:07 -> 09:10.
+            b_saat_yuvarlak = saat_yuvarla(b_saat_ham).time()
+            bit_saat_yuvarlak = saat_yuvarla(bit_saat_ham).time()
 
             # Değişkenleri güncelle
             b_obj = b_saat_yuvarlak
@@ -121,51 +113,39 @@ def randevu_al(request, cihaz_id):
         #  SÜRE KISITLAMALARI ---
         fark = (bitis_dt - baslangic_dt).total_seconds() / 3600
 
-        # Min 1 Saat Kontrolü
-        if fark < 0.1:
-            messages.error(request, "⚠️ En az 10 dakikalık randevu almalısınız. (Saatler otomatik yuvarlanmıştır)")
-            return redirect("randevu_al", cihaz_id=cihaz_id)
-
-        # Max 3 Saat Kontrolü (settings.MAX_RANDEVU_SAATI kullanıldı)
-        if fark > settings.MAX_RANDEVU_SAATI:
-            messages.error(request, f"⚠️ En fazla {settings.MAX_RANDEVU_SAATI} saatlik randevu alabilirsiniz.")
-            return redirect("randevu_al", cihaz_id=cihaz_id)
-
         if fark <= 0:
             messages.error(request, "⚠️ Bitiş saati başlangıçtan sonra olmalıdır.")
             return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        # Min SLOT_DAKIKA (varsayılan 10 dk) Kontrolü
+        if fark < (SLOT_DAKIKA / 60.0):
+            messages.error(request, f"⚠️ En az {SLOT_DAKIKA} dakikalık randevu almalısınız. (Saatler otomatik yuvarlanmıştır)")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
+
+        # Max MAX_RANDEVU_SAATI (varsayılan 24 saat) Kontrolü
+        if fark > settings.MAX_RANDEVU_SAATI:
+            messages.error(request, f"⚠️ En fazla {settings.MAX_RANDEVU_SAATI} saatlik randevu alabilirsiniz.")
+            return redirect("randevu_al", cihaz_id=cihaz_id)
         
         # Çakışma Kontrolü ve Kayıt
+        # NOT: Çakışma kontrolü yalnızca CİHAZ bazlıdır. Aynı kullanıcı aynı anda
+        # farklı cihazlara randevu alabilir; yalnız aynı cihaz tek randevu kuralıdır.
         with transaction.atomic():
-            # 1. Kontrol: Cihaz bazlı çakışma (Mevcut check_overlap fonksiyonun)
             cihaz_cakisiyor = check_overlap(secilen_cihaz, t_obj, b_obj, bit_obj)
-            """
-            # 2. Kontrol: Kullanıcı bazlı çakışma (Kullanıcı başka bir cihazda mı?)
-            # Sadece onay bekleyen veya onaylanan randevulara bakar, iptalleri saymaz.
-            kullanici_cakisiyor = Randevu.objects.filter(
-                kullanici=request.user,
-                tarih=t_obj,
-                durum__in=['onay_bekleniyor', 'onaylandi'],
-                baslangic_saati__lt=bit_obj, # Başlangıç saati bitişten önceyse
-                bitis_saati__gt=b_obj        # Bitiş saati başlangıçtan sonraysa
-            ).exists()
-            """
 
             if cihaz_cakisiyor:
                 messages.error(request, "⚠️ Bu saat aralığı DOLU veya yuvarlanan saatler çakışmaya neden oldu!")
-            
-            #elif kullanici_cakisiyor:
-            #    messages.error(request, "⚠️ Aynı zaman diliminde başka bir laboratuvar/cihaz için zaten bir randevunuz bulunuyor!")
             else:
-                # Her iki kontrol de geçerliyse kaydı yap
+                # İŞ KURALI: Randevu otomatik olarak ONAYLANDI durumunda oluşur
+                # (modeldeki default ONAYLANDI). Yönetici sonradan iptal edebilir.
                 Randevu.objects.create(
-                    kullanici=request.user, 
-                    cihaz=secilen_cihaz, 
-                    tarih=t_obj, 
-                    baslangic_saati=b_obj, 
-                    bitis_saati=bit_obj
+                    kullanici=request.user,
+                    cihaz=secilen_cihaz,
+                    tarih=t_obj,
+                    baslangic_saati=b_obj,
+                    bitis_saati=bit_obj,
                 )
-                messages.success(request, f"✅ Randevu {b_obj.strftime('%H:%M')} - {bit_obj.strftime('%H:%M')} arasına oluşturuldu.")
+                messages.success(request, f"✅ Randevunuz {b_obj.strftime('%H:%M')} - {bit_obj.strftime('%H:%M')} arasına oluşturuldu ve onaylandı.")
                 return redirect("randevularim")
 
     # Mevcut randevuları listele (Sadece Onay Bekleyen ve Onaylanmış olanlar)
@@ -184,8 +164,9 @@ def randevu_al(request, cihaz_id):
 
 @login_required
 def randevularim(request):
-    # Tüm randevuları çekiyoruz
-    tum = Randevu.objects.filter(kullanici=request.user).order_by("tarih", "baslangic_saati")
+    # 48 saat geçmiş onaylı randevuları otomatik "geldi" yap (lazy senkron)
+    otomatik_geldi_isaretle()
+
     simdi = datetime.now()
 
     # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
@@ -193,13 +174,23 @@ def randevularim(request):
     if ay_ara is None:
         ay_ara = timezone.now().strftime('%Y-%m')
 
-    # Tüm randevuları ay'a göre filtrele
+    # Ay filtresini DB tarafında uygula (Python list comprehension yerine).
+    # select_related ile cihaz/lab tek sorguda gelir; template'teki N+1 önlenir.
+    qs = (
+        Randevu.objects
+        .filter(kullanici=request.user)
+        .select_related("cihaz__lab")
+        .order_by("tarih", "baslangic_saati")
+    )
     if ay_ara:
         try:
             yil, ay = ay_ara.split('-')
-            tum = [r for r in tum if r.tarih.year == int(yil) and r.tarih.month == int(ay)]
+            qs = qs.filter(tarih__year=int(yil), tarih__month=int(ay))
         except (ValueError, AttributeError):
             pass
+
+    # Tek sorguda materyalize et; aktif/geçmiş ayrımı bu liste üzerinde yapılır.
+    tum = list(qs)
 
     # AKTİF RANDEVULAR:
     # 1. Zamanı henüz geçmemiş olmalı
