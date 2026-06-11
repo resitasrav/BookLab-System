@@ -67,7 +67,7 @@
                             </td>
 
                             <td>
-                                {% if randevu.durum == 'bekleniyor' or randevu.durum == 'onaylandi' %}
+                                {% if randevu.durum == 'onay_bekleniyor' or randevu.durum == 'onaylandi' %}
                                 <span class="badge badge-btu bg-warning text-dark shadow-sm">⏳ Bekleniyor</span>
                                 {% elif randevu.durum == 'geldi' %}
                                 <span class="badge badge-btu bg-success shadow-sm">✅ Geldi</span>

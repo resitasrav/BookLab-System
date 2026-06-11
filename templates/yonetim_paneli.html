@@ -2,84 +2,6 @@
 {% load static %}
 {% block extra_css %}{{ block.super }}
 <link rel="stylesheet" href="{% static 'css/pages/yonetim_paneli.css' %}">
-<style>
-/* ── Toast ─────────────────────────────────────────── */
-#toast-container {
-    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
-    display: flex; flex-direction: column; gap: .5rem;
-}
-.dash-toast {
-    min-width: 260px; max-width: 360px;
-    padding: .75rem 1.1rem;
-    border-radius: 12px;
-    font-size: .875rem; font-weight: 600;
-    color: #fff;
-    box-shadow: 0 8px 24px rgba(0,0,0,.18);
-    display: flex; align-items: center; gap: .6rem;
-    animation: toastIn .25s ease;
-}
-@keyframes toastIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
-.dash-toast.success { background: linear-gradient(135deg,#11998e,#38ef7d); }
-.dash-toast.error   { background: linear-gradient(135deg,#c0392b,#e74c3c); }
-.dash-toast.info    { background: linear-gradient(135deg,#667eea,#764ba2); }
-
-/* ── Pending panel (slide-down) ─────────────────────── */
-#pendingPanel {
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height .45s cubic-bezier(0.4,0,0.2,1), opacity .3s;
-    opacity: 0;
-}
-#pendingPanel.open { max-height: 800px; opacity: 1; }
-
-/* ── Yellow stat card trigger ───────────────────────── */
-#bekleyenKart {
-    cursor: pointer;
-    transition: transform .25s, box-shadow .25s;
-    user-select: none;
-}
-#bekleyenKart:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(255,193,7,.25) !important; }
-#bekleyenKart .chevron-icon {
-    transition: transform .35s cubic-bezier(0.4,0,0.2,1);
-    font-size: 1.1rem;
-}
-#bekleyenKart.expanded .chevron-icon { transform: rotate(180deg); }
-
-/* ── Pending list items ─────────────────────────────── */
-.pending-item {
-    background: #fafafa;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
-    padding: .75rem 1rem;
-    margin-bottom: .5rem;
-    display: flex; align-items: center; gap: .75rem;
-    transition: background .15s;
-}
-.pending-item:hover { background: #f3f4ff; }
-.pending-item.removing {
-    animation: itemOut .3s ease forwards;
-}
-@keyframes itemOut { to { opacity:0; transform: translateX(30px); max-height:0; padding:0; margin:0; } }
-
-/* ── Chart card fix ─────────────────────────────────── */
-.chart-canvas-wrap {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-}
-
-/* ── Bulk bar ───────────────────────────────────────── */
-#bulkBar {
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 10px;
-    padding: .5rem .8rem;
-    margin-bottom: .6rem;
-    display: none;
-    align-items: center; gap: .5rem; flex-wrap: wrap;
-}
-#bulkBar.active { display: flex; }
-</style>
 {% endblock %}
 
 {% block icerik %}
@@ -97,7 +19,10 @@
             <p class="text-muted">Laboratuvar kullanım verilerini analiz edin ve talepleri yönetin.</p>
         </div>
         <div class="col-md-4 text-md-end">
-            <div class="d-flex gap-2 justify-content-md-end">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{% url 'gunluk_yoklama' %}" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" title="Günlük Yoklama">
+                    <i class="bi bi-clipboard-check me-1"></i> Günlük Yoklama
+                </a>
                 <a href="{% url 'istatistikler' %}" class="btn btn-sm btn-outline-info rounded-pill fw-bold" title="Detaylı İstatistikler">
                     <i class="bi bi-graph-up me-1"></i> Detaylı İstatistikler
                 </a>
@@ -140,20 +65,17 @@
             </a>
         </div>
 
-        <!-- YELLOW CARD — clickable trigger -->
+        <!-- YAKLAŞAN RANDEVULAR — diğer kartlarla aynı davranış (sayfaya gider) -->
         <div class="col-md-3">
-            <div id="bekleyenKart" class="card stat-card bg-warning text-dark shadow-sm p-3 h-100" onclick="togglePendingPanel(this)" role="button" aria-expanded="false" aria-controls="pendingPanel">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="text-uppercase small opacity-75 fw-bold">Onay Bekleyen</h6>
-                            <h2 class="fw-bold mb-0 display-5" id="bekleyenSayisi">{{ bekleyen_onay }}</h2>
-                        </div>
-                        <i class="bi bi-chevron-down chevron-icon mt-1"></i>
+            <a href="{% url 'tum_randevular' %}" class="text-decoration-none">
+                <div class="card stat-card bg-warning text-dark shadow-sm p-3 h-100">
+                    <div class="card-body">
+                        <h6 class="text-uppercase small opacity-75 fw-bold">Yaklaşan Randevular</h6>
+                        <h2 class="fw-bold mb-0 display-5" id="bekleyenSayisi">{{ yaklasan_sayisi }}</h2>
+                        <i class="bi bi-calendar-week stat-icon"></i>
                     </div>
-                    <i class="bi bi-hourglass-split stat-icon"></i>
                 </div>
-            </div>
+            </a>
         </div>
 
         <div class="col-md-3">
@@ -181,30 +103,32 @@
         </div>
     </div>
 
-    <!-- PENDING PANEL (slide-down under stat row) -->
-    <div id="pendingPanel">
-        <div class="card shadow-sm mb-4" style="border-radius:20px; border:2px solid #ffc107;">
-            <div class="card-header bg-warning bg-opacity-10 py-3 border-0 d-flex justify-content-between align-items-center" style="border-radius:18px 18px 0 0;">
+    <!-- YAKLAŞAN RANDEVULAR PANELİ (her zaman görünür) -->
+    <div class="mb-4">
+        <div class="card shadow-sm" style="border-radius:20px; border:2px solid #ffc107;">
+            <div class="card-header bg-warning bg-opacity-10 py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-radius:18px 18px 0 0;">
                 <h5 class="fw-bold text-dark mb-0">
-                    <i class="bi bi-clock-history me-2 text-warning"></i>Onay Bekleyen Randevular
-                    <span class="badge bg-warning text-dark ms-2" id="panelBekleyenBadge">{{ bekleyen_onay }}</span>
+                    <i class="bi bi-calendar-week me-2 text-warning"></i>Yaklaşan Randevular
+                    <span class="badge bg-warning text-dark ms-2" id="panelBekleyenBadge">{{ yaklasan_sayisi }}</span>
                 </h5>
-                <a href="{% url 'tum_randevular' %}" class="btn btn-outline-warning btn-sm rounded-pill fw-bold">
-                    <i class="bi bi-arrow-right me-1"></i>Hepsini Gör
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'toplu_randevu' %}" class="btn btn-success btn-sm rounded-pill fw-bold">
+                        <i class="bi bi-calendar-plus me-1"></i>Toplu Randevu Oluştur
+                    </a>
+                    <a href="{% url 'tum_randevular' %}" class="btn btn-outline-warning btn-sm rounded-pill fw-bold">
+                        <i class="bi bi-arrow-right me-1"></i>Hepsini Gör
+                    </a>
+                </div>
             </div>
             <div class="card-body px-4 pb-4">
 
-                {% if bekleyen_randevular %}
+                {% if yaklasan_randevular %}
 
                 <!-- Bulk action bar -->
                 <div id="bulkBar">
                     <span class="text-dark fw-bold small me-2"><span id="seciliSayisi">0</span> seçili</span>
-                    <button class="btn btn-success btn-sm rounded-pill fw-bold" id="btnBulkOnayla" onclick="bulkAction('onaylandi')">
-                        <i class="bi bi-check-lg me-1"></i>Toplu Onayla
-                    </button>
                     <button class="btn btn-danger btn-sm rounded-pill fw-bold" id="btnBulkReddet" onclick="bulkAction('reddedildi')">
-                        <i class="bi bi-x-lg me-1"></i>Toplu Reddet
+                        <i class="bi bi-x-lg me-1"></i>Toplu İptal
                     </button>
                 </div>
 
@@ -216,7 +140,7 @@
 
                 <!-- List -->
                 <div id="pendingList">
-                {% for randevu in bekleyen_randevular %}
+                {% for randevu in yaklasan_randevular %}
                 <div class="pending-item" id="item-{{ randevu.id }}" data-id="{{ randevu.id }}">
                     <!-- Checkbox -->
                     <input type="checkbox" class="form-check-input item-cb flex-shrink-0"
@@ -251,6 +175,7 @@
                     <div class="d-flex gap-1 flex-shrink-0">
                         <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-info btn-sm rounded-pill px-2 py-1" title="Geldi"><i class="bi bi-check-all"></i></button></form>
                         <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-secondary btn-sm rounded-pill px-2 py-1" title="Gelmedi"><i class="bi bi-x-circle"></i></button></form>
+                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'reddedildi' %}" onsubmit="return confirm('Bu randevu iptal edilsin mi?');">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1" title="İptal Et"><i class="bi bi-trash"></i></button></form>
                     </div>
                     {% endif %}
                 </div>
@@ -269,7 +194,7 @@
 
             </div>
         </div>
-    </div><!-- #pendingPanel -->
+    </div><!-- /yaklasan randevular paneli -->
 
     <!-- CHARTS ROW -->
     <div class="row g-4">
@@ -342,17 +267,6 @@ function showToast(msg, type = 'success') {
     el.innerHTML = `<i class="bi ${icons[type] || icons.info}"></i><span>${msg}</span>`;
     document.getElementById('toast-container').appendChild(el);
     setTimeout(() => el.remove(), 3500);
-}
-
-/* ═══════════════════════════════════════════════════
-   PENDING PANEL TOGGLE
-═══════════════════════════════════════════════════ */
-function togglePendingPanel(card) {
-    const panel = document.getElementById('pendingPanel');
-    const isOpen = panel.classList.contains('open');
-    panel.classList.toggle('open', !isOpen);
-    card.classList.toggle('expanded', !isOpen);
-    card.setAttribute('aria-expanded', String(!isOpen));
 }
 
 /* ═══════════════════════════════════════════════════
