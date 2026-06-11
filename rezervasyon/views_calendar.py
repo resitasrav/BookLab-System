@@ -61,31 +61,33 @@ def tum_events_api(request):
     Genel Takvim API: Geçmiş sonuçlananlar ve Gelecek planlılar.
     Çift ikon ve taşma sorununu önlemek için sadeleştirilmiştir.
     """
-    bugun = timezone.now().date()
-    randevular = Randevu.objects.all()
-    events = []
-
     color_map = {
         Randevu.ONAYLANDI: "#28a745", Randevu.ONAY_BEKLENIYOR: "#ffc107",
         Randevu.GELDI: "#0d6efd", Randevu.GELMEDI: "#6c757d", Randevu.REDDEDILDI: "#dc3545",
     }
 
-    for r in randevular:
-        goster = r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI]
+    # Durum filtresi DB tarafında; cihaz/lab/kullanici JOIN ile tek sorguda (N+1 önlenir).
+    randevular = (
+        Randevu.objects
+        .filter(durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI])
+        .select_related("cihaz__lab", "kullanici")
+    )
 
-        if goster:
-            events.append({
-                'id': r.id,  # İŞTE EKSİK OLAN HAYAT KURTARICI SATIR BURASI!
-                'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
-                'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
-                'end': f"{r.tarih.isoformat()}T{r.bitis_saati.strftime('%H:%M:%S')}",
-                'color': color_map.get(r.durum, "#3788d8"),
-                'extendedProps': {
-                    'lab_adi': r.cihaz.lab.isim,
-                    'kullanici': r.kullanici.username,
-                    'durum': r.get_durum_display()
-                }
-            })
+    events = [
+        {
+            'id': r.id,
+            'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
+            'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
+            'end': f"{r.tarih.isoformat()}T{r.bitis_saati.strftime('%H:%M:%S')}",
+            'color': color_map.get(r.durum, "#3788d8"),
+            'extendedProps': {
+                'lab_adi': r.cihaz.lab.isim,
+                'kullanici': r.kullanici.username,
+                'durum': r.get_durum_display(),
+            },
+        }
+        for r in randevular
+    ]
     return JsonResponse(events, safe=False)
 
 
@@ -98,16 +100,23 @@ def lab_takvim(request, lab_id):
 
 @login_required
 def lab_events_api(request, lab_id):
-    bugun = timezone.now().date()
-    randevular = Randevu.objects.filter(cihaz__lab_id=lab_id)
-    events = []
-    for r in randevular:
-        if r.durum in [Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI]:
-            events.append({
-                'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
-                'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
-                'end': f"{r.tarih.isoformat()}T{r.bitis_saati.strftime('%H:%M:%S')}",
-                'color': "#28a745" if r.durum == Randevu.ONAYLANDI else "#ffc107",
-                'extendedProps': {'kullanici': r.kullanici.username, 'durum': r.get_durum_display()}
-            })
+    # Durum filtresi DB tarafında; cihaz/kullanici JOIN ile tek sorguda (N+1 önlenir).
+    randevular = (
+        Randevu.objects
+        .filter(
+            cihaz__lab_id=lab_id,
+            durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI],
+        )
+        .select_related("cihaz", "kullanici")
+    )
+    events = [
+        {
+            'title': f"{r.cihaz.isim} • {r.baslangic_saati.strftime('%H:%M')}-{r.bitis_saati.strftime('%H:%M')}",
+            'start': f"{r.tarih.isoformat()}T{r.baslangic_saati.strftime('%H:%M:%S')}",
+            'end': f"{r.tarih.isoformat()}T{r.bitis_saati.strftime('%H:%M:%S')}",
+            'color': "#28a745" if r.durum == Randevu.ONAYLANDI else "#ffc107",
+            'extendedProps': {'kullanici': r.kullanici.username, 'durum': r.get_durum_display()},
+        }
+        for r in randevular
+    ]
     return JsonResponse(events, safe=False)
