@@ -13,6 +13,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
+from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import Count, Q
@@ -38,11 +40,14 @@ from .utils import render_to_pdf
 from .view_helpers import (
     EMAIL_DOGRULAMA_KOD_SURESI_DAKIKA,
     IPTAL_MIN_SURE_SAAT,
+    SLOT_DAKIKA,
     dogrulama_kodu_uret,
     kod_suresi_doldu_mu,
     dogrulama_maili_gonder,
     check_overlap,
+    otomatik_geldi_isaretle,
 )
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -53,25 +58,24 @@ def onay_bekleyen_sayisi(request):
     Sol menüdeki bildirimleri (badge) ait oldukları sekmelere dağıtır.
     Pasif öğrenciler ve Bekleyen randevular artık ayrı sayılır.
     """
-    # 1. Onay Bekleyen Pasif Öğrenciler 
-    pasif_ogrenci = User.objects.filter(is_active=False).count()
-    
-    # 2. Onay Bekleyen Randevular 
-    bekleyen_randevu = Randevu.objects.filter(durum='onay_bekleniyor').count()
-    
-    # 3. Çözülmemiş Arıza Bildirimleri
-    acik_ariza = Ariza.objects.filter(cozuldu_mu=False).count()
-    
-    return JsonResponse({
-        "pasif_ogrenci": pasif_ogrenci,
-        "bekleyen_randevu": bekleyen_randevu,
-        "acik_ariza": acik_ariza
-    })
+    # Bu uçnokta sol menüdeki badge'ler için sık (polling) çağrılır.
+    # Sayaçlar global olduğundan 30 sn'lik kısa cache RAM/CPU yükünü azaltır.
+    veri = cache.get("badge_sayaclari")
+    if veri is None:
+        veri = {
+            "pasif_ogrenci": User.objects.filter(is_active=False).count(),
+            "bekleyen_randevu": Randevu.objects.filter(durum='onay_bekleniyor').count(),
+            "acik_ariza": Ariza.objects.filter(cozuldu_mu=False).count(),
+        }
+        cache.set("badge_sayaclari", veri, 30)
+    return JsonResponse(veri)
 
 
 @staff_member_required
 def egitmen_paneli(request):
-    
+    # 48 saat geçmiş onaylı randevuları otomatik "geldi" yap (lazy senkron)
+    otomatik_geldi_isaretle()
+
     # AY BASLı FİLTRELEME - varsayılan olarak şu anki ayı gösterir
     ay_ara = request.GET.get('ay_ara')
     if ay_ara is None:
@@ -96,16 +100,21 @@ def egitmen_paneli(request):
     else:
         labs = Laboratuvar.objects.annotate(randevu_sayisi=_Count('cihaz__randevu'))
 
-    # Tüm randevuları ve bekleyen randevuları hazırla
+    # Tüm randevular (ay filtreli sayım için)
     tum_randevular = Randevu.objects.all()
-    bekleyen_randevular_tum = Randevu.objects.filter(
-        durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI]
-    ).order_by("tarih")
 
-    # Ay filtrelemesini uygula
+    # Yaklaşan randevular: bugün ve sonrası, onaylı/işlem bekleyen randevular.
+    # Otomatik onay nedeniyle bunlar genelde "onaylandı" durumundadır; yönetici
+    # buradan geldi/gelmedi/iptal işlemlerini yapabilir. (Ay filtresinden bağımsız.)
+    bugun = timezone.now().date()
+    yaklasan_randevular_qs = Randevu.objects.filter(
+        durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI],
+        tarih__gte=bugun,
+    ).order_by("tarih", "baslangic_saati")
+
+    # Ay filtrelemesini yalnızca özet sayıma uygula
     if yil and ay:
         tum_randevular = tum_randevular.filter(tarih__year=yil, tarih__month=ay)
-        bekleyen_randevular_tum = bekleyen_randevular_tum.filter(tarih__year=yil, tarih__month=ay)
 
     # --- EN AKTİF KULLANICILAR (En Çok Kullanılan Lab Bazında — Top 10) ---
     top_users_of_top_lab = []
@@ -156,8 +165,8 @@ def egitmen_paneli(request):
 
     context = {
         "toplam_randevu": tum_randevular.count(),
-        "bekleyen_onay": bekleyen_randevular_tum.filter(durum=Randevu.ONAY_BEKLENIYOR).count(),
-        "bekleyen_randevular": bekleyen_randevular_tum[:5],  # İlk 5'ini göster
+        "yaklasan_sayisi": yaklasan_randevular_qs.count(),
+        "yaklasan_randevular": yaklasan_randevular_qs[:8],
         "arizali_cihazlar": Cihaz.objects.filter(aktif_mi=False).count(),
         "toplam_kullanici": User.objects.filter(is_active=True).count(),
         "lab_isimleri": list(labs.values_list('isim', flat=True)),
@@ -167,6 +176,164 @@ def egitmen_paneli(request):
         "top_lab_name": top_lab_name,
     }
     return render(request, "yonetim_paneli.html", context)
+
+# ============================================================
+# GÜNLÜK YOKLAMA EKRANI  (MODÜLER — KOLAYCA KALDIRILABİLİR)
+# Kaldırmak için: bu view + urls.py'deki "gunluk_yoklama" path'i +
+# templates/egitmen_paneli.html + base.html'deki Yoklama nav linkini silmek yeterli.
+# ============================================================
+@staff_member_required
+def gunluk_yoklama(request):
+    """Bugünün randevularını saat sırasına göre listeleyen yoklama ekranı."""
+    bugun = timezone.now().date()
+    randevular = (
+        Randevu.objects
+        .filter(tarih=bugun)
+        .select_related("kullanici", "cihaz__lab")
+        .order_by("baslangic_saati")
+    )
+    return render(request, "egitmen_paneli.html", {
+        "randevular": randevular,
+        "bugun": bugun,
+    })
+
+
+# ============================================================
+# TOPLU RANDEVU OLUŞTURMA  (10 dk slot ızgarası)
+# ============================================================
+@login_required
+def toplu_randevu(request):
+    """Çoklu 10 dk slot seçerek toplu randevu oluşturma.
+
+    - Yönetici: cihaz + tarih + KULLANICI seçer, herhangi biri adına oluşturur.
+    - Normal kullanıcı: cihaz + tarih seçer, randevular DAİMA KENDİ adına oluşur
+      (gönderilen kullanıcı parametresi yok sayılır — başkası adına alamaz).
+    Oluşturulan randevular doğrudan ONAYLANDI durumundadır.
+    """
+    yonetici_mi = request.user.is_staff
+    cihazlar = Cihaz.objects.filter(aktif_mi=True).select_related('lab').order_by('lab__isim', 'isim')
+    # Kullanıcı listesini yalnızca yöneticiye yükle (gereksiz veri çekme).
+    kullanicilar = User.objects.filter(is_active=True).order_by('first_name', 'username') if yonetici_mi else []
+
+    secili_cihaz_id = request.POST.get('cihaz') or request.GET.get('cihaz') or ''
+    # Normal kullanıcıda hedef her zaman kendisidir.
+    if yonetici_mi:
+        secili_kullanici_id = request.POST.get('kullanici') or request.GET.get('kullanici') or ''
+    else:
+        secili_kullanici_id = str(request.user.id)
+    tarih_str = request.POST.get('tarih') or request.GET.get('tarih') or ''
+
+    bugun = timezone.now().date()
+    try:
+        secili_tarih = datetime.strptime(tarih_str, "%Y-%m-%d").date() if tarih_str else bugun
+    except ValueError:
+        secili_tarih = bugun
+
+    secili_cihaz = Cihaz.objects.filter(id=secili_cihaz_id).first() if secili_cihaz_id else None
+
+    # --- POST: seçili slotlardan randevuları oluştur ---
+    if request.method == 'POST' and secili_cihaz:
+        # Hedef kullanıcı: yönetici seçer, normal kullanıcı her zaman kendisidir.
+        if yonetici_mi:
+            if not secili_kullanici_id:
+                messages.error(request, "⚠️ Lütfen randevu sahibi bir kullanıcı seçin.")
+                return redirect(f"{reverse('toplu_randevu')}?cihaz={secili_cihaz.id}&tarih={secili_tarih.isoformat()}")
+            kullanici = get_object_or_404(User, id=secili_kullanici_id)
+        else:
+            kullanici = request.user
+        # Her aralık "HH:MM-HH:MM" biçiminde gelir: ilk tıklanan slot başlangıç,
+        # ikinci tıklanan slotun bitişi de aralığın bitişidir (tek randevu).
+        secilen_araliklar = request.POST.getlist('aralik')  # ["09:00-09:30", ...]
+        simdi = timezone.now()
+        olusturulan = atlanan = 0
+
+        with transaction.atomic():
+            for aralik in secilen_araliklar:
+                try:
+                    bas_str, bit_str = aralik.split('-', 1)
+                    b = datetime.strptime(bas_str.strip(), "%H:%M").time()
+                    bit = datetime.strptime(bit_str.strip(), "%H:%M").time()
+                except (ValueError, AttributeError):
+                    continue
+                # Bitiş başlangıçtan sonra olmalı ve 10 dk hizalı olmalı
+                if bit <= b or b.minute % SLOT_DAKIKA or bit.minute % SLOT_DAKIKA:
+                    atlanan += 1
+                    continue
+                baslangic_dt = timezone.make_aware(datetime.combine(secili_tarih, b))
+                # Geçmiş veya çakışan aralıkları atla
+                if baslangic_dt < simdi or check_overlap(secili_cihaz, secili_tarih, b, bit):
+                    atlanan += 1
+                    continue
+                Randevu.objects.create(
+                    kullanici=kullanici,
+                    cihaz=secili_cihaz,
+                    tarih=secili_tarih,
+                    baslangic_saati=b,
+                    bitis_saati=bit,
+                    durum=Randevu.ONAYLANDI,
+                    onaylayan_admin=request.user,
+                )
+                olusturulan += 1
+
+        if olusturulan:
+            mesaj = f"✅ {olusturulan} randevu oluşturuldu ve onaylandı."
+            if atlanan:
+                mesaj += f" ({atlanan} aralık dolu/geçmiş/geçersiz olduğu için atlandı.)"
+            messages.success(request, mesaj)
+        else:
+            messages.error(request, "⚠️ Randevu oluşturulamadı: aralık seçilmedi ya da seçilenlerin tamamı dolu/geçmiş.")
+
+        geri = f"{reverse('toplu_randevu')}?cihaz={secili_cihaz.id}&tarih={secili_tarih.isoformat()}&kullanici={secili_kullanici_id}"
+        return redirect(geri)
+
+    # --- GET: slot ızgarasını hazırla (cihaz + tarih seçiliyse) ---
+    saat_gruplari = []
+    if secili_cihaz:
+        # O gün için dolu aralıkları tek sorguda çek
+        dolu_araliklar = list(
+            Randevu.objects.filter(
+                cihaz=secili_cihaz,
+                tarih=secili_tarih,
+                durum__in=[Randevu.ONAY_BEKLENIYOR, Randevu.ONAYLANDI, Randevu.GELDI],
+            ).values_list('baslangic_saati', 'bitis_saati')
+        )
+        simdi = timezone.now()
+        gun_basi = datetime.combine(secili_tarih, datetime.min.time())
+        gun_sonu = gun_basi + timedelta(days=1)
+
+        cur = gun_basi
+        saat_map = {}  # "HH" -> [slot, ...]
+        # Son blok 23:50 (bitişi 24:00 olur); "< gun_sonu" ile bunu da dahil ederiz
+        # ancak 24:00 bitişi geçersiz olduğundan ızgaranın son bloğunu pasif bırakırız.
+        while cur < gun_sonu:
+            b = cur.time()
+            bitis_dt = cur + timedelta(minutes=SLOT_DAKIKA)
+            bit = bitis_dt.time()
+            son_blok = bitis_dt >= gun_sonu  # 23:50 → bitişi gün sınırını aşar
+            dolu = any(db < bit and de > b for (db, de) in dolu_araliklar) if not son_blok else False
+            gecmis = timezone.make_aware(cur) < simdi
+            grup = b.strftime('%H')
+            saat_map.setdefault(grup, []).append({
+                'deger': b.strftime('%H:%M'),
+                'mins': b.hour * 60 + b.minute,  # gün başından dakika ofseti
+                'pasif': dolu or gecmis or son_blok,
+            })
+            cur = bitis_dt
+        saat_gruplari = [{'saat': k, 'slotlar': v} for k, v in saat_map.items()]
+
+    context = {
+        'yonetici_mi': yonetici_mi,
+        'cihazlar': cihazlar,
+        'kullanicilar': kullanicilar,
+        'secili_cihaz': secili_cihaz,
+        'secili_cihaz_id': str(secili_cihaz_id),
+        'secili_kullanici_id': str(secili_kullanici_id),
+        'secili_tarih': secili_tarih.isoformat(),
+        'bugun': bugun.isoformat(),
+        'saat_gruplari': saat_gruplari,
+    }
+    return render(request, "toplu_randevu.html", context)
+
 
 @staff_member_required
 @require_POST
@@ -200,22 +367,27 @@ def ariza_bildir(request, cihaz_id):
 
 @staff_member_required
 def kullanici_listesi(request):
-    # kullanıcılar en son kayıt olandan (ID'ye göre ters) başlayarak alıyoruz
-    kullanicilar = Profil.objects.all().order_by('-id')
+    # select_related('user') ile template'teki profil.user.* erişimi N+1 olmaktan çıkar.
+    kullanicilar = Profil.objects.select_related('user').order_by('-id')
 
     # Arama parametresini URL'den yakala (?q=...)
     query = request.GET.get('q', '').strip()
 
     if query:
-        # İsim, soyisim, kullanıcı adı veya okul numarasına göre ara
         kullanicilar = kullanicilar.filter(
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
             Q(user__username__icontains=query)
         ).distinct()
 
+    # Büyük kullanıcı listelerini sayfalara böl (RAM/CPU dostu).
+    toplam_kullanici = kullanicilar.count()
+    paginator = Paginator(kullanicilar, 25)
+    sayfa = paginator.get_page(request.GET.get('sayfa'))
+
     return render(request, "yonetim_kullanicilar.html", {
-        "kullanicilar": kullanicilar,
+        "kullanicilar": sayfa,          # iterasyon + sayfa nesnesi
+        "toplam_kullanici": toplam_kullanici,
         "search_q": query  # Arama kutusunda kelimenin kalması için geri gönderiyoruz
     })
 
@@ -225,8 +397,9 @@ def arizali_cihaz_listesi(request):
     Tüm cihazları listeler. Arızalı (pasif) olanları en üstte gösterir.
     """
     # aktif_mi False (0) olanlar, True (1) olanlardan önce gelir (order_by yükselen sıra)
-    cihazlar = Cihaz.objects.all().order_by('aktif_mi', 'isim')
-    
+    # select_related('lab') ile template'teki cihaz.lab.isim erişimi N+1 olmaktan çıkar.
+    cihazlar = Cihaz.objects.select_related('lab').order_by('aktif_mi', 'isim')
+
     return render(request, "yonetim_arizali_cihazlar.html", {
         "cihazlar": cihazlar
     })
@@ -256,7 +429,16 @@ def cihaz_durum_degistir(request, cihaz_id):
 
 @staff_member_required
 def tum_randevular(request):
-    randevular = Randevu.objects.all().order_by('-tarih', '-baslangic_saati')
+    # 48 saat geçmiş onaylı randevuları otomatik "geldi" yap (lazy senkron)
+    otomatik_geldi_isaretle()
+
+    # select_related ile template'teki kullanici / cihaz / cihaz.lab erişimi
+    # N+1 olmaktan çıkar (tek JOIN'li sorgu).
+    randevular = (
+        Randevu.objects
+        .select_related('kullanici', 'cihaz__lab')
+        .order_by('-tarih', '-baslangic_saati')
+    )
 
     q     = request.GET.get('q', '').strip()
     cihaz = request.GET.get('cihaz', '').strip()
@@ -285,8 +467,14 @@ def tum_randevular(request):
         except ValueError:
             pass
 
+    # Büyük randevu listelerini sayfalara böl (RAM/CPU dostu).
+    toplam_kayit = randevular.count()
+    paginator = Paginator(randevular, 50)
+    sayfa = paginator.get_page(request.GET.get('sayfa'))
+
     context = {
-        "randevular": randevular,
+        "randevular":   sayfa,          # iterasyon + sayfa nesnesi
+        "toplam_kayit": toplam_kayit,
         "search_q":     q,
         "search_cihaz": cihaz,
         "search_lab":   lab,
