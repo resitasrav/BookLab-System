@@ -104,9 +104,12 @@ urlpatterns = [
 
     # Eğitmen Paneli
     path("yonetim/", views.egitmen_paneli, name="egitmen_paneli"),
+    # Günlük Yoklama (modüler — kaldırmak için bu satırı + view'ı + template'i sil)
+    path("yonetim/yoklama/", views.gunluk_yoklama, name="gunluk_yoklama"),
     path("yonetim/kullanicilar/", views.kullanici_listesi, name="kullanici_listesi"),
     path("yonetim/arizali-cihazlar/", views.arizali_cihaz_listesi, name="arizali_cihaz_listesi"),
     path("yonetim/tum-randevular/", views.tum_randevular, name="tum_randevular"),
+    path("yonetim/toplu-randevu/", views.toplu_randevu, name="toplu_randevu"),
     path("durum-degis/<int:randevu_id>/<str:yeni_durum>/", views.durum_guncelle, name="durum_guncelle"),
     path("yonetim/toplu-islem/", views.toplu_islem, name="toplu_islem"),
 ]
