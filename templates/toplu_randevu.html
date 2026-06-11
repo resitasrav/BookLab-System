@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/pages/toplu_randevu.css' %}">
+{% endblock %}
+
+{% block icerik %}
+<div class="container-fluid mt-2 mb-5 px-lg-5">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary mb-0">
+                <i class="bi bi-calendar-plus me-2 text-success"></i>Toplu Randevu Oluştur
+            </h2>
+            <p class="text-muted small mb-0">Bir cihaz ve tarih seçin. İlk tıkladığınız slot <b>başlangıç</b>, ikinci tıkladığınız slot <b>bitiş</b> olur ve aradaki tüm dilimler tek bir randevu olur. Sonraki tıklamalar yeni bir randevu başlatır.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            {% if yonetici_mi %}
+            <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm btn-sm">
+                <i class="bi bi-arrow-left me-2"></i>Yönetim Paneli
+            </a>
+            {% else %}
+            <a href="{% url 'anasayfa' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm btn-sm">
+                <i class="bi bi-arrow-left me-2"></i>Ana Sayfa
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 1. ADIM: CİHAZ + TARİH SEÇİMİ (GET ile slot ızgarasını yeniler) -->
+    <div class="card filter-card mb-4 p-3 shadow-sm">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-5 col-12">
+                <label class="form-label small fw-bold mb-1">Cihaz</label>
+                <select name="cihaz" class="form-select" onchange="this.form.submit()">
+                    <option value="">— Cihaz seçin —</option>
+                    {% for c in cihazlar %}
+                    <option value="{{ c.id }}" {% if secili_cihaz_id == c.id|stringformat:"s" %}selected{% endif %}>
+                        {{ c.lab.isim }} ➝ {{ c.isim }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 col-12">
+                <label class="form-label small fw-bold mb-1">Tarih</label>
+                <input type="date" name="tarih" value="{{ secili_tarih }}" min="{{ bugun }}"
+                       class="form-control" onchange="this.form.submit()">
+            </div>
+            {% if secili_kullanici_id %}<input type="hidden" name="kullanici" value="{{ secili_kullanici_id }}">{% endif %}
+            <div class="col-md-3 col-12">
+                <button type="submit" class="btn btn-primary rounded-pill fw-bold w-100">
+                    <i class="bi bi-search me-1"></i>Slotları Getir
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if secili_cihaz %}
+    <!-- 2. ADIM: KULLANICI + SLOT SEÇİMİ (POST ile randevuları oluşturur) -->
+    <form method="POST" action="{% url 'toplu_randevu' %}">
+        {% csrf_token %}
+        <input type="hidden" name="cihaz" value="{{ secili_cihaz.id }}">
+        <input type="hidden" name="tarih" value="{{ secili_tarih }}">
+
+        <div class="card mb-3 p-3 shadow-sm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6 col-12">
+                    {% if yonetici_mi %}
+                    <label class="form-label small fw-bold mb-1">Randevu Sahibi Kullanıcı</label>
+                    <select name="kullanici" class="form-select" required>
+                        <option value="">— Kullanıcı seçin —</option>
+                        {% for u in kullanicilar %}
+                        <option value="{{ u.id }}" {% if secili_kullanici_id == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.get_full_name|default:u.username }} (@{{ u.username }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <label class="form-label small fw-bold mb-1">Randevu Sahibi</label>
+                    <div class="form-control bg-light d-flex align-items-center">
+                        <i class="bi bi-person-check-fill text-success me-2"></i>
+                        <span class="fw-bold">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="text-muted ms-2 small">(kendi adınıza)</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 col-12 d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="slotTemizle()">
+                        <i class="bi bi-eraser me-1"></i>Tümünü Temizle
+                    </button>
+                    <span class="align-self-center small text-muted ms-auto">
+                        Oluşturulacak randevu: <span id="seciliSlotSayisi" class="fw-bold text-success">0</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-bold small text-secondary">
+                    <i class="bi bi-grid-3x3-gap me-1"></i>{{ secili_cihaz.isim }} — {{ secili_tarih }} (10 dk dilimler)
+                </span>
+                <span class="small text-muted d-flex align-items-center gap-3 flex-wrap">
+                    <span><span class="lejant-dot lejant-bos"></span>Boş</span>
+                    <span><span class="lejant-dot lejant-secili"></span>Seçili randevu</span>
+                    <span><span class="lejant-dot lejant-dolu"></span>Dolu / Geçmiş (alınamaz)</span>
+                </span>
+            </div>
+            <!-- Seçilen aralıklar bu kapsayıcıya gizli input olarak yazılır -->
+            <div id="aralikInputlari"></div>
+            <div class="card-body slot-wrapper">
+                {% for grup in saat_gruplari %}
+                <div class="saat-satir">
+                    <div class="saat-etiket">{{ grup.saat }}:00</div>
+                    <div class="slot-grid">
+                        {% for slot in grup.slotlar %}
+                        <div class="slot-chip {% if slot.pasif %}slot-pasif{% endif %}"
+                             data-mins="{{ slot.mins }}" data-deger="{{ slot.deger }}"
+                             {% if not slot.pasif %}role="button" tabindex="0"{% endif %}>
+                            <span class="slot-deger">{{ slot.deger }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span id="ipucu" class="small text-muted">
+                    <i class="bi bi-hand-index me-1"></i>Başlangıç slotunu seçin…
+                </span>
+                <button type="submit" class="btn btn-success rounded-pill fw-bold px-4 shadow-sm">
+                    <i class="bi bi-check2-circle me-1"></i>Randevuları Oluştur
+                </button>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-calendar2-week display-4 text-muted opacity-25"></i>
+            <p class="text-muted mt-3 mb-0">Slotları görmek için yukarıdan bir cihaz ve tarih seçin.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    const ADIM = 10; // dakika
+    const inputKap = document.getElementById('aralikInputlari');
+    const sayac = document.getElementById('seciliSlotSayisi');
+    const ipucu = document.getElementById('ipucu');
+    if (!inputKap) return; // cihaz seçili değilse grid yok
+
+    // Tüm chip'leri dakika ofsetine göre eşle (yalnızca slot grid içindekiler)
+    const chipler = Array.from(document.querySelectorAll('.slot-chip'));
+    const haritaMins = new Map(); // mins -> chip
+    chipler.forEach(c => haritaMins.set(Number(c.dataset.mins), c));
+
+    let bekleyenBas = null;     // seçilmeyi bekleyen başlangıç (mins) veya null
+    const araliklar = [];       // [{bas, bit}]  bit = bitiş bloğunun mins'i (dahil)
+
+    function minsToStr(m) {
+        const h = Math.floor(m / 60), d = m % 60;
+        return String(h).padStart(2, '0') + ':' + String(d).padStart(2, '0');
+    }
+
+    // Bir mins değeri herhangi bir onaylı aralığın içinde mi?
+    function aralikIcindeMi(m) {
+        return araliklar.some(a => m >= a.bas && m <= a.bit);
+    }
+
+    // [bas, bit] arası (dahil) tüm bloklar boş ve seçilebilir mi?
+    function aralikGecerliMi(bas, bit) {
+        for (let m = bas; m <= bit; m += ADIM) {
+            const chip = haritaMins.get(m);
+            if (!chip) return false;                       // grid dışı
+            if (chip.classList.contains('slot-pasif')) return false; // dolu/geçmiş
+            if (aralikIcindeMi(m)) return false;           // başka seçimle çakışıyor
+        }
+        return true;
+    }
+
+    function ciz() {
+        // Önce tüm durum sınıflarını ve iptal linklerini temizle
+        chipler.forEach(c => {
+            c.classList.remove('slot-secili', 'slot-bekleyen', 'slot-bas');
+            const eski = c.querySelector('.slot-iptal');
+            if (eski) eski.remove();
+        });
+
+        // Bekleyen başlangıç
+        if (bekleyenBas !== null) {
+            const c = haritaMins.get(bekleyenBas);
+            if (c) c.classList.add('slot-bekleyen');
+        }
+
+        // Onaylı aralıklar
+        araliklar.forEach((a, idx) => {
+            for (let m = a.bas; m <= a.bit; m += ADIM) {
+                const c = haritaMins.get(m);
+                if (c) c.classList.add('slot-secili');
+            }
+            const basChip = haritaMins.get(a.bas);
+            if (basChip) {
+                basChip.classList.add('slot-bas');
+                const link = document.createElement('a');
+                link.className = 'slot-iptal';
+                link.textContent = 'iptal';
+                link.title = 'Bu randevuyu kaldır';
+                link.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    araliklar.splice(idx, 1);
+                    ciz();
+                });
+                basChip.appendChild(link);
+            }
+        });
+
+        // Gizli inputları yeniden üret: "HH:MM-HH:MM" (bitiş = son blok + 10dk)
+        inputKap.innerHTML = '';
+        araliklar.forEach(a => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'aralik';
+            inp.value = minsToStr(a.bas) + '-' + minsToStr(a.bit + ADIM);
+            inputKap.appendChild(inp);
+        });
+
+        sayac.textContent = araliklar.length;
+        if (bekleyenBas !== null) {
+            ipucu.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Başlangıç ' +
+                minsToStr(bekleyenBas) + ' — şimdi bitiş slotunu seçin.';
+        } else if (araliklar.length) {
+            ipucu.innerHTML = '<i class="bi bi-check2 me-1"></i>' + araliklar.length +
+                ' randevu hazır. Yeni başlangıç için bir slota tıklayın.';
+        } else {
+            ipucu.innerHTML = '<i class="bi bi-hand-index me-1"></i>Başlangıç slotunu seçin…';
+        }
+    }
+
+    function chipTikla(chip) {
+        if (chip.classList.contains('slot-pasif')) return;
+        const mins = Number(chip.dataset.mins);
+
+        // Onaylı bir aralığın içindeki slota tıklanırsa bir şey yapma (iptal linki var)
+        if (aralikIcindeMi(mins)) return;
+
+        if (bekleyenBas === null) {
+            bekleyenBas = mins;
+            ciz();
+            return;
+        }
+
+        // İkinci tık: bitiş. Başlangıçtan önceyse yeni başlangıç olarak al.
+        if (mins < bekleyenBas) {
+            bekleyenBas = mins;
+            ciz();
+            return;
+        }
+
+        if (!aralikGecerliMi(bekleyenBas, mins)) {
+            ipucu.innerHTML = '<i class="bi bi-exclamation-triangle me-1 text-danger"></i>' +
+                'Seçilen aralık dolu/geçmiş bir slotu kapsıyor. Yeni başlangıç seçin.';
+            bekleyenBas = null;
+            // küçük gecikmeyle normale dön
+            setTimeout(ciz, 1500);
+            return;
+        }
+
+        araliklar.push({ bas: bekleyenBas, bit: mins });
+        bekleyenBas = null;
+        ciz();
+    }
+
+    chipler.forEach(chip => {
+        if (chip.classList.contains('slot-pasif')) return;
+        chip.addEventListener('click', () => chipTikla(chip));
+        chip.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chipTikla(chip); }
+        });
+    });
+
+    window.slotTemizle = function () {
+        araliklar.length = 0;
+        bekleyenBas = null;
+        ciz();
+    };
+
+    ciz();
+})();
+</script>
+{% endblock %}

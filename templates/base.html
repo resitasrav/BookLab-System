@@ -51,25 +51,23 @@
                     {% endif %}
 
                     {% if user.is_authenticated %}
-                    <li class="nav-item me-lg-4">
-                        <a href="{% url 'randevularim' %}" class="nav-profile-container d-flex align-items-center">
+                    <li class="nav-item me-lg-2 mb-2 mb-lg-0">
+                        <a href="{% url 'randevularim' %}" class="nav-profile-container d-flex align-items-center justify-content-center" title="Profil & Randevularım">
                             {% if user.profil.resim %}
                             <img src="{{ user.profil.resim.url }}" alt="Profil"
                                 class="rounded-circle nav-profile-img me-2"
-                                style="width: 38px; height: 38px; object-fit: cover;">
+                                style="width: 26px; height: 26px; object-fit: cover;">
                             {% else %}
                             <div class="rounded-circle bg-info d-flex align-items-center justify-content-center me-2 shadow-sm"
-                                style="width: 38px; height: 38px;">
-                                <i class="bi bi-person-fill text-white fs-5"></i>
+                                style="width: 26px; height: 26px;">
+                                <i class="bi bi-person-fill text-white small"></i>
                             </div>
                             {% endif %}
-                            <div class="d-flex flex-column text-start">
-                                <span class="nav-profile-name lh-1">{{ user.username }}</span>
-                                <small style="font-size: 0.6rem; color: var(--btu-accent); font-weight: bold;">PROFİL &
-                                    RANDEVULAR</small>
-                            </div>
+                            <span class="nav-profile-name">{{ user.username }}</span>
                         </a>
-                    </li>
+                    </li>{% endif %}
+
+                    {% if user.is_authenticated %}
 
                     {% if user.is_staff %}
                     <li class="nav-item">

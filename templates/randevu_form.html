@@ -62,8 +62,9 @@
                 <div class="text-center mb-4 border-bottom pb-3">
                     <h4 class="fw-bold text-dark mb-1">Rezervasyon Bilgileri</h4>
                     <p class="text-muted small">Lütfen uygun bir saat aralığı belirleyerek onaylayın.</p>
-                    <p class="text-muted small">NOT: Aldığınız randevular en yakın 10 dakikalık dilimlere
-                        yuvarlanacaktır. Maksimum bir gün içerisinde 24 saate randevu alabilrsiniz .</p>
+                    <p class="text-muted small">NOT: Saatler 10 dakikalık dilimlerle çalışır (09:00, 09:10, 09:20…).
+                        Elle farklı bir dakika girerseniz en yakın 10 dakikalık dilime yuvarlanır.
+                        En az 10 dakika, en fazla 24 saatlik randevu alabilirsiniz.</p>
                 </div>
 
                 <form method="POST">
@@ -83,12 +84,13 @@
                     <div class="row">
                         <div class="col-md-6 mb-4">
                             <label class="form-label">Başlangıç Saati</label>
-                            <input type="time" name="baslangic" required
-                                class="form-control form-control-btu shadow-sm">
+                            <input type="time" name="baslangic" required step="600"
+                                class="form-control form-control-btu shadow-sm saat-input">
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="form-label">Bitiş Saati</label>
-                            <input type="time" name="bitis" required class="form-control form-control-btu shadow-sm">
+                            <input type="time" name="bitis" required step="600"
+                                class="form-control form-control-btu shadow-sm saat-input">
                         </div>
                     </div>
 
@@ -97,10 +99,14 @@
                         <small>Randevunuz laboratuvar sorumlusu tarafından incelendikten sonra kesinleşecektir.</small>
                     </div>
 
-                    <div class="d-grid gap-3">
+                    <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-confirm text-white shadow-lg">
                             RANDEVUYU ONAYLA <i class="bi bi-check2-circle ms-2"></i>
                         </button>
+                        <a href="{% url 'toplu_randevu' %}?cihaz={{ cihaz.id }}&tarih={{ secili_tarih }}"
+                            class="btn btn-outline-success fw-bold">
+                            <i class="bi bi-calendar-plus me-1"></i> Birden Fazla Saat Seç (Toplu Randevu)
+                        </a>
                         <a href="{% url 'lab_detay' cihaz.lab.id %}"
                             class="btn btn-link text-secondary text-decoration-none fw-bold small">
                             <i class="bi bi-arrow-left me-1"></i> İşlemi İptal Et
@@ -119,5 +125,21 @@
         url.searchParams.set('tarih', dateValue);
         window.location.href = url.toString();
     }
+
+    // Elle girilen saatleri en yakın 10 dakikalık dilime yuvarla (09:07 -> 09:10).
+    // Sunucu da ayrıca yuvarlar; bu, kullanıcıya anında görsel geri bildirim verir.
+    function saatYuvarla(input) {
+        if (!input.value) return;
+        const [s, d] = input.value.split(':').map(Number);
+        if (Number.isNaN(s) || Number.isNaN(d)) return;
+        let toplam = s * 60 + Math.round(d / 10) * 10;
+        toplam = ((toplam % 1440) + 1440) % 1440; // 24 saat sınırına sar
+        const ns = String(Math.floor(toplam / 60)).padStart(2, '0');
+        const nd = String(toplam % 60).padStart(2, '0');
+        input.value = `${ns}:${nd}`;
+    }
+    document.querySelectorAll('.saat-input').forEach(function (el) {
+        el.addEventListener('change', function () { saatYuvarla(el); });
+    });
 </script>
 {% endblock %}
