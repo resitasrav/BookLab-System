@@ -50,8 +50,7 @@ logger = logging.getLogger(__name__)
 def anasayfa(request):
     labs = Laboratuvar.objects.all()
     duyurular = Duyuru.objects.filter(aktif_mi=True).order_by("-tarih")
-    duyurular = Duyuru.objects.filter(aktif_mi=True).order_by("-tarih")
-    
+
     context = {
         "labs": labs, 
         "duyurular": duyurular,
