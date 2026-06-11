@@ -71,7 +71,10 @@ class Randevu(models.Model):
     durum = models.CharField(
         max_length=20,
         choices=DURUM_SECENEKLERI,
-        default=ONAY_BEKLENIYOR, 
+        # İŞ KURALI: Randevular yönetici tarafından iptal/reddedilmedikçe
+        # otomatik olarak ONAYLANDI durumunda oluşur. Onay bekleme aşaması
+        # kaldırılmıştır (yönetici sonradan iptal edebilir).
+        default=ONAYLANDI,
         verbose_name="Rezervasyon Durumu",
     )
 
