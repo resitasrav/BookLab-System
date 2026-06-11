@@ -64,10 +64,11 @@
     .btn-confirm {
         background: linear-gradient(135deg, var(--btu-success), #2ecc71);
         border: none;
-        padding: 15px;
+        padding: 12px;
         border-radius: 12px;
-        font-weight: 800;
-        letter-spacing: 1px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
     }
 
     @keyframes fadeIn {

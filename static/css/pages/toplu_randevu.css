@@ -1,0 +1,134 @@
+/* TURKCE ARAMA: toplu randevu, slot izgarasi sayfa stili */
+
+.filter-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.slot-wrapper {
+    max-height: 540px;
+    overflow-y: auto;
+}
+
+/* Bir saatlik satir: sol etiket + 6 slot */
+.saat-satir {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #eef2f7;
+}
+.saat-satir:last-child { border-bottom: none; }
+
+.saat-etiket {
+    flex: 0 0 56px;
+    font-weight: 700;
+    color: #003366;
+    font-size: 0.85rem;
+}
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    flex: 1 1 auto;
+}
+
+/* Slot chip — tiklanabilir buton gorunumu (div tabanli) */
+.slot-chip {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    padding: 7px 4px;
+    border-radius: 8px;
+    border: 1.5px solid #dbe4ee;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.slot-chip .slot-deger { display: block; }
+.slot-chip:not(.slot-pasif):hover {
+    border-color: #00a8cc;
+    background: #ecfeff;
+}
+
+/* Bekleyen baslangic (ilk tik) — aralik henuz tamamlanmadi */
+.slot-chip.slot-bekleyen {
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    border-color: #e67e22;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+}
+
+/* Secili randevu araligindaki slotlar — yesil */
+.slot-chip.slot-secili {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-color: #27ae60;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(39, 174, 96, 0.25);
+}
+.slot-chip.slot-secili:hover {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-color: #27ae60;
+}
+
+/* Araligin baslangic blogu — uzerinde "iptal" linki */
+.slot-chip.slot-bas {
+    padding-top: 4px;
+    padding-bottom: 16px;
+}
+.slot-iptal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 0 0 6px 6px;
+    padding: 1px 0;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.2;
+}
+.slot-iptal:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+/* Dolu / gecmis slot — KIRMIZI, alinamaz */
+.slot-chip.slot-pasif {
+    cursor: not-allowed;
+    background: #fdecea;
+    border-color: #f5b7b1;
+    color: #c0392b;
+    text-decoration: line-through;
+}
+
+/* Lejant noktasi */
+.lejant-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.lejant-bos { background: #dbe4ee; }
+.lejant-secili { background: #27ae60; }
+.lejant-dolu { background: #e74c3c; }
+
+/* Mobil */
+@media (max-width: 768px) {
+    .slot-grid { grid-template-columns: repeat(3, 1fr); }
+    .saat-satir { flex-wrap: wrap; }
+    .saat-etiket { flex-basis: 100%; }
+}
