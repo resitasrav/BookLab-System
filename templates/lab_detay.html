@@ -21,9 +21,14 @@
             <p class="text-muted mb-0 lead fs-6"><i class="bi bi-info-circle me-1"></i> {{ lab.aciklama|default:"Laboratuvar detay bilgisi girilmemiş." }}</p>
         </div>
 
-        <a href="{% url 'lab_takvim' lab.id %}" class="btn btn-warning rounded-pill px-4 py-2 shadow-sm fw-bold border-0 text-dark">
-            <i class="bi bi-calendar3 me-2"></i>Laboratuvar Programı
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'toplu_randevu' %}" class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-bold border-0">
+                <i class="bi bi-calendar-plus me-2"></i>Toplu Randevu Al
+            </a>
+            <a href="{% url 'lab_takvim' lab.id %}" class="btn btn-warning rounded-pill px-4 py-2 shadow-sm fw-bold border-0 text-dark">
+                <i class="bi bi-calendar3 me-2"></i>Laboratuvar Programı
+            </a>
+        </div>
     </div>
 
     <div class="d-flex align-items-center mb-4">

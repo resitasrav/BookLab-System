@@ -12,7 +12,7 @@
             <h2 class="fw-bold text-primary mb-0">
                 <i class="bi bi-collection-fill me-2 text-info"></i>Randevu Kayıtları
             </h2>
-            <p class="text-muted small mb-0">Toplam {{ randevular.count }} kayıt listeleniyor.</p>
+            <p class="text-muted small mb-0">Toplam {{ toplam_kayit }} kayıt &bull; Sayfa {{ randevular.number }}/{{ randevular.paginator.num_pages }}</p>
         </div>
         <div class="col-md-6 col-12 text-md-end text-start">
             <a href="{% url 'egitmen_paneli' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm btn-sm">
@@ -73,6 +73,7 @@
                                 <th>Cihaz / Laboratuvar</th>
                                 <th>Tarih &amp; Saat</th>
                                 <th class="text-center">Durum</th>
+                                <th class="text-center">İşlem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,7 +81,7 @@
 
                             {% ifchanged randevu.tarih %}
                             <tr class="table-light">
-                                <td colspan="5" class="text-center py-2" style="background-color:#f8f9fa;">
+                                <td colspan="6" class="text-center py-2" style="background-color:#f8f9fa;">
                                     <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size:0.8rem;">
                                         <i class="bi bi-calendar-event me-2"></i>{{ randevu.tarih|date:"d F Y, l" }}
                                     </span>
@@ -131,10 +132,25 @@
                                         <span class="badge-status bg-light text-dark border">{{ randevu.durum|upper }}</span>
                                     {% endif %}
                                 </td>
+
+                                <td data-label="İşlem" class="text-center">
+                                    <!-- Yönetici, süre fark etmeksizin durumu değiştirebilir -->
+                                    <div class="d-inline-flex gap-1 satir-islem">
+                                        {% if randevu.durum != 'geldi' %}
+                                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'geldi' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline-info btn-sm py-1 px-2" title="Geldi"><i class="bi bi-check-lg"></i></button></form>
+                                        {% endif %}
+                                        {% if randevu.durum != 'gelmedi' %}
+                                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'gelmedi' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline-secondary btn-sm py-1 px-2" title="Gelmedi"><i class="bi bi-x-circle"></i></button></form>
+                                        {% endif %}
+                                        {% if randevu.durum != 'reddedildi' and randevu.durum != 'iptal_edildi' %}
+                                        <form method="post" action="{% url 'durum_guncelle' randevu.id 'reddedildi' %}" class="d-inline" onsubmit="return confirm('Bu randevu iptal/reddedilsin mi?');">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline-danger btn-sm py-1 px-2" title="İptal / Reddet"><i class="bi bi-trash"></i></button></form>
+                                        {% endif %}
+                                    </div>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
                                     <p class="text-muted mt-3 mb-0">Kriterlere uygun randevu bulunamadı.</p>
                                 </td>
@@ -146,6 +162,20 @@
             </div>
         </div>
     </form>
+
+    {% if randevular.paginator.num_pages > 1 %}
+    <nav class="mt-3 d-flex justify-content-center">
+        <ul class="pagination pagination-sm mb-0">
+            {% if randevular.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if search_q %}q={{ search_q }}&{% endif %}{% if search_cihaz %}cihaz={{ search_cihaz }}&{% endif %}{% if search_lab %}lab={{ search_lab }}&{% endif %}{% if search_ay %}ay_ara={{ search_ay }}&{% endif %}sayfa={{ randevular.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">{{ randevular.number }} / {{ randevular.paginator.num_pages }}</span></li>
+            {% if randevular.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if search_q %}q={{ search_q }}&{% endif %}{% if search_cihaz %}cihaz={{ search_cihaz }}&{% endif %}{% if search_lab %}lab={{ search_lab }}&{% endif %}{% if search_ay %}ay_ara={{ search_ay }}&{% endif %}sayfa={{ randevular.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
 <script>
