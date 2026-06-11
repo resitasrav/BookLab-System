@@ -14,6 +14,7 @@ from .views_profile import profil_duzenle, email_degisim_dogrulama
 from .views_management import (
     onay_bekleyen_sayisi,
     egitmen_paneli,
+    gunluk_yoklama,
     durum_guncelle,
     ariza_bildir,
     kullanici_listesi,
@@ -22,5 +23,6 @@ from .views_management import (
     tum_randevular,
     toplu_islem,
     toplu_onay_ajax,
+    toplu_randevu,
     ariza_bildir_genel,
 )
