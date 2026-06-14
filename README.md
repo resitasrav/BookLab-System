@@ -174,4 +174,4 @@ Son doğrulama sonucu:
 
 ## Not
 
-Bu proje özel laboratuvar randevu kurallarına göre şekillendirilmiştir. Bazı iş kuralları genel rezervasyon sistemlerinden farklı olabilir; bu kurallar bilinçli olarak korunmuştur.
+Bu proje **REŞİT ASRAV** tarafından özel laboratuvar randevu kurallarına göre geliştirilimiş ve şekillendirilmiştir. Bazı iş kuralları genel rezervasyon sistemlerinden farklı olabilir; bu kurallar bilinçli olarak korunmuştur.
